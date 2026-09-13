@@ -454,7 +454,16 @@
     font-family:'IBM Plex Sans',sans-serif;color:var(--ink);background:var(--panel);cursor:pointer;
   }
   .suivi-fourn-select:focus{outline:none;border-color:var(--brass);}
-  .suivi-th{padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);white-space:nowrap;}
+  .suivi-th{padding:8px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);white-space:nowrap;}
+  /* En largeur fixe, tout ce qui dépasse doit être coupé proprement plutôt que
+     d'élargir la colonne. Le texte complet reste lisible via l'infobulle. */
+  #suiviTable td{padding:7px 4px;overflow:hidden;text-overflow:ellipsis;}
+  #suiviTable td.suivi-cell-texte{white-space:nowrap;}
+  #suiviTable .suivi-field-input,
+  #suiviTable .suivi-date-input,
+  #suiviTable .suivi-fourn-select,
+  #suiviTable .suivi-prio-select{width:100%;box-sizing:border-box;min-width:0;font-size:12px;padding:5px 4px;}
+  #suiviTable .suivi-date-input{font-size:11.5px;}
   /* Flèches de tri : deux chevrons cliquables, celui en service est mis en avant. */
   .suivi-sort{display:inline-flex;flex-direction:column;line-height:0;margin-left:4px;vertical-align:middle;}
   .suivi-sort b{font-size:8px;line-height:8px;cursor:pointer;color:var(--ink-soft);opacity:.45;}
@@ -709,7 +718,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V2.8</div>
+          <div class="brand-version">V2.9</div>
         </div>
       </div>
     </div>
@@ -780,18 +789,26 @@
   <div id="suiviLoading" style="font-size:13px;color:var(--ink-soft);">Chargement…</div>
 
   <div style="overflow-x:auto;">
-  <table id="suiviTable" style="width:100%;border-collapse:collapse;display:none;">
+  <!-- table-layout:fixed + colgroup : la ligne tient TOUJOURS dans la largeur
+       disponible, quelle que soit la taille d'écran. Sans ça, les colonnes
+       s'élargissent au gré du contenu et la fin de ligne part hors champ. -->
+  <table id="suiviTable" style="width:100%;table-layout:fixed;border-collapse:collapse;display:none;min-width:860px;">
+    <colgroup>
+      <col style="width:10%"><col style="width:13%"><col style="width:17%"><col style="width:10%">
+      <col style="width:16%"><col style="width:11%"><col style="width:8%"><col style="width:10%">
+      <col style="width:5%">
+    </colgroup>
     <thead>
       <tr style="text-align:left;border-bottom:1.5px solid var(--line);">
         <th class="suivi-th">Job <span class="suivi-sort" data-sort="job"></span></th>
         <th class="suivi-th">Date <span class="suivi-sort" data-sort="date"></span></th>
         <th class="suivi-th">Client</th>
-        <th class="suivi-th">Fournisseur <span class="suivi-sort" data-sort="fournisseur"></span></th>
+        <th class="suivi-th">Fourn. <span class="suivi-sort" data-sort="fournisseur"></span></th>
         <th class="suivi-th">Réf. monture</th>
-        <th class="suivi-th">Statut fournisseur</th>
-        <th class="suivi-th">Dernière vérif.</th>
+        <th class="suivi-th">Statut</th>
+        <th class="suivi-th">Vérif.</th>
         <th class="suivi-th">Priorité</th>
-        <th class="suivi-th" style="width:1%;"></th>
+        <th class="suivi-th"></th>
       </tr>
     </thead>
     <tbody id="suiviBody"></tbody>
@@ -7399,30 +7416,30 @@ function renderSuiviTable(){
     const prio = e.priorite || '';
     const cls = prio ? ` class="prio-${prio}"` : '';
     return `<tr${cls} style="border-bottom:1px solid #EEF2F8;">
-      <td style="padding:8px 6px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;white-space:nowrap;">${escapeHtml(job)}</td>
-      <td style="padding:8px 6px;">
+      <td class="suivi-cell-texte" style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${escapeHtml(job)}</td>
+      <td>
         <input type="date" class="suivi-date-input" value="${escapeHtml(e.date_dossier || '')}"
                data-job="${escapeHtml(job)}" data-field="date_dossier" title="Date du dossier">
       </td>
-      <td style="padding:8px 6px;min-width:130px;">
-        <input type="text" value="${escapeHtml(e.client || '')}" placeholder="À compléter"
+      <td>
+        <input type="text" value="${escapeHtml(e.client || '')}" title="${escapeHtml(e.client || '')}" placeholder="À compléter"
                data-job="${escapeHtml(job)}" data-field="client" class="suivi-field-input">
       </td>
-      <td style="padding:8px 6px;">
+      <td>
         <select class="suivi-fourn-select" data-job="${escapeHtml(job)}">${suiviFournisseurOptions(e.fournisseur)}</select>
       </td>
-      <td style="padding:8px 6px;min-width:130px;">
-        <input type="text" value="${escapeHtml(e.ref_monture || '')}" placeholder="À compléter"
+      <td>
+        <input type="text" value="${escapeHtml(e.ref_monture || '')}" title="${escapeHtml(e.ref_monture || '')}" placeholder="À compléter"
                data-job="${escapeHtml(job)}" data-field="ref_monture" class="suivi-field-input">
       </td>
-      <td style="padding:8px 6px;${statutStyle}">${escapeHtml(statut || '—')}</td>
-      <td style="padding:8px 6px;font-size:12px;color:var(--ink-soft);white-space:nowrap;">${escapeHtml(e.derniere_verification || '—')}</td>
-      <td style="padding:8px 6px;">
+      <td class="suivi-cell-texte" style="font-size:12px;${statutStyle}" title="${escapeHtml(statut)}">${escapeHtml(statut || '—')}</td>
+      <td class="suivi-cell-texte" style="font-size:11.5px;color:var(--ink-soft);">${escapeHtml(e.derniere_verification || '—')}</td>
+      <td>
         <select class="suivi-prio-select" data-job="${escapeHtml(job)}" title="Anomalie / urgence">
           ${SUIVI_PRIORITES.map(p => `<option value="${p.value}"${p.value === prio ? ' selected' : ''}>${p.label}</option>`).join('')}
         </select>
       </td>
-      <td style="padding:8px 6px;white-space:nowrap;">
+      <td style="text-align:center;">
         <button type="button" class="suivi-delete-btn" data-job="${escapeHtml(job)}" title="Supprimer du suivi (dossier clos)"
                 style="border:none;background:none;cursor:pointer;padding:6px;border-radius:6px;color:var(--error);display:inline-flex;">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
