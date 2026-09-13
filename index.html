@@ -454,6 +454,38 @@
     font-family:'IBM Plex Sans',sans-serif;color:var(--ink);background:var(--panel);cursor:pointer;
   }
   .suivi-fourn-select:focus{outline:none;border-color:var(--brass);}
+  .suivi-th{padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);white-space:nowrap;}
+  /* Flèches de tri : deux chevrons cliquables, celui en service est mis en avant. */
+  .suivi-sort{display:inline-flex;flex-direction:column;line-height:0;margin-left:4px;vertical-align:middle;}
+  .suivi-sort b{font-size:8px;line-height:8px;cursor:pointer;color:var(--ink-soft);opacity:.45;}
+  .suivi-sort b:hover{opacity:.9;}
+  .suivi-sort b.on{opacity:1;color:var(--brass);}
+  .suivi-date-input{
+    border:1px solid transparent;border-radius:6px;padding:5px 6px;font-size:12.5px;
+    font-family:'IBM Plex Sans',sans-serif;color:var(--ink);background:transparent;
+  }
+  .suivi-date-input:hover{border-color:var(--line);}
+  .suivi-date-input:focus{outline:none;border-color:var(--brass);background:#fff;}
+  .suivi-prio-select{
+    border:1px solid var(--line);border-radius:6px;padding:5px 6px;font-size:12px;
+    font-family:'IBM Plex Sans',sans-serif;cursor:pointer;background:var(--panel);
+  }
+  /* Observation : une ligne pleine largeur sous chaque dossier, pour écrire au large. */
+  .suivi-obs-row > td{padding:0 6px 10px 6px;border-bottom:1px solid #EEF2F8;}
+  .suivi-obs-area{
+    width:100%;box-sizing:border-box;min-height:46px;resize:vertical;
+    border:1px solid var(--line);border-radius:6px;padding:7px 9px;
+    font-size:12.5px;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);background:var(--panel);
+  }
+  .suivi-obs-area:focus{outline:none;border-color:var(--brass);background:#fff;}
+  .suivi-obs-area::placeholder{color:var(--ink-soft);font-style:italic;}
+  /* Codes couleur d'anomalie / urgence */
+  tr.prio-jaune  > td{background:#FEF6DC;}
+  tr.prio-orange > td{background:#FFEEDC;}
+  tr.prio-rouge  > td{background:#FDE4E4;}
+  tr.prio-jaune  > td:first-child{box-shadow:inset 3px 0 0 #F59E0B;}
+  tr.prio-orange > td:first-child{box-shadow:inset 3px 0 0 #EA580C;}
+  tr.prio-rouge  > td:first-child{box-shadow:inset 3px 0 0 #DC2626;}
   .pd-upload{
     border:2px dashed var(--line);border-radius:var(--radius);
     padding:40px 20px;text-align:center;cursor:pointer;background:var(--panel);
@@ -677,7 +709,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V2.7</div>
+          <div class="brand-version">V2.8</div>
         </div>
       </div>
     </div>
@@ -736,20 +768,10 @@
   <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
     <input type="text" id="suiviNewJob" placeholder="Numéro de Job (ex. J101110767)" autocomplete="off"
            style="flex:1;min-width:220px;border:1.5px solid var(--line);border-radius:var(--radius);padding:12px 14px;font-size:14px;font-family:'IBM Plex Sans',sans-serif;">
-    <select id="suiviNewFournisseur"
-            style="border:1.5px solid var(--line);border-radius:var(--radius);padding:12px 14px;font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:var(--panel);">
-      <option value="">Fournisseur…</option>
-      <option value="opal">OPAL</option>
-      <option value="luxo">LUXO</option>
-      <option value="adcl">ADCL</option>
-      <option value="french">FRENCH</option>
-      <option value="pac">PAC</option>
-    </select>
     <button id="suiviAddJobBtn" type="button" class="btn-ghost-link">+ Ajouter au suivi</button>
   </div>
 
-
-  <div id="suiviLockBar" style="display:none;align-items:center;gap:8px;margin-bottom:16px;padding:10px 12px;background:var(--brass-soft);border-radius:var(--radius);font-size:12.5px;color:var(--ink-soft);">
+  <div id="suiviLockBar" style="display:none;align-items:center;gap:8px;margin-bottom:16px;padding:10px 12px;background:var(--brass-soft);border-radius:var(--radius);font-size:12.5px;color:var(--ink);">
     <span>Mot de passe Admin requis pour ajouter un Job ou modifier une observation.</span>
     <input type="password" id="suiviUnlockPw" placeholder="Mot de passe" style="border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:12.5px;width:140px;">
     <button id="suiviUnlockBtn" type="button" class="btn-ghost-link">Déverrouiller</button>
@@ -761,14 +783,15 @@
   <table id="suiviTable" style="width:100%;border-collapse:collapse;display:none;">
     <thead>
       <tr style="text-align:left;border-bottom:1.5px solid var(--line);">
-        <th style="padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);">Job</th>
-        <th style="padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);">Client</th>
-        <th style="padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);">Fournisseur</th>
-        <th style="padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);">Réf. monture</th>
-        <th style="padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);">Statut fournisseur</th>
-        <th style="padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);">Dernière vérif.</th>
-        <th style="padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);">Observation</th>
-        <th style="padding:8px 6px;width:1%;"></th>
+        <th class="suivi-th">Job <span class="suivi-sort" data-sort="job"></span></th>
+        <th class="suivi-th">Date <span class="suivi-sort" data-sort="date"></span></th>
+        <th class="suivi-th">Client</th>
+        <th class="suivi-th">Fournisseur <span class="suivi-sort" data-sort="fournisseur"></span></th>
+        <th class="suivi-th">Réf. monture</th>
+        <th class="suivi-th">Statut fournisseur</th>
+        <th class="suivi-th">Dernière vérif.</th>
+        <th class="suivi-th">Priorité</th>
+        <th class="suivi-th" style="width:1%;"></th>
       </tr>
     </thead>
     <tbody id="suiviBody"></tbody>
@@ -7229,7 +7252,7 @@ const TABS = [
   { btn: tabSav, view: viewSav, title: 'SAV Lunettes', subtitle: 'Formulaire de demande au service après-vente C·Evidentia' },
   { btn: tabRa, view: viewRa, title: 'Procédure RA', subtitle: 'RA et double équipement VL/VP par mutuelle' },
   { btn: tabAtelier, view: viewAtelier, title: 'Dépôt Fiches Atelier', subtitle: 'Dépôt, tri et fusion des fiches atelier (accès protégé)', onActivate: resetAtelierToLogin },
-  { btn: tabSuivi, view: viewSuivi, title: 'Suivi Fournisseur', subtitle: "Statut des commandes bloquées, mis à jour automatiquement (French exclu — commandes par mail)", onActivate: loadSuiviFournisseur },
+  { btn: tabSuivi, view: viewSuivi, title: 'Suivi Fournisseur', subtitle: '', onActivate: loadSuiviFournisseur },
   { btn: tabAdmin, view: viewAdmin, title: 'Admin', subtitle: 'Mise à jour des bases montures et préconisations (accès protégé)', onActivate: resetAdminToLogin },
 ];
 
@@ -7312,19 +7335,75 @@ function suiviFournisseurOptions(courant){
   ).join('');
 }
 
+/* Tri courant du tableau. Trois clés seulement : numéro de job, date du dossier,
+   fournisseur. Les lignes sans date passent toujours en dernier, quel que soit le
+   sens, sinon elles pollueraient le haut du tableau. */
+let suiviSort = { key: 'job', dir: 'asc' };
+
+const SUIVI_PRIORITES = [
+  { value:'',       label:'—' },
+  { value:'jaune',  label:'Jaune' },
+  { value:'orange', label:'Orange' },
+  { value:'rouge',  label:'Rouge' },
+];
+
+function suiviSortedJobs(){
+  const jobs = Object.keys(SUIVI_DATA);
+  const sens = suiviSort.dir === 'desc' ? -1 : 1;
+  return jobs.sort((a, b) => {
+    const ea = SUIVI_DATA[a] || {}, eb = SUIVI_DATA[b] || {};
+    if(suiviSort.key === 'date'){
+      const da = ea.date_dossier || '', db = eb.date_dossier || '';
+      if(!da && !db) return a.localeCompare(b);
+      if(!da) return 1;              // sans date : toujours à la fin
+      if(!db) return -1;
+      return da === db ? a.localeCompare(b) : (da < db ? -1 : 1) * sens;
+    }
+    if(suiviSort.key === 'fournisseur'){
+      const fa = (ea.fournisseur || '').toLowerCase(), fb = (eb.fournisseur || '').toLowerCase();
+      if(!fa && !fb) return a.localeCompare(b);
+      if(!fa) return 1;
+      if(!fb) return -1;
+      return fa === fb ? a.localeCompare(b) : fa.localeCompare(fb, 'fr') * sens;
+    }
+    return a.localeCompare(b) * sens; // job
+  });
+}
+
+function renderSuiviSortArrows(){
+  document.querySelectorAll('.suivi-sort').forEach(el => {
+    const key = el.dataset.sort;
+    el.innerHTML =
+      `<b data-sort="${key}" data-dir="asc"${suiviSort.key===key && suiviSort.dir==='asc' ? ' class="on"' : ''} title="Croissant">▲</b>` +
+      `<b data-sort="${key}" data-dir="desc"${suiviSort.key===key && suiviSort.dir==='desc' ? ' class="on"' : ''} title="Décroissant">▼</b>`;
+    el.querySelectorAll('b').forEach(fleche => {
+      fleche.addEventListener('click', () => {
+        suiviSort = { key: fleche.dataset.sort, dir: fleche.dataset.dir };
+        renderSuiviTable();
+      });
+    });
+  });
+}
+
 function renderSuiviTable(){
   const loading = document.getElementById('suiviLoading');
   const table = document.getElementById('suiviTable');
   const body = document.getElementById('suiviBody');
-  const jobs = Object.keys(SUIVI_DATA).sort();
+  const jobs = suiviSortedJobs();
 
   body.innerHTML = jobs.map(job => {
     const e = SUIVI_DATA[job] || {};
     const statut = e.statut_fournisseur || '';
     const statutStyle = /exp[ée]di[ée]e|livr[ée]e|dispo/i.test(statut) ? 'color:#16A34A;' :
                          /annul[ée]e|non identifi/i.test(statut) ? 'color:var(--error);' : '';
-    return `<tr style="border-bottom:1px solid #EEF2F8;">
+    const prio = e.priorite || '';
+    const cls = prio ? ` class="prio-${prio}"` : '';
+    return `<tr${cls} style="border-bottom:1px solid #EEF2F8;">
       <td style="padding:8px 6px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;white-space:nowrap;">${escapeHtml(job)}</td>
+      <td style="padding:8px 6px;">
+        <input type="date" class="suivi-date-input" value="${escapeHtml(e.date_dossier || '')}"
+               data-job="${escapeHtml(job)}" data-field="date_dossier" title="Date du dossier">
+      </td>
       <td style="padding:8px 6px;min-width:130px;">
         <input type="text" value="${escapeHtml(e.client || '')}" placeholder="À compléter"
                data-job="${escapeHtml(job)}" data-field="client" class="suivi-field-input">
@@ -7338,16 +7417,22 @@ function renderSuiviTable(){
       </td>
       <td style="padding:8px 6px;${statutStyle}">${escapeHtml(statut || '—')}</td>
       <td style="padding:8px 6px;font-size:12px;color:var(--ink-soft);white-space:nowrap;">${escapeHtml(e.derniere_verification || '—')}</td>
-      <td style="padding:8px 6px;min-width:180px;">
-        <input type="text" value="${escapeHtml(e.observation || '')}"
-               data-job="${escapeHtml(job)}" class="suivi-obs-input"
-               style="width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12.5px;font-family:'IBM Plex Sans',sans-serif;">
+      <td style="padding:8px 6px;">
+        <select class="suivi-prio-select" data-job="${escapeHtml(job)}" title="Anomalie / urgence">
+          ${SUIVI_PRIORITES.map(p => `<option value="${p.value}"${p.value === prio ? ' selected' : ''}>${p.label}</option>`).join('')}
+        </select>
       </td>
       <td style="padding:8px 6px;white-space:nowrap;">
         <button type="button" class="suivi-delete-btn" data-job="${escapeHtml(job)}" title="Supprimer du suivi (dossier clos)"
                 style="border:none;background:none;cursor:pointer;padding:6px;border-radius:6px;color:var(--error);display:inline-flex;">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
         </button>
+      </td>
+    </tr>
+    <tr class="suivi-obs-row${prio ? ' prio-'+prio : ''}">
+      <td colspan="9">
+        <textarea class="suivi-obs-area" data-job="${escapeHtml(job)}"
+                  placeholder="Observation…">${escapeHtml(e.observation || '')}</textarea>
       </td>
     </tr>`;
   }).join('');
@@ -7355,64 +7440,67 @@ function renderSuiviTable(){
   table.style.display = jobs.length ? 'table' : 'none';
   loading.style.display = jobs.length ? 'none' : 'block';
   loading.textContent = 'Aucune commande suivie pour le moment.';
+  renderSuiviSortArrows();
 
-  body.querySelectorAll('.suivi-obs-input').forEach(input => {
-    input.addEventListener('change', async () => {
-      if(!CURRENT_ADMIN_PASSWORD){
-        alert("Déverrouille l'édition (mot de passe Admin) avant de modifier une observation.");
-        renderSuiviTable();
-        return;
-      }
-      SUIVI_DATA[input.dataset.job].observation = input.value;
-      try{
-        await AppStorage.set('suivi_fournisseur', JSON.stringify(SUIVI_DATA));
-      } catch(e){
-        alert("Impossible d'enregistrer : " + e.message);
-      }
+  // Enregistrement commun à tous les champs modifiables de la ligne.
+  async function majChamp(job, champ, valeur, messageRefus){
+    if(!CURRENT_ADMIN_PASSWORD){
+      alert(messageRefus);
+      renderSuiviTable();
+      return false;
+    }
+    if(!SUIVI_DATA[job]) return false;
+    SUIVI_DATA[job][champ] = valeur;
+    try{
+      await AppStorage.set('suivi_fournisseur', JSON.stringify(SUIVI_DATA));
+      return true;
+    } catch(err){
+      alert("Impossible d'enregistrer : " + err.message);
+      renderSuiviTable();
+      return false;
+    }
+  }
+
+  body.querySelectorAll('.suivi-obs-area').forEach(area => {
+    area.addEventListener('change', () => {
+      majChamp(area.dataset.job, 'observation', area.value,
+        "Déverrouille l'édition (mot de passe Admin) avant de modifier une observation.");
     });
   });
 
   body.querySelectorAll('.suivi-fourn-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      majChamp(sel.dataset.job, 'fournisseur', sel.value,
+        "Déverrouille l'édition (mot de passe Admin) avant de modifier le fournisseur.");
+    });
+  });
+
+  // Priorité : re-rendu après enregistrement pour appliquer tout de suite la couleur.
+  body.querySelectorAll('.suivi-prio-select').forEach(sel => {
     sel.addEventListener('change', async () => {
-      const job = sel.dataset.job;
-      if(!CURRENT_ADMIN_PASSWORD){
-        alert("Déverrouille l'édition (mot de passe Admin) avant de modifier le fournisseur.");
-        renderSuiviTable();
-        return;
-      }
-      if(!SUIVI_DATA[job]) return;
-      SUIVI_DATA[job].fournisseur = sel.value;
-      try{
-        await AppStorage.set('suivi_fournisseur', JSON.stringify(SUIVI_DATA));
-      } catch(e){
-        alert("Impossible d'enregistrer : " + e.message);
-        renderSuiviTable();
-      }
+      const ok = await majChamp(sel.dataset.job, 'priorite', sel.value,
+        "Déverrouille l'édition (mot de passe Admin) avant de changer la priorité.");
+      if(ok) renderSuiviTable();
+    });
+  });
+
+  // Date du dossier : saisie manuelle via le calendrier du navigateur.
+  // Re-rendu seulement si le tableau est justement trié par date.
+  body.querySelectorAll('.suivi-date-input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const ok = await majChamp(input.dataset.job, 'date_dossier', input.value,
+        "Déverrouille l'édition (mot de passe Admin) avant de modifier la date.");
+      if(ok && suiviSort.key === 'date') renderSuiviTable();
     });
   });
 
   // Saisie manuelle de Client / Réf. monture : indispensable pour les commandes
   // anticipées, pas encore validées chez C'Evidentia et donc introuvables par la
-  // recherche automatique. Ces champs restent modifiables même une fois remplis :
-  // la complétion automatique ne sait pas nommer les montures des marques dont le
-  // catalogue n'a pas les SKU (Ray-Ban, Oakley…), il faut pouvoir corriger.
+  // recherche automatique. Ces champs restent modifiables même une fois remplis.
   body.querySelectorAll('.suivi-field-input').forEach(input => {
-    input.addEventListener('change', async () => {
-      const job = input.dataset.job;
-      const field = input.dataset.field;
-      if(!CURRENT_ADMIN_PASSWORD){
-        alert("Déverrouille l'édition (mot de passe Admin) avant de modifier cette ligne.");
-        renderSuiviTable();
-        return;
-      }
-      if(!SUIVI_DATA[job]) return;
-      SUIVI_DATA[job][field] = input.value.trim();
-      try{
-        await AppStorage.set('suivi_fournisseur', JSON.stringify(SUIVI_DATA));
-      } catch(e){
-        alert("Impossible d'enregistrer : " + e.message);
-        renderSuiviTable();
-      }
+    input.addEventListener('change', () => {
+      majChamp(input.dataset.job, input.dataset.field, input.value.trim(),
+        "Déverrouille l'édition (mot de passe Admin) avant de modifier cette ligne.");
     });
   });
 
@@ -7436,11 +7524,10 @@ async function deleteSuiviJob(job){
   }
 }
 
-const suiviNewFournisseur = document.getElementById('suiviNewFournisseur');
 
 suiviAddJobBtn.addEventListener('click', async () => {
   const job = suiviNewJob.value.trim().toUpperCase();
-  const fournisseur = suiviNewFournisseur.value;
+  const fournisseur = ''; // renseigné ensuite via le menu de la ligne
   if(!/^J\d{9}$/.test(job)){
     alert('Format attendu : J suivi de 9 chiffres (ex. J101110767).');
     return;
@@ -7459,7 +7546,6 @@ suiviAddJobBtn.addEventListener('click', async () => {
     }
   }
   suiviNewJob.value = '';
-  suiviNewFournisseur.value = '';
   renderSuiviTable();
 });
 
