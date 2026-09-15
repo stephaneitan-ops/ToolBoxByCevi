@@ -15,6 +15,9 @@ const SITE_ID = '1073646c-ef38-4e99-b77a-2a7aaa928b25'; // Project ID Netlify (l
 const SCOPE_KEYS = {
   admin: 'password-hash',
   atelier: 'password-hash:atelier',
+  // 'operation' remplace 'atelier' côté rôles (Opticien / Operation / Admin) : même hash
+  // stocké, pour que le mot de passe existant (Teamops2026 par défaut) reste valable.
+  operation: 'password-hash:atelier',
 };
 
 // Configuration manuelle du store : nécessaire dans certains contextes de déploiement où
