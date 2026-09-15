@@ -36,17 +36,16 @@ function resolveScope(scope) {
   return SCOPE_KEYS[scope] ? scope : 'admin';
 }
 
-// Renvoie le hash stocké pour une zone. Si rien n'existe encore en base :
-//  - zone 'admin'   -> initialisée au mot de passe par défaut (comportement inchangé)
-//  - zone 'atelier' -> initialisée en COPIANT le mot de passe Admin courant au moment du
-//                      premier accès (même valeur de départ), puis totalement indépendante
-//                      dès qu'elle est changée une fois (via auth.js, action 'change').
+// Renvoie le hash stocké pour une zone. Si rien n'existe encore en base, chaque zone
+// ('admin' et 'atelier') est initialisée indépendamment au même mot de passe par défaut
+// (Teamops2026) — plus de copie du mot de passe Admin courant, pour que le mot de passe
+// Atelier de départ reste toujours Teamops2026 même si l'Admin a déjà été changé.
 async function getStoredHash(authStore, scope) {
   const s = resolveScope(scope);
   const key = SCOPE_KEYS[s];
   let hash = await authStore.get(key);
   if (!hash) {
-    hash = s === 'atelier' ? await getStoredHash(authStore, 'admin') : hashPw(DEFAULT_PASSWORD);
+    hash = hashPw(DEFAULT_PASSWORD);
     await authStore.set(key, hash);
   }
   return hash;
