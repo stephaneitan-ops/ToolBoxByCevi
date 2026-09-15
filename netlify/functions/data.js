@@ -6,7 +6,7 @@
 // faites depuis l'onglet Dépôt Fiche Atelier / SAV utilisent 'atelier' pour être
 // vérifiées contre le mot de passe atelier plutôt que le mot de passe Admin.
 
-const { blobStore, hashPw, getStoredHash } = require('./_shared/auth-shared');
+const { blobStore, hashPw, getStoredHash, resolveScope } = require('./_shared/auth-shared');
 
 exports.handler = async (event) => {
   const cors = {
@@ -54,9 +54,18 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers: cors, body: JSON.stringify({ error: "Paramètre 'key' manquant." }) };
     }
 
+    // Un mot de passe Admin est toujours accepté, même sur une zone à privilège moindre
+    // (ex. scope 'operation') : un compte Admin n'a pas besoin de connaître le mot de passe
+    // Operation pour agir dessus. L'inverse n'est pas vrai.
     const authStore = blobStore('toolbox-auth');
+    const pwHash = hashPw(password);
     const storedHash = await getStoredHash(authStore, scope);
-    if (hashPw(password) !== storedHash) {
+    let authorized = pwHash === storedHash;
+    if (!authorized && resolveScope(scope) !== 'admin') {
+      const adminHash = await getStoredHash(authStore, 'admin');
+      authorized = pwHash === adminHash;
+    }
+    if (!authorized) {
       return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'Mot de passe incorrect.' }) };
     }
 

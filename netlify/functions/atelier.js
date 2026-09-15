@@ -22,9 +22,14 @@
 const crypto = require('crypto');
 const { blobStore, hashPw, getStoredHash } = require('./_shared/auth-shared');
 
+// Accepte le mot de passe Operation (scope 'atelier', historique) OU le mot de passe Admin :
+// un compte Admin doit pouvoir utiliser l'Atelier sans connaître le mot de passe Operation.
 async function checkPassword(authStore, password) {
-  const hash = await getStoredHash(authStore, 'atelier');
-  return hashPw(password) === hash;
+  const pwHash = hashPw(password);
+  const operationHash = await getStoredHash(authStore, 'atelier');
+  if (pwHash === operationHash) return true;
+  const adminHash = await getStoredHash(authStore, 'admin');
+  return pwHash === adminHash;
 }
 
 exports.handler = async (event) => {
