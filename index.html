@@ -750,7 +750,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.0</div>
+          <div class="brand-version">V3.2</div>
         </div>
       </div>
     </div>
@@ -830,10 +830,31 @@
     <summary style="cursor:pointer;font-weight:600;font-size:13.5px;">✉️ Emails de contact (relance fournisseur / alerte indisponibilité)</summary>
     <p class="sub" style="margin-top:10px;">Utilisés pour pré-remplir les brouillons d'email ouverts depuis chaque ligne du tableau ci-dessous.</p>
     <div id="suiviFournEmailFields" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:10px 0;"></div>
-    <label for="suiviServiceClientEmail">Email service client (alerte monture indisponible)</label>
-    <input type="text" id="suiviServiceClientEmail" placeholder="ex. sav@cevidentia.fr">
+    <label for="suiviServiceClientEmail" style="display:block;font-size:12px;margin-bottom:4px;">Email service client (alerte monture indisponible)</label>
+    <input type="text" id="suiviServiceClientEmail" placeholder="ex. sav@cevidentia.fr" style="width:100%;">
+
+    <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;">
+      <b style="font-size:12.5px;">📝 Modèle — Relance fournisseur</b>
+      <p class="sub" style="margin:4px 0 8px;">Variables disponibles : <code>{{job}}</code>, <code>{{client}}</code>, <code>{{ref_monture}}</code>, <code>{{date_dossier}}</code>, <code>{{fournisseur}}</code></p>
+      <label for="suiviTplFournSubject" style="display:block;font-size:12px;margin-bottom:4px;">Objet</label>
+      <input type="text" id="suiviTplFournSubject" style="width:100%;margin-bottom:10px;">
+      <label for="suiviTplFournBody" style="display:block;font-size:12px;margin-bottom:4px;">Corps du message</label>
+      <textarea id="suiviTplFournBody" rows="7" style="width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1.5px solid var(--line);border-radius:var(--radius);padding:10px 12px;box-sizing:border-box;"></textarea>
+      <button class="btn-ghost-link" id="suiviTplFournResetBtn" type="button" style="margin-top:6px;">↺ Réinitialiser ce modèle</button>
+    </div>
+
+    <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;">
+      <b style="font-size:12.5px;">📝 Modèle — Alerte monture indisponible</b>
+      <p class="sub" style="margin:4px 0 8px;">Variables disponibles : <code>{{job}}</code>, <code>{{client}}</code>, <code>{{ref_monture}}</code>, <code>{{fournisseur}}</code></p>
+      <label for="suiviTplIndispoSubject" style="display:block;font-size:12px;margin-bottom:4px;">Objet</label>
+      <input type="text" id="suiviTplIndispoSubject" style="width:100%;margin-bottom:10px;">
+      <label for="suiviTplIndispoBody" style="display:block;font-size:12px;margin-bottom:4px;">Corps du message</label>
+      <textarea id="suiviTplIndispoBody" rows="7" style="width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1.5px solid var(--line);border-radius:var(--radius);padding:10px 12px;box-sizing:border-box;"></textarea>
+      <button class="btn-ghost-link" id="suiviTplIndispoResetBtn" type="button" style="margin-top:6px;">↺ Réinitialiser ce modèle</button>
+    </div>
+
     <div class="modal-error" id="suiviEmailConfigError" style="display:none;margin-top:8px;"></div>
-    <button class="btn-ghost" id="suiviEmailConfigSaveBtn" type="button" style="margin-top:12px;">Enregistrer les emails</button>
+    <button class="btn-ghost" id="suiviEmailConfigSaveBtn" type="button" style="margin-top:12px;">Enregistrer les emails et modèles</button>
     <span id="suiviEmailConfigSaved" style="display:none;margin-left:10px;color:#16A34A;font-size:12.5px;">Enregistré ✓</span>
   </details>
 
@@ -4909,6 +4930,45 @@ function suiviFournisseurOptions(courant){
    Operation/Admin, stockées via AppStorage (scope 'operation'), clé 'suivi-emails'. */
 let SUIVI_EMAILS = { fournisseurs: {}, service_client: '' };
 
+// Modèles d'email par défaut (secours + valeur de "Réinitialiser ce modèle"). Éditables par
+// Operation/Admin dans le panneau "Emails de contact", stockés via AppStorage (scope
+// 'operation'), clé 'suivi-email-templates'. Variables remplacées par suiviFillTemplate().
+const SUIVI_EMAIL_TEMPLATES_DEFAULT = {
+  fournisseur: {
+    subject: 'Relance commande - Job {{job}}',
+    body: [
+      'Bonjour,', '',
+      "Merci de nous indiquer l'état d'avancement de la commande suivante :", '',
+      'Job : {{job}}',
+      'Client : {{client}}',
+      'Référence monture : {{ref_monture}}',
+      'Date du dossier : {{date_dossier}}', '',
+      'Cordialement,'
+    ].join('\n')
+  },
+  indispo: {
+    subject: 'Monture indisponible - Job {{job}}',
+    body: [
+      'Bonjour,', '',
+      "La monture commandée pour le dossier suivant n'est plus disponible chez le fournisseur :", '',
+      'Job : {{job}}',
+      'Client : {{client}}',
+      'Référence monture : {{ref_monture}}',
+      'Fournisseur : {{fournisseur}}', '',
+      "Merci de contacter le client pour l'informer et lui proposer un rendez-vous afin de choisir une autre monture.", '',
+      'Cordialement,'
+    ].join('\n')
+  }
+};
+let SUIVI_EMAIL_TEMPLATES = JSON.parse(JSON.stringify(SUIVI_EMAIL_TEMPLATES_DEFAULT));
+
+function suiviFillTemplate(str, vars){
+  return (str || '').replace(/\{\{(\w+)\}\}/g, (m, key) => {
+    const v = vars[key];
+    return (v === undefined || v === null || v === '') ? '—' : v;
+  });
+}
+
 async function loadSuiviEmails(){
   try{
     const { value } = await AppStorage.get('suivi-emails');
@@ -4917,6 +4977,16 @@ async function loadSuiviEmails(){
       SUIVI_EMAILS = { fournisseurs: parsed.fournisseurs || {}, service_client: parsed.service_client || '' };
     }
   } catch(e){ /* pas encore configuré / API indisponible : on garde les valeurs vides */ }
+  try{
+    const { value } = await AppStorage.get('suivi-email-templates');
+    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
+    if(parsed && typeof parsed === 'object'){
+      SUIVI_EMAIL_TEMPLATES = {
+        fournisseur: Object.assign({}, SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur, parsed.fournisseur || {}),
+        indispo: Object.assign({}, SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo, parsed.indispo || {})
+      };
+    }
+  } catch(e){ /* pas encore configuré / API indisponible : on garde les modèles par défaut */ }
   renderSuiviEmailConfigFields();
 }
 
@@ -4932,7 +5002,25 @@ function renderSuiviEmailConfigFields(){
   `).join('');
   const svcInput = document.getElementById('suiviServiceClientEmail');
   if(svcInput) svcInput.value = SUIVI_EMAILS.service_client || '';
+
+  const tplFournSubject = document.getElementById('suiviTplFournSubject');
+  const tplFournBody = document.getElementById('suiviTplFournBody');
+  const tplIndispoSubject = document.getElementById('suiviTplIndispoSubject');
+  const tplIndispoBody = document.getElementById('suiviTplIndispoBody');
+  if(tplFournSubject) tplFournSubject.value = SUIVI_EMAIL_TEMPLATES.fournisseur.subject;
+  if(tplFournBody) tplFournBody.value = SUIVI_EMAIL_TEMPLATES.fournisseur.body;
+  if(tplIndispoSubject) tplIndispoSubject.value = SUIVI_EMAIL_TEMPLATES.indispo.subject;
+  if(tplIndispoBody) tplIndispoBody.value = SUIVI_EMAIL_TEMPLATES.indispo.body;
 }
+
+document.getElementById('suiviTplFournResetBtn').addEventListener('click', () => {
+  document.getElementById('suiviTplFournSubject').value = SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur.subject;
+  document.getElementById('suiviTplFournBody').value = SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur.body;
+});
+document.getElementById('suiviTplIndispoResetBtn').addEventListener('click', () => {
+  document.getElementById('suiviTplIndispoSubject').value = SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo.subject;
+  document.getElementById('suiviTplIndispoBody').value = SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo.body;
+});
 
 document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', async () => {
   const errEl = document.getElementById('suiviEmailConfigError');
@@ -4940,7 +5028,7 @@ document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', asy
   errEl.style.display = 'none';
   savedEl.style.display = 'none';
   if(CURRENT_ROLE === 'opticien'){
-    errEl.textContent = "Connecte-toi en Operation ou Admin (sous le logo Tool Box) pour modifier ces adresses.";
+    errEl.textContent = "Connecte-toi en Operation ou Admin (sous le logo Tool Box) pour modifier ces adresses et modèles.";
     errEl.style.display = 'block';
     return;
   }
@@ -4950,8 +5038,21 @@ document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', asy
   });
   const service_client = (document.getElementById('suiviServiceClientEmail').value || '').trim();
   SUIVI_EMAILS = { fournisseurs, service_client };
+
+  SUIVI_EMAIL_TEMPLATES = {
+    fournisseur: {
+      subject: document.getElementById('suiviTplFournSubject').value || SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur.subject,
+      body: document.getElementById('suiviTplFournBody').value || SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur.body
+    },
+    indispo: {
+      subject: document.getElementById('suiviTplIndispoSubject').value || SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo.subject,
+      body: document.getElementById('suiviTplIndispoBody').value || SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo.body
+    }
+  };
+
   try{
     await AppStorage.set('suivi-emails', JSON.stringify(SUIVI_EMAILS), 'operation');
+    await AppStorage.set('suivi-email-templates', JSON.stringify(SUIVI_EMAIL_TEMPLATES), 'operation');
     savedEl.style.display = 'inline';
     setTimeout(() => { savedEl.style.display = 'none'; }, 2500);
   } catch(e){
@@ -4967,6 +5068,28 @@ function suiviBuildMailto(to, subject, body){
   return `mailto:${encodeURIComponent(to || '').replace(/%40/g,'@')}?${params.toString().replace(/\+/g, '%20')}`;
 }
 
+// Petit format compact "JJ/MM HH:MM" pour l'horodatage affiché sous les boutons mail.
+function suiviFormatSentAt(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '';
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Marque un email comme envoyé (date + heure) sur le job concerné : enregistré comme les
+// autres champs du suivi (AppStorage, scope 'operation'), puis ré-affiché en vert avec la
+// date sous l'icône. Appelé juste après ouverture du brouillon mailto — best effort, ne
+// bloque jamais l'ouverture du mail en cas d'échec d'enregistrement.
+async function suiviMarkEmailSent(job, champ){
+  if(!SUIVI_DATA[job]) return;
+  SUIVI_DATA[job][champ] = new Date().toISOString();
+  try{
+    await AppStorage.set('suivi_fournisseur', JSON.stringify(SUIVI_DATA), 'operation');
+  } catch(e){ /* best effort : l'email est déjà parti, on ne remonte pas d'erreur bloquante */ }
+  renderSuiviTable();
+}
+
 function suiviWireEmailButtons(body){
   body.querySelectorAll('.suivi-email-fourn-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -4977,17 +5100,17 @@ function suiviWireEmailButtons(body){
       if(!to){
         alert(`Aucun email enregistré pour ce fournisseur (${fournisseurLabel || '—'}). Ouvre "Emails de contact" en haut de page pour l'ajouter.`);
       }
-      const subject = `Relance commande - Job ${job}`;
-      const lignes = [
-        'Bonjour,', '',
-        "Merci de nous indiquer l'état d'avancement de la commande suivante :", '',
-        `Job : ${job}`,
-        `Client : ${e.client || '—'}`,
-        `Référence monture : ${e.ref_monture || '—'}`,
-        `Date du dossier : ${e.date_dossier || '—'}`, '',
-        'Cordialement,'
-      ];
-      window.location.href = suiviBuildMailto(to, subject, lignes.join('\n'));
+      const vars = {
+        job,
+        client: e.client,
+        ref_monture: e.ref_monture,
+        date_dossier: e.date_dossier,
+        fournisseur: fournisseurLabel
+      };
+      const subject = suiviFillTemplate(SUIVI_EMAIL_TEMPLATES.fournisseur.subject, vars);
+      const bodyTxt = suiviFillTemplate(SUIVI_EMAIL_TEMPLATES.fournisseur.body, vars);
+      window.location.href = suiviBuildMailto(to, subject, bodyTxt);
+      suiviMarkEmailSent(job, 'email_fourn_sent_at');
     });
   });
 
@@ -4999,18 +5122,18 @@ function suiviWireEmailButtons(body){
       if(!to){
         alert('Aucun email service client enregistré. Ouvre "Emails de contact" en haut de page pour le renseigner.');
       }
-      const subject = `Monture indisponible - Job ${job}`;
-      const lignes = [
-        'Bonjour,', '',
-        "La monture commandée pour le dossier suivant n'est plus disponible chez le fournisseur :", '',
-        `Job : ${job}`,
-        `Client : ${e.client || '—'}`,
-        `Référence monture : ${e.ref_monture || '—'}`,
-        `Fournisseur : ${(SUIVI_FOURNISSEURS.find(f => f.value === e.fournisseur) || { label: e.fournisseur || '—' }).label}`, '',
-        "Merci de contacter le client pour l'informer et lui proposer un rendez-vous afin de choisir une autre monture.", '',
-        'Cordialement,'
-      ];
-      window.location.href = suiviBuildMailto(to, subject, lignes.join('\n'));
+      const fournisseurLabel = (SUIVI_FOURNISSEURS.find(f => f.value === e.fournisseur) || { label: e.fournisseur || '—' }).label;
+      const vars = {
+        job,
+        client: e.client,
+        ref_monture: e.ref_monture,
+        date_dossier: e.date_dossier,
+        fournisseur: fournisseurLabel
+      };
+      const subject = suiviFillTemplate(SUIVI_EMAIL_TEMPLATES.indispo.subject, vars);
+      const bodyTxt = suiviFillTemplate(SUIVI_EMAIL_TEMPLATES.indispo.body, vars);
+      window.location.href = suiviBuildMailto(to, subject, bodyTxt);
+      suiviMarkEmailSent(job, 'email_indispo_sent_at');
     });
   });
 }
@@ -5078,6 +5201,8 @@ function renderSuiviTable(){
                          /annul[ée]e|non identifi/i.test(statut) ? 'color:var(--error);' : '';
     const prio = e.priorite || '';
     const cls = prio ? ` class="prio-${prio}"` : '';
+    const fournSentAt = suiviFormatSentAt(e.email_fourn_sent_at);
+    const indispoSentAt = suiviFormatSentAt(e.email_indispo_sent_at);
     return `<tr${cls} style="border-bottom:1px solid #EEF2F8;">
       <td class="suivi-cell-texte" style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${escapeHtml(job)}</td>
       <td>
@@ -5103,14 +5228,22 @@ function renderSuiviTable(){
         </select>
       </td>
       <td style="text-align:center;white-space:nowrap;">
-        <button type="button" class="suivi-email-fourn-btn" data-job="${escapeHtml(job)}" title="Email de relance au fournisseur"
-                style="border:none;background:none;cursor:pointer;padding:6px;border-radius:6px;color:var(--teal-deep);display:inline-flex;">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg>
-        </button>
-        <button type="button" class="suivi-email-indispo-btn" data-job="${escapeHtml(job)}" title="Alerter le service client : monture indisponible"
-                style="border:none;background:none;cursor:pointer;padding:6px;border-radius:6px;color:var(--brass);display:inline-flex;">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L2.5 17a1.5 1.5 0 0 0 1.3 2.2h16.4a1.5 1.5 0 0 0 1.3-2.2L13.7 3.9a1.6 1.6 0 0 0-2.8 0z"/></svg>
-        </button>
+        <span style="display:inline-flex;flex-direction:column;align-items:center;line-height:1;vertical-align:top;">
+          <button type="button" class="suivi-email-fourn-btn" data-job="${escapeHtml(job)}"
+                  title="Email de relance au fournisseur${fournSentAt ? ' — envoyé le '+fournSentAt : ''}"
+                  style="border:none;background:none;cursor:pointer;padding:6px;border-radius:6px;color:${fournSentAt ? '#16A34A' : 'var(--teal-deep)'};display:inline-flex;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg>
+          </button>
+          ${fournSentAt ? `<span style="font-size:9.5px;color:#16A34A;white-space:nowrap;">${fournSentAt}</span>` : ''}
+        </span>
+        <span style="display:inline-flex;flex-direction:column;align-items:center;line-height:1;vertical-align:top;">
+          <button type="button" class="suivi-email-indispo-btn" data-job="${escapeHtml(job)}"
+                  title="Alerter le service client : monture indisponible${indispoSentAt ? ' — envoyé le '+indispoSentAt : ''}"
+                  style="border:none;background:none;cursor:pointer;padding:6px;border-radius:6px;color:${indispoSentAt ? '#16A34A' : 'var(--brass)'};display:inline-flex;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L2.5 17a1.5 1.5 0 0 0 1.3 2.2h16.4a1.5 1.5 0 0 0 1.3-2.2L13.7 3.9a1.6 1.6 0 0 0-2.8 0z"/></svg>
+          </button>
+          ${indispoSentAt ? `<span style="font-size:9.5px;color:#16A34A;white-space:nowrap;">${indispoSentAt}</span>` : ''}
+        </span>
         <button type="button" class="suivi-delete-btn" data-job="${escapeHtml(job)}" title="Supprimer du suivi (dossier clos)"
                 style="border:none;background:none;cursor:pointer;padding:6px;border-radius:6px;color:var(--error);display:inline-flex;">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
