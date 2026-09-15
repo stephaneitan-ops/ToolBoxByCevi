@@ -401,8 +401,9 @@
 
   /* Zone imprimable du générateur de code-barres : invisible à l'écran, seule visible à l'impression */
   #barcodePrintArea{display:none;}
-  .barcode-label-sheet{text-align:center;padding:60px 20px;}
-  .barcode-label-ref{font-size:22px;font-weight:700;letter-spacing:1px;margin-bottom:18px;font-family:'IBM Plex Mono',monospace;}
+  .barcode-label-sheet{text-align:center;padding:16px 10px;}
+  .barcode-label-ref{font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;}
+  #barcodeSvg{max-width:100mm;}
 
   @media print{
     body > *:not(#barcodePrintArea){ display:none !important; }
@@ -750,9 +751,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span>Procédure RA</span>
       </button>
-      <button class="nav-item" id="tabAtelier" type="button" title="Dépôt Fiches Atelier">
+      <button class="nav-item" id="tabAtelier" type="button" title="Atelier (CodeBarre + Dépôt fiches)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-        <span>Dépôt Fiches Atelier</span>
+        <span>Atelier</span>
       </button>
       <button class="nav-item" id="tabSuivi" type="button" title="Suivi Fournisseur">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 4 5-8"/></svg>
@@ -1315,22 +1316,38 @@
 
   <div id="viewAtelier" style="display:none;">
 
-    <div id="atelierLoginView">
-      <p class="sub" style="margin-bottom:18px;">Réservé aux personnes autorisées à déposer et récupérer les fiches atelier / SAV.</p>
-      <div class="modal-error" id="atelierLoginError">Mot de passe incorrect.</div>
-      <label for="atelierPassword">Mot de passe</label>
-      <input type="password" id="atelierPassword" placeholder="••••••••" style="max-width:280px;">
-      <button class="btn btn-primary" id="atelierLoginBtn" style="width:auto;padding:11px 24px;">Se connecter</button>
+    <div class="sub-tabs" style="display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);">
+      <button class="sub-tab-btn active" id="atelierSubTabBarcode" type="button">CodeBarre</button>
+      <button class="sub-tab-btn" id="atelierSubTabDeposit" type="button">Dépôt Atelier / SAV</button>
     </div>
 
-    <div id="atelierMainView" style="display:none;">
+    <div id="atelierSubBarcode">
+      <div class="admin-card" style="max-width:480px;margin-bottom:14px;">
+        <h2>Générateur de code-barres</h2>
+        <label for="barcodeRefInput">Référence</label>
+        <input type="text" id="barcodeRefInput" placeholder="Ex. 00164952">
+        <div class="modal-error" id="barcodeErr"></div>
+        <button class="btn btn-primary" id="barcodeGenBtn" style="width:auto;padding:11px 22px;margin-top:14px;">Générer et imprimer</button>
+      </div>
+      <div class="admin-card" style="max-width:480px;margin-bottom:20px;">
+        <h2>Génération automatique</h2>
+        <p class="sub">Sur le site des envois, sélectionne la référence puis clique sur ce favori : le code-barre est rempli et imprimé automatiquement, sans mot de passe. Si cet onglet Tool Box est déjà ouvert, il est réutilisé.</p>
+        <a id="atelierBarcodeBookmarklet" href="javascript:!function()%7B%22use%20strict%22%3Bvar%20e%3D(window.getSelection%3Fwindow.getSelection().toString()%3A%22%22).trim()%3Bif(e)%7Bvar%20t%3Dwindow.open(%22%22%2C%22toolbox-cevidentia%22)%3Bif(t)%7Bvar%20n%3D!1%3Bwindow.addEventListener(%22message%22%2Cr)%3Bvar%20a%3DsetInterval(function()%7Bif(n)clearInterval(a)%3Belse%20try%7Bt.postMessage(%7Btype%3A%22barcode-ref%22%2Cref%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7D%7D%2C300)%3Btry%7Bt.postMessage(%7Btype%3A%22barcode-ref%22%2Cref%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7DsetTimeout(function()%7Bif(clearInterval(a)%2Cwindow.removeEventListener(%22message%22%2Cr)%2C!n)try%7Bt.location%3D%22https%3A%2F%2Flapdmbycevidentia.netlify.app%2F%3Fbarcode_ref%3D%22%2BencodeURIComponent(e)%7Dcatch(e)%7B%7D%7D%2C1200)%7D%7Dfunction%20r(e)%7Be.data%26%26%22barcode-ref-ack%22%3D%3D%3De.data.type%26%26(n%3D!0%2CclearInterval(a)%2Cwindow.removeEventListener(%22message%22%2Cr))%7D%7D()%3B"
+           class="btn-ghost-link" onclick="return false;" title="Glisse-moi dans tes favoris, ne clique pas ici">🔖 Générer code-barre</a>
+      </div>
+    </div><!-- /atelierSubBarcode -->
 
-      <div class="sub-tabs" style="display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);">
-        <button class="sub-tab-btn active" id="atelierSubTabDeposit" type="button">Dépôt Atelier / SAV</button>
-        <button class="sub-tab-btn" id="atelierSubTabBarcode" type="button">CodeBarre</button>
+    <div id="atelierSubDeposit" style="display:none;">
+
+      <div id="atelierLoginView">
+        <p class="sub" style="margin-bottom:18px;">Réservé aux personnes autorisées à déposer et récupérer les fiches atelier / SAV.</p>
+        <div class="modal-error" id="atelierLoginError">Mot de passe incorrect.</div>
+        <label for="atelierPassword">Mot de passe</label>
+        <input type="password" id="atelierPassword" placeholder="••••••••" style="max-width:280px;">
+        <button class="btn btn-primary" id="atelierLoginBtn" style="width:auto;padding:11px 24px;">Se connecter</button>
       </div>
 
-      <div id="atelierSubDeposit">
+      <div id="atelierMainView" style="display:none;">
 
       <div class="admin-card" style="margin-bottom:20px;">
         <h2>1. Déposer des fiches</h2>
@@ -1406,26 +1423,11 @@
         <div id="atelierArchiveLog"><div class="sub" id="atelierArchiveEmpty">Aucun jour fusionné pour le moment.</div></div>
       </div>
 
-      </div><!-- /atelierSubDeposit -->
-
-      <div id="atelierSubBarcode" style="display:none;">
-        <div class="admin-card" style="max-width:480px;margin-bottom:14px;">
-          <h2>Générateur de code-barres</h2>
-          <label for="barcodeRefInput">Référence</label>
-          <input type="text" id="barcodeRefInput" placeholder="Ex. 00164952">
-          <div class="modal-error" id="barcodeErr"></div>
-          <button class="btn btn-primary" id="barcodeGenBtn" style="width:auto;padding:11px 22px;margin-top:14px;">Générer et imprimer</button>
-        </div>
-        <div class="admin-card" style="max-width:480px;margin-bottom:20px;">
-          <h2>Génération automatique</h2>
-          <p class="sub">Sur le site des envois, sélectionne la référence puis clique sur ce favori : le code-barre est rempli et imprimé automatiquement. Si cet onglet Tool Box est déjà ouvert, il est réutilisé — le mot de passe n'est plus redemandé.</p>
-          <a id="atelierBarcodeBookmarklet" href="javascript:!function()%7B%22use%20strict%22%3Bvar%20e%3D(window.getSelection%3Fwindow.getSelection().toString()%3A%22%22).trim()%3Bif(e)%7Bvar%20t%3Dwindow.open(%22%22%2C%22toolbox-cevidentia%22)%3Bif(t)%7Bvar%20n%3D!1%3Bwindow.addEventListener(%22message%22%2Cr)%3Bvar%20a%3DsetInterval(function()%7Bif(n)clearInterval(a)%3Belse%20try%7Bt.postMessage(%7Btype%3A%22barcode-ref%22%2Cref%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7D%7D%2C300)%3Btry%7Bt.postMessage(%7Btype%3A%22barcode-ref%22%2Cref%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7DsetTimeout(function()%7Bif(clearInterval(a)%2Cwindow.removeEventListener(%22message%22%2Cr)%2C!n)try%7Bt.location%3D%22https%3A%2F%2Flapdmbycevidentia.netlify.app%2F%3Fbarcode_ref%3D%22%2BencodeURIComponent(e)%7Dcatch(e)%7B%7D%7D%2C1200)%7D%7Dfunction%20r(e)%7Be.data%26%26%22barcode-ref-ack%22%3D%3D%3De.data.type%26%26(n%3D!0%2CclearInterval(a)%2Cwindow.removeEventListener(%22message%22%2Cr))%7D%7D()%3B"
-             class="btn-ghost-link" onclick="return false;" title="Glisse-moi dans tes favoris, ne clique pas ici">🔖 Générer code-barre</a>
-        </div>
-      </div>
-
       <button class="btn-ghost" id="atelierLogoutBtn">Se déconnecter</button>
-    </div>
+
+      </div><!-- /atelierMainView -->
+
+    </div><!-- /atelierSubDeposit -->
 
   </div><!-- /viewAtelier -->
 
@@ -5010,7 +5012,7 @@ if(pwChangeBtn){
 
 /* ============ DÉPÔT FICHE ATELIER / SAV ============ */
 const ATELIER_API = '/.netlify/functions/atelier';
-const ATELIER_PASSWORD_FALLBACK = 'Atelier2026'; // repli local, utilisé uniquement quand l'API serveur n'est pas déployée (tests dans Claude)
+const ATELIER_PASSWORD_FALLBACK = 'Teamops2026'; // repli local (aligné sur le mdp Admin par défaut), utilisé uniquement quand l'API serveur n'est pas déployée (tests dans Claude)
 let CURRENT_ATELIER_PASSWORD = null;
 let pendingBarcodeRef = null; // rempli via le lien ?barcode_ref=... (bookmarklet "Générer code-barre")
 const ATELIER_PW_SESSION_KEY = 'toolbox_atelier_pw';
@@ -5031,7 +5033,6 @@ function atelierShowLoginForm(){
   atelierPassword.value = '';
   atelierLoginError.classList.remove('show');
   CURRENT_ATELIER_PASSWORD = null;
-  if(typeof atelierShowSubTab === 'function') atelierShowSubTab('deposit');
 }
 
 // Déconnexion explicite : c'est le seul endroit qui efface la session mémorisée.
@@ -5040,9 +5041,10 @@ function atelierLogout(){
   atelierShowLoginForm();
 }
 
-// Appelé à chaque activation de l'onglet. Si le mot de passe a déjà été saisi dans cet
-// onglet de navigateur, on rouvre directement la session au lieu de le redemander.
-function resetAtelierToLogin(){
+// Appelé quand le sous-onglet "Dépôt Atelier / SAV" est sélectionné (seule zone protégée
+// par mot de passe désormais). Si le mot de passe a déjà été saisi dans cet onglet de
+// navigateur, on rouvre directement la session au lieu de le redemander.
+function atelierEnterDepositTab(){
   let saved = null;
   try{ saved = sessionStorage.getItem(ATELIER_PW_SESSION_KEY); }catch(e){}
   if(saved){
@@ -5050,13 +5052,20 @@ function resetAtelierToLogin(){
     atelierLoginView.style.display = 'none';
     atelierMainView.style.display = 'block';
     atelierRenderPool();
-    atelierRunPendingBarcode();
     return;
   }
   atelierShowLoginForm();
 }
 
-// Exécute la demande de code-barre reçue du bookmarklet, une fois la session ouverte.
+// Appelé à chaque activation de l'onglet Atelier depuis le menu latéral : on retombe
+// toujours sur CodeBarre (accès libre, sans mot de passe) — le Dépôt reste protégé et
+// n'est vérifié que si l'utilisateur clique explicitement sur ce sous-onglet.
+function atelierOnTabOpen(){
+  atelierShowSubTab('barcode');
+  atelierRunPendingBarcode();
+}
+
+// Exécute la demande de code-barre reçue du bookmarklet — aucun mot de passe requis.
 function atelierRunPendingBarcode(){
   if(!pendingBarcodeRef) return;
   const ref = pendingBarcodeRef;
@@ -5754,6 +5763,8 @@ function atelierShowSubTab(which){
   atelierSubBarcode.style.display = isDeposit ? 'none' : 'block';
   atelierSubTabDeposit.classList.toggle('active', isDeposit);
   atelierSubTabBarcode.classList.toggle('active', !isDeposit);
+  // Le Dépôt est protégé par mot de passe ; on ne vérifie/affiche la session qu'à ce moment-là.
+  if(isDeposit) atelierEnterDepositTab();
 }
 atelierSubTabDeposit.addEventListener('click', () => atelierShowSubTab('deposit'));
 atelierSubTabBarcode.addEventListener('click', () => atelierShowSubTab('barcode'));
@@ -5790,7 +5801,19 @@ async function atelierGenerateAndPrintBarcode(){
   try{
     await atelierLoadBarcodeLib();
     document.getElementById('barcodePrintRef').textContent = ref;
-    JsBarcode('#barcodeSvg', ref, { format: 'CODE128', width: 2.4, height: 90, displayValue: false, margin: 0 });
+    const svgEl = document.getElementById('barcodeSvg');
+    JsBarcode(svgEl, ref, { format: 'CODE128', width: 2.4, height: 90, displayValue: false, margin: 0 });
+    // Taille d'impression fixe (~10cm de large) quelle que soit la longueur de la référence :
+    // on fige le viewBox sur la taille naturelle du code-barre généré, puis on impose une
+    // taille physique en mm — le SVG (vectoriel) se redimensionne sans perte, net pour les douchettes.
+    const naturalW = parseFloat(svgEl.getAttribute('width')) || 1;
+    const naturalH = parseFloat(svgEl.getAttribute('height')) || 1;
+    svgEl.setAttribute('viewBox', `0 0 ${naturalW} ${naturalH}`);
+    svgEl.removeAttribute('width');
+    svgEl.removeAttribute('height');
+    const printWidthMm = 100; // ~10 cm
+    svgEl.style.width = printWidthMm + 'mm';
+    svgEl.style.height = ((naturalH / naturalW) * printWidthMm) + 'mm';
     window.print();
   } catch(e){
     barcodeErr.textContent = e.message || 'Référence invalide pour un code-barres Code 128.';
@@ -7268,7 +7291,7 @@ const TABS = [
   { btn: tabMontures, view: viewMontures, title: 'Hauteur Cote B', subtitle: 'Recherchez une monture, la hauteur se calcule automatiquement' },
   { btn: tabSav, view: viewSav, title: 'SAV Lunettes', subtitle: 'Formulaire de demande au service après-vente C·Evidentia' },
   { btn: tabRa, view: viewRa, title: 'Procédure RA', subtitle: 'RA et double équipement VL/VP par mutuelle' },
-  { btn: tabAtelier, view: viewAtelier, title: 'Dépôt Fiches Atelier', subtitle: 'Dépôt, tri et fusion des fiches atelier (accès protégé)', onActivate: resetAtelierToLogin },
+  { btn: tabAtelier, view: viewAtelier, title: 'Atelier', subtitle: 'Code-barres en accès libre — dépôt et fusion des fiches protégés par mot de passe', onActivate: atelierOnTabOpen },
   { btn: tabSuivi, view: viewSuivi, title: 'Suivi Fournisseur', subtitle: '', onActivate: loadSuiviFournisseur },
   { btn: tabAdmin, view: viewAdmin, title: 'Admin', subtitle: 'Mise à jour des bases montures et préconisations (accès protégé)', onActivate: resetAdminToLogin },
 ];
@@ -8452,12 +8475,12 @@ loadSavMemos();
 /* ---- Bookmarklet "Générer code-barre" ----
    Deux chemins d'entrée :
    1. ?barcode_ref=... quand le bookmarklet a dû ouvrir un nouvel onglet (Tool Box fermé).
-   2. Un postMessage {type:'barcode-ref'} quand un onglet Tool Box était déjà ouvert : on
-      réutilise la session atelier en cours, donc aucun mot de passe à retaper. */
+   2. Un postMessage {type:'barcode-ref'} quand un onglet Tool Box était déjà ouvert.
+   Aucun mot de passe requis dans les deux cas — seul le Dépôt Atelier/SAV est protégé. */
 function atelierHandleBarcodeRequest(ref){
   pendingBarcodeRef = String(ref);
   const atelierEntry = TABS.find(t => t.btn === tabAtelier);
-  if(atelierEntry) activateTab(atelierEntry); // déclenche resetAtelierToLogin -> session ou login
+  if(atelierEntry) activateTab(atelierEntry); // déclenche atelierOnTabOpen -> génère et imprime directement
 }
 
 (function initBarcodeDeepLink(){
