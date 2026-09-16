@@ -116,6 +116,7 @@
   }
 
   .wrap{flex:1;min-width:0;max-width:920px;margin:0 auto;padding:32px 24px 80px;}
+  .wrap.wrap-wide{max-width:1400px;}
 
   /* Header */
   .hdr{margin-bottom:26px;}
@@ -751,7 +752,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.3</div>
+          <div class="brand-version">V3.4</div>
         </div>
       </div>
     </div>
@@ -837,14 +838,15 @@
        s'élargissent au gré du contenu et la fin de ligne part hors champ. -->
   <table id="suiviTable" style="width:100%;table-layout:fixed;border-collapse:collapse;display:none;min-width:860px;">
     <colgroup>
-      <col style="width:10%"><col style="width:13%"><col style="width:14%"><col style="width:10%">
-      <col style="width:14%"><col style="width:11%"><col style="width:8%"><col style="width:10%">
-      <col style="width:10%">
+      <col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:12%">
+      <col style="width:9%"><col style="width:11%"><col style="width:9%"><col style="width:7%">
+      <col style="width:8%"><col style="width:10%">
     </colgroup>
     <thead>
       <tr style="text-align:left;border-bottom:1.5px solid var(--line);">
         <th class="suivi-th">Job <span class="suivi-sort" data-sort="job"></span></th>
-        <th class="suivi-th">Date <span class="suivi-sort" data-sort="date"></span></th>
+        <th class="suivi-th">Date dossier <span class="suivi-sort" data-sort="date"></span></th>
+        <th class="suivi-th">Date commande</th>
         <th class="suivi-th">Client</th>
         <th class="suivi-th">Fourn. <span class="suivi-sort" data-sort="fournisseur"></span></th>
         <th class="suivi-th">Réf. monture</th>
@@ -1374,7 +1376,7 @@
 
           <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;">
             <b style="font-size:12.5px;">📝 Modèle — Relance fournisseur</b>
-            <p class="sub" style="margin:4px 0 8px;">Variables disponibles : <code>{{job}}</code>, <code>{{client}}</code>, <code>{{ref_monture}}</code>, <code>{{date_dossier}}</code>, <code>{{fournisseur}}</code></p>
+            <p class="sub" style="margin:4px 0 8px;">Variables disponibles : <code>{{job}}</code>, <code>{{client}}</code>, <code>{{ref_monture}}</code>, <code>{{date_commande}}</code>, <code>{{date_dossier}}</code>, <code>{{code_client}}</code>, <code>{{fournisseur}}</code></p>
             <label for="suiviTplFournSubject" style="display:block;font-size:12px;margin-bottom:4px;">Objet</label>
             <input type="text" id="suiviTplFournSubject" style="width:100%;margin-bottom:10px;">
             <label for="suiviTplFournBody" style="display:block;font-size:12px;margin-bottom:4px;">Corps du message</label>
@@ -4887,7 +4889,7 @@ const TABS = [
   { btn: tabMontures, view: viewMontures, title: 'Hauteur Cote B', subtitle: 'Recherchez une monture, la hauteur se calcule automatiquement' },
   { btn: tabSav, view: viewSav, title: 'SAV Lunettes', subtitle: 'Formulaire de demande au service après-vente C·Evidentia' },
   { btn: tabAtelier, view: viewAtelier, title: 'Atelier', subtitle: 'Code-barres, dépôt et fusion des fiches (accès Operation/Administrateur)', onActivate: atelierOnTabOpen },
-  { btn: tabSuivi, view: viewSuivi, title: 'Suivi Fournisseur', subtitle: '', onActivate: loadSuiviFournisseur },
+  { btn: tabSuivi, view: viewSuivi, title: 'Suivi Fournisseur', subtitle: '', onActivate: loadSuiviFournisseur, wide: true },
   { btn: tabAdmin, view: viewAdmin, title: 'Administrateur', subtitle: 'Mise à jour des bases montures et préconisations (accès protégé)', onActivate: adminOnTabOpen },
 ];
 
@@ -4899,6 +4901,10 @@ function activateTab(target){
   });
   pageTitle.textContent = target.title;
   pageSubtitle.textContent = target.subtitle;
+  // Le Suivi Fournisseur a besoin de plus de place que la largeur de lecture confortable
+  // utilisée partout ailleurs (920px) : sans ça, son tableau doit défiler horizontalement
+  // alors qu'il tiendrait très bien sur la largeur réelle de l'écran.
+  document.querySelector('.wrap').classList.toggle('wrap-wide', !!target.wide);
   if(target.onActivate) target.onActivate();
 }
 
@@ -4974,6 +4980,11 @@ function suiviFournisseurOptions(courant){
    Operation/Admin, stockées via AppStorage (scope 'operation'), clé 'suivi-emails'. */
 let SUIVI_EMAILS = { fournisseurs: {}, service_client: '' };
 
+// Code client (notre référence chez chaque fournisseur), par valeur de fournisseur —
+// éditable dans le même panneau que les emails, stocké via AppStorage (scope 'operation'),
+// clé 'suivi-fournisseur-codes'. Utilisé dans le mail de relance ({{code_client}}).
+let SUIVI_FOURN_CODES = {};
+
 // Modèles d'email par défaut (secours + valeur de "Réinitialiser ce modèle"). Éditables par
 // Operation/Admin dans le panneau "Emails de contact", stockés via AppStorage (scope
 // 'operation'), clé 'suivi-email-templates'. Variables remplacées par suiviFillTemplate().
@@ -4983,10 +4994,11 @@ const SUIVI_EMAIL_TEMPLATES_DEFAULT = {
     body: [
       'Bonjour,', '',
       "Merci de nous indiquer l'état d'avancement de la commande suivante :", '',
+      'Notre code client : {{code_client}}',
       'Job : {{job}}',
       'Client : {{client}}',
       'Référence monture : {{ref_monture}}',
-      'Date du dossier : {{date_dossier}}', '',
+      'Date de commande : {{date_commande}}', '',
       'Cordialement,'
     ].join('\n')
   },
@@ -5036,6 +5048,11 @@ async function loadSuiviEmails(){
     const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
     if(Array.isArray(parsed)) SUIVI_FOURNISSEURS_CUSTOM = parsed;
   } catch(e){ /* pas encore configuré / API indisponible : on garde la liste de base seule */ }
+  try{
+    const { value } = await AppStorage.get('suivi-fournisseur-codes');
+    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
+    if(parsed && typeof parsed === 'object') SUIVI_FOURN_CODES = parsed;
+  } catch(e){ /* pas encore configuré / API indisponible : on garde les codes vides */ }
   SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.concat(SUIVI_FOURNISSEURS_CUSTOM);
   renderSuiviEmailConfigFields();
 }
@@ -5048,6 +5065,8 @@ function renderSuiviEmailConfigFields(){
       <label for="suiviEmailFourn-${f.value}" style="font-size:12px;">${escapeHtml(f.label)}</label>
       <input type="text" id="suiviEmailFourn-${f.value}" data-fourn="${f.value}" placeholder="email@fournisseur.fr"
              value="${escapeHtml(SUIVI_EMAILS.fournisseurs[f.value] || '')}">
+      <input type="text" id="suiviCodeFourn-${f.value}" data-code-fourn="${f.value}" placeholder="Notre code client"
+             style="margin-top:4px;" value="${escapeHtml(SUIVI_FOURN_CODES[f.value] || '')}">
     </div>
   `).join('');
   const svcInput = document.getElementById('suiviServiceClientEmail');
@@ -5089,6 +5108,12 @@ document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', asy
   const service_client = (document.getElementById('suiviServiceClientEmail').value || '').trim();
   SUIVI_EMAILS = { fournisseurs, service_client };
 
+  const codes = {};
+  document.querySelectorAll('#suiviFournEmailFields input[data-code-fourn]').forEach(input => {
+    if(input.value.trim()) codes[input.dataset.codeFourn] = input.value.trim();
+  });
+  SUIVI_FOURN_CODES = codes;
+
   SUIVI_EMAIL_TEMPLATES = {
     fournisseur: {
       subject: document.getElementById('suiviTplFournSubject').value || SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur.subject,
@@ -5103,6 +5128,7 @@ document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', asy
   try{
     await AppStorage.set('suivi-emails', JSON.stringify(SUIVI_EMAILS), 'operation');
     await AppStorage.set('suivi-email-templates', JSON.stringify(SUIVI_EMAIL_TEMPLATES), 'operation');
+    await AppStorage.set('suivi-fournisseur-codes', JSON.stringify(SUIVI_FOURN_CODES), 'operation');
     savedEl.style.display = 'inline';
     setTimeout(() => { savedEl.style.display = 'none'; }, 2500);
   } catch(e){
@@ -5202,6 +5228,8 @@ function suiviWireEmailButtons(body){
         client: e.client,
         ref_monture: e.ref_monture,
         date_dossier: e.date_dossier,
+        date_commande: e.date_commande,
+        code_client: SUIVI_FOURN_CODES[e.fournisseur],
         fournisseur: fournisseurLabel
       };
       const subject = suiviFillTemplate(SUIVI_EMAIL_TEMPLATES.fournisseur.subject, vars);
@@ -5307,6 +5335,10 @@ function renderSuiviTable(){
                data-job="${escapeHtml(job)}" data-field="date_dossier" title="Date du dossier">
       </td>
       <td>
+        <input type="date" class="suivi-date-input" value="${escapeHtml(e.date_commande || '')}"
+               data-job="${escapeHtml(job)}" data-field="date_commande" title="Date de commande (auprès du fournisseur)">
+      </td>
+      <td>
         <input type="text" value="${escapeHtml(e.client || '')}" title="${escapeHtml(e.client || '')}" placeholder="À compléter"
                data-job="${escapeHtml(job)}" data-field="client" class="suivi-field-input">
       </td>
@@ -5351,7 +5383,7 @@ function renderSuiviTable(){
       </td>
     </tr>
     <tr class="suivi-obs-row${prio ? ' prio-'+prio : ''}">
-      <td colspan="9">
+      <td colspan="10">
         <textarea class="suivi-obs-area" data-job="${escapeHtml(job)}"
                   placeholder="Observation…">${escapeHtml(e.observation || '')}</textarea>
       </td>
@@ -5402,11 +5434,12 @@ function renderSuiviTable(){
     });
   });
 
-  // Date du dossier : saisie manuelle via le calendrier du navigateur.
-  // Re-rendu seulement si le tableau est justement trié par date.
+  // Date du dossier + Date de commande : saisie manuelle via le calendrier du navigateur.
+  // Re-rendu seulement si le tableau est justement trié par date (tri basé sur la date du
+  // dossier uniquement, la date de commande n'affecte pas l'ordre).
   body.querySelectorAll('.suivi-date-input').forEach(input => {
     input.addEventListener('change', async () => {
-      const ok = await majChamp(input.dataset.job, 'date_dossier', input.value);
+      const ok = await majChamp(input.dataset.job, input.dataset.field, input.value);
       if(ok && suiviSort.key === 'date') renderSuiviTable();
     });
   });
