@@ -473,13 +473,13 @@
   .pd-bookmarklet-hint{font-size:12px;color:var(--ink-soft);}
   /* Champs Client / Réf. monture du Suivi Fournisseur : discrets tant qu'ils sont
      remplis, visibles comme "à compléter" quand ils sont vides. */
-  .suivi-field-input{
+  .suivi-field-input, .suivi-statut-input{
     width:100%;border:1px solid transparent;border-radius:6px;padding:6px 7px;
     font-size:13px;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);background:transparent;
   }
-  .suivi-field-input::placeholder{color:var(--ink-soft);font-style:italic;font-size:12px;}
-  .suivi-field-input:hover{border-color:var(--line);}
-  .suivi-field-input:focus{outline:none;border-color:var(--brass);background:#fff;}
+  .suivi-field-input::placeholder, .suivi-statut-input::placeholder{color:var(--ink-soft);font-style:italic;font-size:12px;}
+  .suivi-field-input:hover, .suivi-statut-input:hover{border-color:var(--line);}
+  .suivi-field-input:focus, .suivi-statut-input:focus{outline:none;border-color:var(--brass);background:#fff;}
   .suivi-fourn-select{
     border:1px solid var(--line);border-radius:6px;padding:5px 6px;font-size:12.5px;
     font-family:'IBM Plex Sans',sans-serif;color:var(--ink);background:var(--panel);cursor:pointer;
@@ -492,6 +492,7 @@
   #suiviTable td:last-child{overflow:visible;padding:7px 0;}
   #suiviTable td.suivi-cell-texte{white-space:nowrap;}
   #suiviTable .suivi-field-input,
+  #suiviTable .suivi-statut-input,
   #suiviTable .suivi-date-input,
   #suiviTable .suivi-fourn-select,
   #suiviTable .suivi-prio-select{width:100%;box-sizing:border-box;min-width:0;font-size:12px;padding:5px 4px;}
@@ -750,7 +751,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.2</div>
+          <div class="brand-version">V3.3</div>
         </div>
       </div>
     </div>
@@ -764,7 +765,7 @@
         <select id="roleLoginUser">
           <option value="">Utilisateur…</option>
           <option value="operation">Operation</option>
-          <option value="admin">Admin</option>
+          <option value="admin">Administrateur</option>
         </select>
         <input type="password" id="roleLoginPw" placeholder="Mot de passe">
         <button type="button" class="role-login-btn" id="roleLoginBtn">Se connecter</button>
@@ -804,9 +805,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 4 5-8"/></svg>
         <span>Suivi Fournisseur</span>
       </button>
-      <button class="nav-item" id="tabAdmin" type="button" title="Admin" data-role="admin" style="display:none;">
+      <button class="nav-item" id="tabAdmin" type="button" title="Administrateur" data-role="admin" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-        <span>Admin</span>
+        <span>Administrateur</span>
       </button>
     </nav>
   </aside>
@@ -826,37 +827,7 @@
     <button id="suiviAddJobBtn" type="button" class="btn-ghost-link">+ Ajouter au suivi</button>
   </div>
 
-  <details class="admin-card" id="suiviEmailConfig" style="max-width:640px;margin-bottom:16px;">
-    <summary style="cursor:pointer;font-weight:600;font-size:13.5px;">✉️ Emails de contact (relance fournisseur / alerte indisponibilité)</summary>
-    <p class="sub" style="margin-top:10px;">Utilisés pour pré-remplir les brouillons d'email ouverts depuis chaque ligne du tableau ci-dessous.</p>
-    <div id="suiviFournEmailFields" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:10px 0;"></div>
-    <label for="suiviServiceClientEmail" style="display:block;font-size:12px;margin-bottom:4px;">Email service client (alerte monture indisponible)</label>
-    <input type="text" id="suiviServiceClientEmail" placeholder="ex. sav@cevidentia.fr" style="width:100%;">
-
-    <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;">
-      <b style="font-size:12.5px;">📝 Modèle — Relance fournisseur</b>
-      <p class="sub" style="margin:4px 0 8px;">Variables disponibles : <code>{{job}}</code>, <code>{{client}}</code>, <code>{{ref_monture}}</code>, <code>{{date_dossier}}</code>, <code>{{fournisseur}}</code></p>
-      <label for="suiviTplFournSubject" style="display:block;font-size:12px;margin-bottom:4px;">Objet</label>
-      <input type="text" id="suiviTplFournSubject" style="width:100%;margin-bottom:10px;">
-      <label for="suiviTplFournBody" style="display:block;font-size:12px;margin-bottom:4px;">Corps du message</label>
-      <textarea id="suiviTplFournBody" rows="7" style="width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1.5px solid var(--line);border-radius:var(--radius);padding:10px 12px;box-sizing:border-box;"></textarea>
-      <button class="btn-ghost-link" id="suiviTplFournResetBtn" type="button" style="margin-top:6px;">↺ Réinitialiser ce modèle</button>
-    </div>
-
-    <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;">
-      <b style="font-size:12.5px;">📝 Modèle — Alerte monture indisponible</b>
-      <p class="sub" style="margin:4px 0 8px;">Variables disponibles : <code>{{job}}</code>, <code>{{client}}</code>, <code>{{ref_monture}}</code>, <code>{{fournisseur}}</code></p>
-      <label for="suiviTplIndispoSubject" style="display:block;font-size:12px;margin-bottom:4px;">Objet</label>
-      <input type="text" id="suiviTplIndispoSubject" style="width:100%;margin-bottom:10px;">
-      <label for="suiviTplIndispoBody" style="display:block;font-size:12px;margin-bottom:4px;">Corps du message</label>
-      <textarea id="suiviTplIndispoBody" rows="7" style="width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1.5px solid var(--line);border-radius:var(--radius);padding:10px 12px;box-sizing:border-box;"></textarea>
-      <button class="btn-ghost-link" id="suiviTplIndispoResetBtn" type="button" style="margin-top:6px;">↺ Réinitialiser ce modèle</button>
-    </div>
-
-    <div class="modal-error" id="suiviEmailConfigError" style="display:none;margin-top:8px;"></div>
-    <button class="btn-ghost" id="suiviEmailConfigSaveBtn" type="button" style="margin-top:12px;">Enregistrer les emails et modèles</button>
-    <span id="suiviEmailConfigSaved" style="display:none;margin-left:10px;color:#16A34A;font-size:12.5px;">Enregistré ✓</span>
-  </details>
+  <p class="sub" style="margin:-4px 0 14px;">Emails de contact fournisseurs/service client et modèles de mails : configurables dans l'onglet <b>Administrateur</b> &gt; Fournisseurs.</p>
 
   <div id="suiviLoading" style="font-size:13px;color:var(--ink-soft);">Chargement…</div>
 
@@ -1212,6 +1183,7 @@
         <button class="admin-subtab-btn" data-subtab="lentilles" type="button">Lentilles</button>
         <button class="admin-subtab-btn" data-subtab="formulas" type="button">Règles de calcul</button>
         <button class="admin-subtab-btn" data-subtab="memos" type="button">Mémos SAV</button>
+        <button class="admin-subtab-btn" data-subtab="fournisseurs" type="button">Fournisseurs</button>
         <button class="admin-subtab-btn" data-subtab="passwords" type="button">Mots de passe</button>
       </div>
 
@@ -1374,9 +1346,61 @@
       </div>
       </div>
 
+      <div class="admin-subview" id="adminSubview-fournisseurs" style="display:none;">
+        <div class="admin-card" style="max-width:640px;margin-bottom:16px;">
+          <h2>Ajouter un fournisseur</h2>
+          <p class="sub">Le fournisseur ajouté apparaît ensuite dans le menu déroulant "Fourn." de chaque ligne du Suivi Fournisseur.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+            <div style="flex:1;min-width:180px;">
+              <label for="suiviNewFournName" style="display:block;font-size:12px;margin-bottom:4px;">Nom du fournisseur</label>
+              <input type="text" id="suiviNewFournName" placeholder="Ex. Essilor" style="width:100%;">
+            </div>
+            <div style="flex:1;min-width:220px;">
+              <label for="suiviNewFournEmail" style="display:block;font-size:12px;margin-bottom:4px;">Email (facultatif — modifiable ensuite ci-dessous)</label>
+              <input type="text" id="suiviNewFournEmail" placeholder="ex. commandes@fournisseur.fr" style="width:100%;">
+            </div>
+            <button class="btn-ghost" id="suiviNewFournAddBtn" type="button">+ Ajouter</button>
+          </div>
+          <div class="modal-error" id="suiviNewFournError" style="display:none;margin-top:8px;"></div>
+          <span id="suiviNewFournSaved" style="display:none;margin-top:8px;color:#16A34A;font-size:12.5px;">Fournisseur ajouté ✓</span>
+        </div>
+
+        <div class="admin-card" id="suiviEmailConfig" style="max-width:640px;margin-bottom:16px;">
+          <h2>✉️ Emails de contact (relance fournisseur / alerte indisponibilité)</h2>
+          <p class="sub">Utilisés pour pré-remplir les brouillons d'email ouverts depuis chaque ligne du Suivi Fournisseur.</p>
+          <div id="suiviFournEmailFields" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:10px 0;"></div>
+          <label for="suiviServiceClientEmail" style="display:block;font-size:12px;margin-bottom:4px;">Email service client (alerte monture indisponible)</label>
+          <input type="text" id="suiviServiceClientEmail" placeholder="ex. sav@cevidentia.fr" style="width:100%;">
+
+          <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;">
+            <b style="font-size:12.5px;">📝 Modèle — Relance fournisseur</b>
+            <p class="sub" style="margin:4px 0 8px;">Variables disponibles : <code>{{job}}</code>, <code>{{client}}</code>, <code>{{ref_monture}}</code>, <code>{{date_dossier}}</code>, <code>{{fournisseur}}</code></p>
+            <label for="suiviTplFournSubject" style="display:block;font-size:12px;margin-bottom:4px;">Objet</label>
+            <input type="text" id="suiviTplFournSubject" style="width:100%;margin-bottom:10px;">
+            <label for="suiviTplFournBody" style="display:block;font-size:12px;margin-bottom:4px;">Corps du message</label>
+            <textarea id="suiviTplFournBody" rows="7" style="width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1.5px solid var(--line);border-radius:var(--radius);padding:10px 12px;box-sizing:border-box;"></textarea>
+            <button class="btn-ghost-link" id="suiviTplFournResetBtn" type="button" style="margin-top:6px;">↺ Réinitialiser ce modèle</button>
+          </div>
+
+          <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;">
+            <b style="font-size:12.5px;">📝 Modèle — Alerte monture indisponible</b>
+            <p class="sub" style="margin:4px 0 8px;">Variables disponibles : <code>{{job}}</code>, <code>{{client}}</code>, <code>{{ref_monture}}</code>, <code>{{fournisseur}}</code></p>
+            <label for="suiviTplIndispoSubject" style="display:block;font-size:12px;margin-bottom:4px;">Objet</label>
+            <input type="text" id="suiviTplIndispoSubject" style="width:100%;margin-bottom:10px;">
+            <label for="suiviTplIndispoBody" style="display:block;font-size:12px;margin-bottom:4px;">Corps du message</label>
+            <textarea id="suiviTplIndispoBody" rows="7" style="width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1.5px solid var(--line);border-radius:var(--radius);padding:10px 12px;box-sizing:border-box;"></textarea>
+            <button class="btn-ghost-link" id="suiviTplIndispoResetBtn" type="button" style="margin-top:6px;">↺ Réinitialiser ce modèle</button>
+          </div>
+
+          <div class="modal-error" id="suiviEmailConfigError" style="display:none;margin-top:8px;"></div>
+          <button class="btn-ghost" id="suiviEmailConfigSaveBtn" type="button" style="margin-top:12px;">Enregistrer les emails et modèles</button>
+          <span id="suiviEmailConfigSaved" style="display:none;margin-left:10px;color:#16A34A;font-size:12.5px;">Enregistré ✓</span>
+        </div>
+      </div>
+
       <div class="admin-subview" id="adminSubview-passwords" style="display:none;">
       <div class="admin-card" id="pwChangeCard" style="max-width:420px;">
-        <h2>Changer le mot de passe Admin</h2>
+        <h2>Changer le mot de passe Administrateur</h2>
         <div id="pwChangeUnavailable" class="modal-error" style="display:none;">
           Cette fonctionnalité nécessite que le site soit déployé sur Netlify avec les fonctions serveur actives (elle est désactivée dans cette prévisualisation).
         </div>
@@ -1393,7 +1417,7 @@
 
       <div class="admin-card" id="atelierPwChangeCard" style="max-width:420px;margin-top:24px;">
         <h2>Changer le mot de passe Operation</h2>
-        <p class="sub">Mot de passe du rôle Operation (onglets Atelier et Suivi Fournisseur). Indépendant du mot de passe Admin ci-dessus — initialisé sur la même valeur par défaut, mais modifiable séparément ici.</p>
+        <p class="sub">Mot de passe du rôle Operation (onglets Atelier et Suivi Fournisseur). Indépendant du mot de passe Administrateur ci-dessus — initialisé sur la même valeur par défaut, mais modifiable séparément ici.</p>
         <div class="modal-error" id="atelierPwChangeError"></div>
         <div class="modal-success" id="atelierPwChangeSuccess"></div>
         <label for="atelierPwOld">Mot de passe actuel (Operation)</label>
@@ -2219,7 +2243,7 @@ function formatNum(n){
 // Atelier / Suivi Fournisseur (Operation ou Admin) et Admin (Admin seul) n'apparaissent
 // dans le menu qu'une fois le rôle requis atteint — voir data-role sur les .nav-item.
 const ROLE_SESSION_KEY = 'toolbox_role_session'; // mémorisé pour cet onglet navigateur uniquement
-const ROLE_LABELS = { operation: 'Operation', admin: 'Admin' };
+const ROLE_LABELS = { operation: 'Operation', admin: 'Administrateur' };
 let CURRENT_ROLE = 'opticien';
 
 const roleLoginForm = document.getElementById('roleLoginForm');
@@ -2328,6 +2352,9 @@ function adminOnTabOpen(){
   updatePasswordSectionAvailability();
   document.querySelectorAll('.admin-subtab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
   document.querySelectorAll('.admin-subview').forEach((v,i) => v.style.display = i===0 ? 'block' : 'none');
+  // Le panneau Fournisseurs vit ici même si l'onglet Suivi Fournisseur n'a encore jamais
+  // été ouvert cette session : on charge ses données dans tous les cas.
+  loadSuiviEmails();
 }
 
 function updatePasswordSectionAvailability(){
@@ -4859,9 +4886,9 @@ const TABS = [
   { btn: tabPd, view: viewPd, title: 'Prise De Mesure', subtitle: 'Calibrez avec une carte bancaire ou Vitale, positionnez les repères' },
   { btn: tabMontures, view: viewMontures, title: 'Hauteur Cote B', subtitle: 'Recherchez une monture, la hauteur se calcule automatiquement' },
   { btn: tabSav, view: viewSav, title: 'SAV Lunettes', subtitle: 'Formulaire de demande au service après-vente C·Evidentia' },
-  { btn: tabAtelier, view: viewAtelier, title: 'Atelier', subtitle: 'Code-barres, dépôt et fusion des fiches (accès Operation/Admin)', onActivate: atelierOnTabOpen },
+  { btn: tabAtelier, view: viewAtelier, title: 'Atelier', subtitle: 'Code-barres, dépôt et fusion des fiches (accès Operation/Administrateur)', onActivate: atelierOnTabOpen },
   { btn: tabSuivi, view: viewSuivi, title: 'Suivi Fournisseur', subtitle: '', onActivate: loadSuiviFournisseur },
-  { btn: tabAdmin, view: viewAdmin, title: 'Admin', subtitle: 'Mise à jour des bases montures et préconisations (accès protégé)', onActivate: adminOnTabOpen },
+  { btn: tabAdmin, view: viewAdmin, title: 'Administrateur', subtitle: 'Mise à jour des bases montures et préconisations (accès protégé)', onActivate: adminOnTabOpen },
 ];
 
 function activateTab(target){
@@ -4905,13 +4932,30 @@ async function loadSuiviFournisseur(){
 /* Fournisseurs proposés sur chaque ligne du suivi. La valeur stockée reste en
    minuscules ; un fournisseur enregistré autrefois mais absent de cette liste
    (ex. "minima") est ajouté à la volée pour ne jamais être perdu silencieusement. */
-const SUIVI_FOURNISSEURS = [
+const SUIVI_FOURNISSEURS_BASE = [
   { value:'opal',   label:'OPAL' },
   { value:'luxo',   label:'LUXO' },
   { value:'adcl',   label:'ADCL' },
   { value:'french', label:'FRENCH' },
   { value:'pac',    label:'PAC' },
 ];
+// Fournisseurs ajoutés depuis Admin > Fournisseurs (nom + email), en plus de la liste
+// de base ci-dessus. Persistés via AppStorage, clé 'suivi-fournisseurs-custom'.
+let SUIVI_FOURNISSEURS_CUSTOM = [];
+let SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.slice();
+
+// Identifiant technique stable pour un fournisseur ajouté à la main : version normalisée
+// (sans accent/espace) du nom saisi, avec un suffixe numérique en cas de collision.
+function suiviSlug(str){
+  const base = (str || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'fournisseur';
+  let slug = base, n = 2;
+  while(SUIVI_FOURNISSEURS.some(f => f.value === slug)){
+    slug = `${base}_${n}`;
+    n++;
+  }
+  return slug;
+}
 
 function suiviFournisseurOptions(courant){
   const val = (courant || '').trim();
@@ -4987,6 +5031,12 @@ async function loadSuiviEmails(){
       };
     }
   } catch(e){ /* pas encore configuré / API indisponible : on garde les modèles par défaut */ }
+  try{
+    const { value } = await AppStorage.get('suivi-fournisseurs-custom');
+    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
+    if(Array.isArray(parsed)) SUIVI_FOURNISSEURS_CUSTOM = parsed;
+  } catch(e){ /* pas encore configuré / API indisponible : on garde la liste de base seule */ }
+  SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.concat(SUIVI_FOURNISSEURS_CUSTOM);
   renderSuiviEmailConfigFields();
 }
 
@@ -5027,8 +5077,8 @@ document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', asy
   const savedEl = document.getElementById('suiviEmailConfigSaved');
   errEl.style.display = 'none';
   savedEl.style.display = 'none';
-  if(CURRENT_ROLE === 'opticien'){
-    errEl.textContent = "Connecte-toi en Operation ou Admin (sous le logo Tool Box) pour modifier ces adresses et modèles.";
+  if(CURRENT_ROLE !== 'admin'){
+    errEl.textContent = "Connecte-toi en Administrateur (sous le logo Tool Box) pour modifier ces adresses et modèles.";
     errEl.style.display = 'block';
     return;
   }
@@ -5056,6 +5106,53 @@ document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', asy
     savedEl.style.display = 'inline';
     setTimeout(() => { savedEl.style.display = 'none'; }, 2500);
   } catch(e){
+    errEl.textContent = "Impossible d'enregistrer : " + e.message;
+    errEl.style.display = 'block';
+  }
+});
+
+// Création d'un fournisseur depuis Admin > Fournisseurs : ajouté à SUIVI_FOURNISSEURS
+// (donc au menu déroulant du Suivi Fournisseur) et, si un email est fourni, à SUIVI_EMAILS
+// tout de suite — pas besoin de ressaisir l'email juste après dans le panneau du dessous.
+document.getElementById('suiviNewFournAddBtn').addEventListener('click', async () => {
+  const errEl = document.getElementById('suiviNewFournError');
+  const savedEl = document.getElementById('suiviNewFournSaved');
+  errEl.style.display = 'none';
+  savedEl.style.display = 'none';
+  if(CURRENT_ROLE !== 'admin'){
+    errEl.textContent = "Connecte-toi en Administrateur (sous le logo Tool Box) pour ajouter un fournisseur.";
+    errEl.style.display = 'block';
+    return;
+  }
+  const nameInput = document.getElementById('suiviNewFournName');
+  const emailInput = document.getElementById('suiviNewFournEmail');
+  const name = nameInput.value.trim();
+  const email = emailInput.value.trim();
+  if(!name){
+    errEl.textContent = 'Le nom du fournisseur est obligatoire.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const value = suiviSlug(name);
+  SUIVI_FOURNISSEURS_CUSTOM.push({ value, label: name });
+  SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.concat(SUIVI_FOURNISSEURS_CUSTOM);
+  if(email) SUIVI_EMAILS.fournisseurs[value] = email;
+
+  try{
+    await AppStorage.set('suivi-fournisseurs-custom', JSON.stringify(SUIVI_FOURNISSEURS_CUSTOM), 'operation');
+    if(email) await AppStorage.set('suivi-emails', JSON.stringify(SUIVI_EMAILS), 'operation');
+    nameInput.value = '';
+    emailInput.value = '';
+    renderSuiviEmailConfigFields();
+    renderSuiviTable();
+    savedEl.style.display = 'inline';
+    setTimeout(() => { savedEl.style.display = 'none'; }, 2500);
+  } catch(e){
+    // Retour en arrière si l'enregistrement échoue, pour ne pas laisser l'app dans un
+    // état incohérent avec ce que le serveur a réellement conservé.
+    SUIVI_FOURNISSEURS_CUSTOM.pop();
+    SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.concat(SUIVI_FOURNISSEURS_CUSTOM);
+    if(email) delete SUIVI_EMAILS.fournisseurs[value];
     errEl.textContent = "Impossible d'enregistrer : " + e.message;
     errEl.style.display = 'block';
   }
@@ -5220,7 +5317,10 @@ function renderSuiviTable(){
         <input type="text" value="${escapeHtml(e.ref_monture || '')}" title="${escapeHtml(e.ref_monture || '')}" placeholder="À compléter"
                data-job="${escapeHtml(job)}" data-field="ref_monture" class="suivi-field-input">
       </td>
-      <td class="suivi-cell-texte" style="font-size:12px;${statutStyle}" title="${escapeHtml(statut)}">${escapeHtml(statut || '—')}</td>
+      <td>
+        <input type="text" class="suivi-statut-input" value="${escapeHtml(statut)}" placeholder="Auto ou saisie manuelle"
+               data-job="${escapeHtml(job)}" title="Statut (renseigné automatiquement ou à la main)" style="${statutStyle}">
+      </td>
       <td class="suivi-cell-texte" style="font-size:11.5px;color:var(--ink-soft);">${escapeHtml(e.derniere_verification || '—')}</td>
       <td>
         <select class="suivi-prio-select" data-job="${escapeHtml(job)}" title="Anomalie / urgence">
@@ -5266,7 +5366,7 @@ function renderSuiviTable(){
   // Enregistrement commun à tous les champs modifiables de la ligne.
   async function majChamp(job, champ, valeur){
     if(CURRENT_ROLE === 'opticien'){
-      alert("Connecte-toi en Operation ou Admin (sous le logo Tool Box) pour modifier le suivi.");
+      alert("Connecte-toi en Operation ou Administrateur (sous le logo Tool Box) pour modifier le suivi.");
       renderSuiviTable();
       return false;
     }
@@ -5311,6 +5411,18 @@ function renderSuiviTable(){
     });
   });
 
+  // Statut fournisseur : normalement rempli par une future récupération automatique
+  // (aujourd'hui en pause), mais toujours modifiable à la main — utile quand il n'y a
+  // aucune donnée ou que le fournisseur ne répond que par email. Re-rendu après
+  // enregistrement pour appliquer tout de suite la couleur (expédiée/livrée en vert,
+  // annulée/non identifiée en rouge).
+  body.querySelectorAll('.suivi-statut-input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const ok = await majChamp(input.dataset.job, 'statut_fournisseur', input.value.trim());
+      if(ok) renderSuiviTable();
+    });
+  });
+
   // Saisie manuelle de Client / Réf. monture : indispensable pour les commandes
   // anticipées, pas encore validées chez C'Evidentia et donc introuvables par la
   // recherche automatique. Ces champs restent modifiables même une fois remplis.
@@ -5329,7 +5441,7 @@ function renderSuiviTable(){
 
 async function deleteSuiviJob(job){
   if(CURRENT_ROLE === 'opticien'){
-    alert("Connecte-toi en Operation ou Admin (sous le logo Tool Box) pour supprimer un Job.");
+    alert("Connecte-toi en Operation ou Administrateur (sous le logo Tool Box) pour supprimer un Job.");
     return;
   }
   if(!confirm(`Supprimer le Job ${job} du suivi ? (dossier clos)`)) return;
@@ -5351,7 +5463,7 @@ suiviAddJobBtn.addEventListener('click', async () => {
     return;
   }
   if(CURRENT_ROLE === 'opticien'){
-    alert("Connecte-toi en Operation ou Admin (sous le logo Tool Box) pour ajouter un Job.");
+    alert("Connecte-toi en Operation ou Administrateur (sous le logo Tool Box) pour ajouter un Job.");
     return;
   }
   if(SUIVI_DATA[job]){
