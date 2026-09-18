@@ -5276,6 +5276,7 @@ function renderProfilesList(){
       <div data-profile-pw-form="${escapeHtml(p.id)}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <input type="password" data-profile-pw-input="${escapeHtml(p.id)}" placeholder="Nouveau mot de passe (6 caractères min.)" style="max-width:240px;">
+          <input type="password" data-profile-pw-confirm="${escapeHtml(p.id)}" placeholder="Confirmer le mot de passe" style="max-width:240px;">
           <button type="button" class="btn-ghost" data-profile-pw-save="${escapeHtml(p.id)}">Enregistrer</button>
         </div>
         <div class="modal-error" data-profile-pw-error="${escapeHtml(p.id)}" style="display:none;margin-top:6px;"></div>
@@ -5456,8 +5457,20 @@ document.getElementById('profilesList').addEventListener('click', async (e) => {
 
   const toggleBtn = e.target.closest('[data-toggle-profile-pw]');
   if(toggleBtn){
-    const form = document.querySelector(`[data-profile-pw-form="${CSS.escape(toggleBtn.dataset.toggleProfilePw)}"]`);
-    if(form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    const id = toggleBtn.dataset.toggleProfilePw;
+    const form = document.querySelector(`[data-profile-pw-form="${CSS.escape(id)}"]`);
+    if(form){
+      const nowHidden = form.style.display !== 'none';
+      form.style.display = nowHidden ? 'none' : 'block';
+      // On efface les champs à chaque ouverture/fermeture : un mot de passe saisi ne doit
+      // jamais rester affiché/en mémoire dans le DOM une fois le formulaire refermé.
+      const input = document.querySelector(`[data-profile-pw-input="${CSS.escape(id)}"]`);
+      const confirmInput = document.querySelector(`[data-profile-pw-confirm="${CSS.escape(id)}"]`);
+      if(input) input.value = '';
+      if(confirmInput) confirmInput.value = '';
+      const errEl = document.querySelector(`[data-profile-pw-error="${CSS.escape(id)}"]`);
+      if(errEl) errEl.style.display = 'none';
+    }
     return;
   }
 
@@ -5465,6 +5478,7 @@ document.getElementById('profilesList').addEventListener('click', async (e) => {
   if(saveBtn){
     const id = saveBtn.dataset.profilePwSave;
     const input = document.querySelector(`[data-profile-pw-input="${CSS.escape(id)}"]`);
+    const confirmInput = document.querySelector(`[data-profile-pw-confirm="${CSS.escape(id)}"]`);
     const errEl = document.querySelector(`[data-profile-pw-error="${CSS.escape(id)}"]`);
     const savedEl = document.querySelector(`[data-profile-pw-saved="${CSS.escape(id)}"]`);
     errEl.style.display = 'none';
@@ -5475,14 +5489,26 @@ document.getElementById('profilesList').addEventListener('click', async (e) => {
       return;
     }
     const newPw = input.value;
+    const confirmPw = confirmInput ? confirmInput.value : '';
     if(newPw.length < 6){
       errEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères.';
       errEl.style.display = 'block';
       return;
     }
+    if(newPw !== confirmPw){
+      errEl.textContent = 'Les deux mots de passe ne correspondent pas.';
+      errEl.style.display = 'block';
+      return;
+    }
+    const profile = CUSTOM_PROFILES.find(p => p.id === id);
+    const profileName = profile ? profile.name : id;
+    if(!confirm(`Confirmer le changement du mot de passe du profil « ${profileName} » ?\n\nL'ancien mot de passe cessera immédiatement de fonctionner pour tout le monde.`)){
+      return;
+    }
     try{
       await setProfilePassword(id, newPw);
       input.value = '';
+      confirmInput.value = '';
       savedEl.style.display = 'inline';
       setTimeout(() => { savedEl.style.display = 'none'; }, 2500);
     } catch(err){
