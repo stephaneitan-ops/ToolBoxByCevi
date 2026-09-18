@@ -20,16 +20,13 @@
 // GET  ?action=search&password=...&job=...                              -> { ok, matches: [ {day, mergedAt} ] }
 
 const crypto = require('crypto');
-const { blobStore, hashPw, getStoredHash } = require('./_shared/auth-shared');
+const { blobStore, checkScopeAuthorized } = require('./_shared/auth-shared');
 
-// Accepte le mot de passe Operation (scope 'atelier', historique) OU le mot de passe Admin :
-// un compte Admin doit pouvoir utiliser l'Atelier sans connaître le mot de passe Operation.
-async function checkPassword(authStore, password) {
-  const pwHash = hashPw(password);
-  const operationHash = await getStoredHash(authStore, 'atelier');
-  if (pwHash === operationHash) return true;
-  const adminHash = await getStoredHash(authStore, 'admin');
-  return pwHash === adminHash;
+// Accepte le mot de passe Operation (scope 'atelier', historique), le mot de passe Admin (un
+// compte Admin doit pouvoir utiliser l'Atelier sans connaître le mot de passe Operation), ou le
+// mot de passe propre d'un profil personnalisé habilité (Admin > Profils).
+async function checkPassword(dataStore, authStore, password) {
+  return checkScopeAuthorized(dataStore, authStore, password, 'atelier');
 }
 
 exports.handler = async (event) => {
@@ -52,6 +49,7 @@ exports.handler = async (event) => {
   }
 
   const authStore = blobStore('toolbox-auth');
+  const dataStore = blobStore('toolbox-data'); // pour retrouver les profils personnalisés (voir checkScopeAuthorized)
   const filesStore = blobStore('toolbox-atelier-files');
   const indexStore = blobStore('toolbox-atelier-index');
   const archiveStore = blobStore('toolbox-atelier-archive');
@@ -67,7 +65,7 @@ exports.handler = async (event) => {
     const qs = event.queryStringParameters || {};
     const action = qs.action;
 
-    if (!(await checkPassword(authStore, qs.password))) {
+    if (!(await checkPassword(dataStore, authStore, qs.password))) {
       return json(401, { ok: false, error: 'Mot de passe incorrect.' });
     }
 
@@ -120,11 +118,11 @@ exports.handler = async (event) => {
     }
 
     if (body.action === 'verify-only') {
-      const ok = await checkPassword(authStore, body.password);
+      const ok = await checkPassword(dataStore, authStore, body.password);
       return json(ok ? 200 : 401, { ok });
     }
 
-    if (!(await checkPassword(authStore, body.password))) {
+    if (!(await checkPassword(dataStore, authStore, body.password))) {
       return json(401, { ok: false, error: 'Mot de passe incorrect.' });
     }
 
