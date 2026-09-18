@@ -752,7 +752,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.4</div>
+          <div class="brand-version">V3.5</div>
         </div>
       </div>
     </div>
@@ -765,8 +765,6 @@
       <div class="role-login-form" id="roleLoginForm">
         <select id="roleLoginUser">
           <option value="">Utilisateur…</option>
-          <option value="operation">Operation</option>
-          <option value="admin">Administrateur</option>
         </select>
         <input type="password" id="roleLoginPw" placeholder="Mot de passe">
         <button type="button" class="role-login-btn" id="roleLoginBtn">Se connecter</button>
@@ -775,38 +773,38 @@
     </div>
 
     <nav class="sidebar-nav">
-      <button class="nav-item active" id="tabPrecos" type="button" title="Préconisations">
+      <button class="nav-item" id="tabPrecos" type="button" title="Préconisations" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.3l2.2 2.2 4.8-4.8"/></svg>
         <span>Préconisations</span>
       </button>
-      <button class="nav-item" id="tabPd" type="button" title="Prise De Mesure">
+      <button class="nav-item" id="tabPd" type="button" title="Prise De Mesure" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
         <span>Prise De Mesure</span>
       </button>
-      <button class="nav-item" id="tabMontures" type="button" title="Hauteur Cote B">
+      <button class="nav-item" id="tabMontures" type="button" title="Hauteur Cote B" style="display:none;">
         <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 22c0-6 4-10 9-10s9 4 9 10-4 8-9 8-9-2-9-8Z"/><path d="M22 22c0-6 4-10 9-10s9 4 9 10-4 8-9 8-9-2-9-8Z"/><path d="M22 18c-1-2-3-2-4 0" stroke-linecap="round"/></svg>
         <span>Hauteur Cote B</span>
       </button>
-      <a class="nav-item nav-item-external" href="https://espacepro.ameli.fr/" target="_blank" rel="noopener noreferrer" title="Ouvre l'espace pro Ameli dans un nouvel onglet">
+      <a class="nav-item nav-item-external" id="tabCpam" href="https://espacepro.ameli.fr/" target="_blank" rel="noopener noreferrer" title="Ouvre l'espace pro Ameli dans un nouvel onglet" style="display:none;">
         <span class="nav-item-main">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
           <span>Droit CPAM</span>
         </span>
         <svg class="nav-item-external-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
       </a>
-      <button class="nav-item" id="tabSav" type="button" title="SAV Lunettes">
+      <button class="nav-item" id="tabSav" type="button" title="SAV Lunettes" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         <span>SAV Lunettes</span>
       </button>
-      <button class="nav-item" id="tabAtelier" type="button" title="Atelier (CodeBarre + Dépôt fiches)" data-role="operation" style="display:none;">
+      <button class="nav-item" id="tabAtelier" type="button" title="Atelier (CodeBarre + Dépôt fiches)" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
         <span>Atelier</span>
       </button>
-      <button class="nav-item" id="tabSuivi" type="button" title="Suivi Fournisseur" data-role="operation" style="display:none;">
+      <button class="nav-item" id="tabSuivi" type="button" title="Suivi Fournisseur" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 4 5-8"/></svg>
         <span>Suivi Fournisseur</span>
       </button>
-      <button class="nav-item" id="tabAdmin" type="button" title="Administrateur" data-role="admin" style="display:none;">
+      <button class="nav-item" id="tabAdmin" type="button" title="Administrateur" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
         <span>Administrateur</span>
       </button>
@@ -816,8 +814,15 @@
   <div class="wrap">
 
   <div class="hdr">
-    <h1 id="pageTitle">Préconisations</h1>
-    <p id="pageSubtitle">Sélectionnez la mutuelle du client pour voir les verres à préconiser</p>
+    <h1 id="pageTitle">Tool Box by C·Evidentia</h1>
+    <p id="pageSubtitle">Connectez-vous avec un profil (sous le logo, en haut à gauche) pour accéder au site.</p>
+  </div>
+
+  <div id="viewLocked">
+    <div class="admin-card" style="max-width:420px;margin:60px auto;text-align:center;">
+      <h2>🔒 Accès protégé</h2>
+      <p class="sub">Connecte-toi avec un profil (Opticien, Operation, Administrateur…) sous le logo Tool Box, en haut à gauche, pour accéder au site.</p>
+    </div>
   </div>
 
   <div id="viewSuivi" style="display:none;">
@@ -1064,7 +1069,7 @@
 
   </div><!-- /viewPd -->
 
-  <div id="viewPrecos">
+  <div id="viewPrecos" style="display:none;">
 
     <div class="admin-subtabs" style="margin-bottom:18px;">
       <button class="admin-subtab-btn active" id="precosModeBtnVerres" type="button">Verres à préconiser</button>
@@ -1186,7 +1191,8 @@
         <button class="admin-subtab-btn" data-subtab="formulas" type="button">Règles de calcul</button>
         <button class="admin-subtab-btn" data-subtab="memos" type="button">Mémos SAV</button>
         <button class="admin-subtab-btn" data-subtab="fournisseurs" type="button">Fournisseurs</button>
-        <button class="admin-subtab-btn" data-subtab="passwords" type="button">Mots de passe</button>
+        <button class="admin-subtab-btn" data-subtab="fournisseurs-emails" type="button">Emails fournisseurs</button>
+        <button class="admin-subtab-btn" data-subtab="profils" type="button">Profils</button>
       </div>
 
       <div class="admin-subview" id="adminSubview-catalogues">
@@ -1351,14 +1357,14 @@
       <div class="admin-subview" id="adminSubview-fournisseurs" style="display:none;">
         <div class="admin-card" style="max-width:640px;margin-bottom:16px;">
           <h2>Ajouter un fournisseur</h2>
-          <p class="sub">Le fournisseur ajouté apparaît ensuite dans le menu déroulant "Fourn." de chaque ligne du Suivi Fournisseur.</p>
+          <p class="sub">Le fournisseur ajouté apparaît ensuite dans le menu déroulant "Fourn." de chaque ligne du Suivi Fournisseur. L'email et le code client se renseignent dans le sous-onglet "Emails fournisseurs".</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
             <div style="flex:1;min-width:180px;">
               <label for="suiviNewFournName" style="display:block;font-size:12px;margin-bottom:4px;">Nom du fournisseur</label>
               <input type="text" id="suiviNewFournName" placeholder="Ex. Essilor" style="width:100%;">
             </div>
             <div style="flex:1;min-width:220px;">
-              <label for="suiviNewFournEmail" style="display:block;font-size:12px;margin-bottom:4px;">Email (facultatif — modifiable ensuite ci-dessous)</label>
+              <label for="suiviNewFournEmail" style="display:block;font-size:12px;margin-bottom:4px;">Email (facultatif — modifiable ensuite dans "Emails fournisseurs")</label>
               <input type="text" id="suiviNewFournEmail" placeholder="ex. commandes@fournisseur.fr" style="width:100%;">
             </div>
             <button class="btn-ghost" id="suiviNewFournAddBtn" type="button">+ Ajouter</button>
@@ -1367,6 +1373,14 @@
           <span id="suiviNewFournSaved" style="display:none;margin-top:8px;color:#16A34A;font-size:12.5px;">Fournisseur ajouté ✓</span>
         </div>
 
+        <div class="admin-card" style="max-width:640px;">
+          <h2>Fournisseurs existants</h2>
+          <p class="sub">Les fournisseurs "par défaut" ne peuvent pas être supprimés. Un fournisseur ajouté ici peut l'être.</p>
+          <div id="suiviFournisseursList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+
+      <div class="admin-subview" id="adminSubview-fournisseurs-emails" style="display:none;">
         <div class="admin-card" id="suiviEmailConfig" style="max-width:640px;margin-bottom:16px;">
           <h2>✉️ Emails de contact (relance fournisseur / alerte indisponibilité)</h2>
           <p class="sub">Utilisés pour pré-remplir les brouillons d'email ouverts depuis chaque ligne du Suivi Fournisseur.</p>
@@ -1400,36 +1414,48 @@
         </div>
       </div>
 
-      <div class="admin-subview" id="adminSubview-passwords" style="display:none;">
-      <div class="admin-card" id="pwChangeCard" style="max-width:420px;">
-        <h2>Changer le mot de passe Administrateur</h2>
-        <div id="pwChangeUnavailable" class="modal-error" style="display:none;">
-          Cette fonctionnalité nécessite que le site soit déployé sur Netlify avec les fonctions serveur actives (elle est désactivée dans cette prévisualisation).
+      <div class="admin-subview" id="adminSubview-profils" style="display:none;">
+        <div class="admin-card" style="max-width:640px;margin-bottom:16px;">
+          <h2>Créer un profil</h2>
+          <p class="sub">Un profil porte un nom et son propre mot de passe (indépendant des mots de passe Operation/Administrateur), et un niveau d'accès qui détermine ce qu'il peut faire. Les onglets cochés limitent en plus ce qui est visible pour ce profil.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+            <div style="flex:1;min-width:180px;">
+              <label for="profileNewName" style="display:block;font-size:12px;margin-bottom:4px;">Nom du profil</label>
+              <input type="text" id="profileNewName" placeholder="Ex. Accueil, Vendeur..." style="width:100%;">
+            </div>
+            <div style="flex:1;min-width:180px;">
+              <label for="profileNewBaseRole" style="display:block;font-size:12px;margin-bottom:4px;">Niveau d'accès</label>
+              <select id="profileNewBaseRole" style="width:100%;">
+                <option value="opticien">Opticien</option>
+                <option value="operation">Operation</option>
+                <option value="admin">Administrateur</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:12px;">
+            <div style="flex:1;min-width:180px;">
+              <label for="profileNewPw" style="display:block;font-size:12px;margin-bottom:4px;">Mot de passe (6 caractères min.)</label>
+              <input type="password" id="profileNewPw" placeholder="Mot de passe du profil" style="width:100%;">
+            </div>
+            <div style="flex:1;min-width:180px;">
+              <label for="profileNewPwConfirm" style="display:block;font-size:12px;margin-bottom:4px;">Confirmation</label>
+              <input type="password" id="profileNewPwConfirm" placeholder="Ressaisir le mot de passe" style="width:100%;">
+            </div>
+          </div>
+          <div style="margin-top:14px;">
+            <label style="display:block;font-size:12px;margin-bottom:6px;">Onglets visibles pour ce profil</label>
+            <div id="profileNewTabs" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;"></div>
+          </div>
+          <div class="modal-error" id="profileNewError" style="display:none;margin-top:8px;"></div>
+          <span id="profileNewSaved" style="display:none;margin-top:8px;color:#16A34A;font-size:12.5px;">Profil créé ✓</span>
+          <button class="btn-ghost" id="profileNewAddBtn" type="button" style="margin-top:12px;">+ Créer le profil</button>
         </div>
-        <div class="modal-error" id="pwChangeError"></div>
-        <div class="modal-success" id="pwChangeSuccess"></div>
-        <label for="pwOld">Mot de passe actuel</label>
-        <input type="password" id="pwOld" placeholder="••••••••">
-        <label for="pwNew">Nouveau mot de passe</label>
-        <input type="password" id="pwNew" placeholder="Au moins 6 caractères">
-        <label for="pwNew2">Confirmer le nouveau mot de passe</label>
-        <input type="password" id="pwNew2" placeholder="••••••••">
-        <button class="btn btn-primary" id="pwChangeBtn" style="width:auto;padding:11px 22px;">Changer le mot de passe</button>
-      </div>
 
-      <div class="admin-card" id="atelierPwChangeCard" style="max-width:420px;margin-top:24px;">
-        <h2>Changer le mot de passe Operation</h2>
-        <p class="sub">Mot de passe du rôle Operation (onglets Atelier et Suivi Fournisseur). Indépendant du mot de passe Administrateur ci-dessus — initialisé sur la même valeur par défaut, mais modifiable séparément ici.</p>
-        <div class="modal-error" id="atelierPwChangeError"></div>
-        <div class="modal-success" id="atelierPwChangeSuccess"></div>
-        <label for="atelierPwOld">Mot de passe actuel (Operation)</label>
-        <input type="password" id="atelierPwOld" placeholder="••••••••">
-        <label for="atelierPwNew">Nouveau mot de passe</label>
-        <input type="password" id="atelierPwNew" placeholder="Au moins 6 caractères">
-        <label for="atelierPwNew2">Confirmer le nouveau mot de passe</label>
-        <input type="password" id="atelierPwNew2" placeholder="••••••••">
-        <button class="btn btn-primary" id="atelierPwChangeBtn" style="width:auto;padding:11px 22px;">Changer le mot de passe</button>
-      </div>
+        <div class="admin-card" style="max-width:640px;">
+          <h2>Profils existants</h2>
+          <p class="sub">Opticien, Operation et Administrateur sont les 3 profils de base (non supprimables) ; d'autres profils peuvent être créés ci-dessus. Les onglets et le mot de passe de chacun sont modifiables à tout moment ci-dessous.</p>
+          <div id="profilesList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
       </div>
 
       <button class="btn-ghost" id="logoutBtn" style="margin-top:22px;">Se déconnecter</button>
@@ -1602,8 +1628,6 @@ function loadClipPhotos(){
 }
 
 
-const ADMIN_PASSWORD = "Teamops2026"; // repli local, utilisé uniquement quand l'API serveur n'est pas déployée (tests dans Claude)
-
 /* ============ STOCKAGE PERSISTANT (Netlify Functions + Blobs) ============ */
 // Priorité à l'API serveur réelle (fonctionne partout, une fois déployée sur Netlify).
 // Repli sur window.storage (Claude uniquement) quand l'API n'est pas encore déployée,
@@ -1613,7 +1637,6 @@ const REMOTE_AUTH_API = '/.netlify/functions/auth';
 let CURRENT_ADMIN_PASSWORD = null; // mot de passe validé pour la session admin en cours (mémoire uniquement)
 let CURRENT_OPERATION_PASSWORD = null; // idem pour le rôle Operation (scope serveur 'operation', ex-'atelier')
 let CURRENT_ATELIER_PASSWORD = null; // fixé par la connexion Operation/Admin (voir roleSetLoggedIn) — déclaré ici (et non plus bas) pour que roleRestoreSession() puisse y écrire dès le chargement de la page
-let ADMIN_REMOTE_MODE = false; // true si l'API serveur a répondu (donc vraiment déployée)
 
 const AppStorage = {
   async get(key){
@@ -1656,36 +1679,16 @@ const AppStorage = {
   }
 };
 
-async function verifyAdminPassword(pw){
+// Vérifie le mot de passe propre d'un profil (Admin > Profils — Opticien/Operation/
+// Administrateur sont eux-mêmes des profils, plus des profils personnalisés éventuels).
+// Aucun repli local possible ici : sans API serveur déployée, personne ne peut se connecter
+// (le site entier est désormais protégé par mot de passe, plus d'accès de base sans connexion).
+async function verifyProfilePassword(profileId, pw){
   try{
     const res = await fetch(REMOTE_AUTH_API, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'verify', password: pw })
-    });
-    // Seuls 200 (ok) et 401 (mauvais mot de passe, réponse volontaire de notre fonction) sont
-    // des réponses fiables de la fonction serveur. Tout le reste (404, 500, erreur réseau...) = repli.
-    if(res.status !== 200 && res.status !== 401){
-      throw new Error('Réponse serveur inattendue (' + res.status + ')');
-    }
-    const json = await res.json();
-    if(typeof json.ok !== 'boolean'){
-      throw new Error('Réponse serveur invalide');
-    }
-    return { ok: json.ok, remote: true };
-  } catch(e){
-    // API pas encore déployée / en erreur (test dans Claude, ou souci serveur) : repli local
-    return { ok: pw === ADMIN_PASSWORD, remote: false };
-  }
-}
-
-const OPERATION_PASSWORD_FALLBACK = 'Teamops2026'; // repli local, même défaut que le mot de passe Admin
-async function verifyOperationPassword(pw){
-  try{
-    const res = await fetch(REMOTE_AUTH_API, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'verify', password: pw, scope: 'operation' })
+      body: JSON.stringify({ action: 'verify', password: pw, scope: 'profile:' + profileId })
     });
     if(res.status !== 200 && res.status !== 401){
       throw new Error('Réponse serveur inattendue (' + res.status + ')');
@@ -1696,7 +1699,7 @@ async function verifyOperationPassword(pw){
     }
     return { ok: json.ok, remote: true };
   } catch(e){
-    return { ok: pw === OPERATION_PASSWORD_FALLBACK, remote: false };
+    return { ok: false, remote: false };
   }
 }
 
@@ -2239,14 +2242,36 @@ function formatNum(n){
 }
 
 /* ============ RÔLES (Opticien / Operation / Admin) ============ */
-// Widget de connexion unique sous le logo, remplace les anciens logins séparés (Admin dans
-// l'onglet Admin, Atelier dans l'onglet Atelier, cadenas du Suivi Fournisseur). Opticien =
-// aucun mot de passe, accès de base. Operation et Admin se connectent ici ; les onglets
-// Atelier / Suivi Fournisseur (Operation ou Admin) et Admin (Admin seul) n'apparaissent
-// dans le menu qu'une fois le rôle requis atteint — voir data-role sur les .nav-item.
+// Widget de connexion unique sous le logo. Le site entier est protégé par mot de passe : les 3
+// niveaux d'accès de base (Opticien, Operation, Administrateur) sont eux-mêmes des profils (voir
+// Admin > Profils plus bas), chacun avec son propre mot de passe indépendant — Opticien n'a plus
+// d'accès libre sans connexion. Tant qu'aucun profil n'est connecté (CURRENT_ROLE null), tous les
+// onglets restent masqués et l'écran de verrouillage (#viewLocked) reste affiché.
 const ROLE_SESSION_KEY = 'toolbox_role_session'; // mémorisé pour cet onglet navigateur uniquement
-const ROLE_LABELS = { operation: 'Operation', admin: 'Administrateur' };
-let CURRENT_ROLE = 'opticien';
+const ROLE_LABELS = { opticien: 'Opticien', operation: 'Operation', admin: 'Administrateur' };
+let CURRENT_ROLE = null;
+
+// Profils (Admin > Profils) : Opticien / Operation / Administrateur sont les 3 profils de base
+// (toujours présents, non supprimables — voir BUILTIN_PROFILE_DEFS et loadCustomProfiles plus
+// bas), et d'autres profils personnalisés peuvent être créés ensuite. Chaque profil a un nom,
+// un niveau d'accès ('baseRole' : opticien/operation/admin, qui détermine les permissions
+// d'écriture serveur), un mot de passe propre et une liste d'onglets visibles — le tout
+// modifiable à tout moment depuis Admin > Profils. Persistés via AppStorage, clé
+// 'app-custom-profiles'. Chargés en asynchrone par loadCustomProfiles() (voir plus bas).
+const PROFILE_TAB_IDS = ['tabPrecos','tabPd','tabMontures','tabCpam','tabSav','tabAtelier','tabSuivi','tabAdmin'];
+const PROFILE_TAB_LABELS = {
+  tabPrecos:'Préconisations', tabPd:'Prise De Mesure', tabMontures:'Hauteur Cote B', tabCpam:'Droit CPAM',
+  tabSav:'SAV Lunettes', tabAtelier:'Atelier', tabSuivi:'Suivi Fournisseur', tabAdmin:'Administrateur'
+};
+let CUSTOM_PROFILES = [];
+let CURRENT_PROFILE_ID = null; // profil connecté (toujours renseigné une fois connecté : même Opticien/Operation/Admin sont des profils)
+let CURRENT_PROFILE_TABS = null; // liste d'ids d'onglets autorisés pour ce profil, ou null si personne n'est connecté
+let PENDING_PROFILE_ID_FROM_SESSION = null; // en attente que CUSTOM_PROFILES soit chargé (voir loadCustomProfiles)
+
+function applyCurrentProfileTabs(){
+  const profile = CURRENT_PROFILE_ID ? CUSTOM_PROFILES.find(p => p.id === CURRENT_PROFILE_ID) : null;
+  CURRENT_PROFILE_TABS = profile ? profile.tabs : null;
+}
 
 const roleLoginForm = document.getElementById('roleLoginForm');
 const roleLoginCurrent = document.getElementById('roleLoginCurrent');
@@ -2257,31 +2282,64 @@ const roleLoginBtn = document.getElementById('roleLoginBtn');
 const roleLoginError = document.getElementById('roleLoginError');
 const roleLogoutBtn = document.getElementById('roleLogoutBtn');
 
+// Correspondance onglet -> vue interne, utilisée uniquement pour verrouiller/déverrouiller
+// l'affichage (roleApplyVisibility ci-dessous) — indépendante du tableau TABS (plus bas dans
+// ce fichier), qui n'existe pas encore quand roleRestoreSession() s'exécute (voir plus bas).
+// tabCpam (Droit CPAM) n'y figure pas : lien externe, pas de vue interne à basculer.
+const TAB_VIEW_IDS = {
+  tabPrecos: 'viewPrecos', tabPd: 'viewPd', tabMontures: 'viewMontures', tabSav: 'viewSav',
+  tabAtelier: 'viewAtelier', tabSuivi: 'viewSuivi', tabAdmin: 'viewAdmin',
+};
+
 function roleApplyVisibility(){
-  document.querySelectorAll('.nav-item[data-role]').forEach(btn => {
-    const need = btn.dataset.role; // 'admin' = Admin seul ; 'operation' = Operation ou Admin
-    const allowed = need === 'admin' ? CURRENT_ROLE === 'admin' : (CURRENT_ROLE === 'operation' || CURRENT_ROLE === 'admin');
+  // Tous les onglets sont verrouillés par défaut (voir style="display:none" dans le HTML) et
+  // ne se déverrouillent que selon les onglets autorisés pour le profil connecté — plus aucun
+  // accès de base sans connexion (voir la demande d'origine : Opticien lui-même a maintenant
+  // son propre mot de passe, Vision2026 par défaut).
+  PROFILE_TAB_IDS.forEach(id => {
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    const allowed = !!CURRENT_PROFILE_TABS && CURRENT_PROFILE_TABS.includes(id);
     btn.style.display = allowed ? '' : 'none';
   });
-  if(CURRENT_ROLE === 'opticien'){
+
+  if(!CURRENT_ROLE){
     roleLoginCurrent.style.display = 'none';
     roleLoginForm.style.display = 'flex';
   } else {
     roleLoginCurrent.style.display = 'flex';
     roleLoginForm.style.display = 'none';
-    roleLoginCurrentLabel.textContent = 'Connecté : ' + ROLE_LABELS[CURRENT_ROLE];
+    const profile = CURRENT_PROFILE_ID ? CUSTOM_PROFILES.find(p => p.id === CURRENT_PROFILE_ID) : null;
+    roleLoginCurrentLabel.textContent = 'Connecté : ' + (profile ? profile.name : (ROLE_LABELS[CURRENT_ROLE] || CURRENT_ROLE));
   }
-  // Si l'onglet actuellement ouvert n'est plus accessible avec le rôle courant (ex. déconnexion
-  // pendant qu'on est sur Admin), on revient sur Préconisations.
-  const active = document.querySelector('.nav-item.active');
-  if(active && active.dataset.role){
-    const need = active.dataset.role;
-    const allowed = need === 'admin' ? CURRENT_ROLE === 'admin' : (CURRENT_ROLE === 'operation' || CURRENT_ROLE === 'admin');
-    if(!allowed){ const t = document.getElementById('tabPrecos'); if(t) t.click(); }
-  }
+
+  // Le choix de la vue à afficher (écran verrouillé, ou bascule vers le premier onglet
+  // autorisé si l'onglet actif ne l'est plus) est différé au tick suivant : au tout premier
+  // chargement, ce code s'exécute pendant roleRestoreSession() ci-dessous, AVANT que
+  // TABS.forEach() n'ait attaché les écouteurs de clic sur les boutons (tableau TABS déclaré
+  // bien plus loin dans le script) — cliquer un bouton ici n'aurait alors aucun effet.
+  setTimeout(() => {
+    const lockedView = document.getElementById('viewLocked');
+    if(!CURRENT_ROLE){
+      PROFILE_TAB_IDS.forEach(id => { const b = document.getElementById(id); if(b) b.classList.remove('active'); });
+      Object.values(TAB_VIEW_IDS).forEach(viewId => { const v = document.getElementById(viewId); if(v) v.style.display = 'none'; });
+      if(lockedView) lockedView.style.display = '';
+      const pt = document.getElementById('pageTitle'); if(pt) pt.textContent = 'Tool Box by C·Evidentia';
+      const ps = document.getElementById('pageSubtitle'); if(ps) ps.textContent = 'Connectez-vous avec un profil (sous le logo, en haut à gauche) pour accéder au site.';
+      const wrapEl = document.querySelector('.wrap'); if(wrapEl) wrapEl.classList.remove('wrap-wide');
+      return;
+    }
+    const active = document.querySelector('.nav-item.active');
+    const activeStillVisible = active && active.style.display !== 'none';
+    if(!activeStillVisible){
+      if(lockedView) lockedView.style.display = 'none';
+      const firstVisible = PROFILE_TAB_IDS.map(id => document.getElementById(id)).find(b => b && b.style.display !== 'none' && b.id !== 'tabCpam');
+      if(firstVisible) firstVisible.click();
+    }
+  }, 0);
 }
 
-function roleSetLoggedIn(role, pw, remember){
+function roleSetLoggedIn(role, pw, remember, profileId){
   CURRENT_ROLE = role;
   if(role === 'admin'){
     CURRENT_ADMIN_PASSWORD = pw;
@@ -2291,41 +2349,50 @@ function roleSetLoggedIn(role, pw, remember){
     CURRENT_OPERATION_PASSWORD = pw;
     CURRENT_ATELIER_PASSWORD = pw;
     CURRENT_ADMIN_PASSWORD = null;
+  } else {
+    // 'opticien' : aucune écriture serveur n'est jamais requise depuis ses onglets de base,
+    // pas de mot de passe à retenir pour AppStorage.
+    CURRENT_ADMIN_PASSWORD = null;
+    CURRENT_OPERATION_PASSWORD = null;
   }
+  CURRENT_PROFILE_ID = profileId || null;
+  applyCurrentProfileTabs();
   if(remember){
-    try{ sessionStorage.setItem(ROLE_SESSION_KEY, JSON.stringify({ role, password: pw })); }catch(e){}
+    try{ sessionStorage.setItem(ROLE_SESSION_KEY, JSON.stringify({ role, password: pw, profileId: CURRENT_PROFILE_ID })); }catch(e){}
   }
   roleApplyVisibility();
 }
 
 function roleLogout(){
-  CURRENT_ROLE = 'opticien';
+  CURRENT_ROLE = null;
   CURRENT_ADMIN_PASSWORD = null;
   CURRENT_OPERATION_PASSWORD = null;
   CURRENT_ATELIER_PASSWORD = null;
-  ADMIN_REMOTE_MODE = false;
+  CURRENT_PROFILE_ID = null;
+  CURRENT_PROFILE_TABS = null;
   try{ sessionStorage.removeItem(ROLE_SESSION_KEY); }catch(e){}
   roleLoginUser.value = '';
   roleLoginPw.value = '';
   roleLoginError.style.display = 'none';
   roleApplyVisibility();
-  const t = document.getElementById('tabPrecos'); if(t) t.click();
 }
 
 roleLoginBtn.addEventListener('click', async () => {
-  const role = roleLoginUser.value;
+  const selected = roleLoginUser.value;
   const pw = roleLoginPw.value;
   roleLoginError.style.display = 'none';
-  if(!role || !pw) return;
+  if(!selected || !pw) return;
+  if(selected.indexOf('profile:') !== 0){ roleLoginError.style.display = 'block'; return; }
+  const profileId = selected.slice('profile:'.length);
+  const profile = CUSTOM_PROFILES.find(p => p.id === profileId);
+  if(!profile){ roleLoginError.style.display = 'block'; return; }
   roleLoginBtn.disabled = true;
   roleLoginBtn.textContent = 'Connexion…';
-  const result = role === 'admin' ? await verifyAdminPassword(pw) : await verifyOperationPassword(pw);
+  const result = await verifyProfilePassword(profileId, pw);
   roleLoginBtn.disabled = false;
   roleLoginBtn.textContent = 'Se connecter';
   if(result.ok){
-    ADMIN_REMOTE_MODE = result.remote;
-    roleSetLoggedIn(role, pw, true);
-    updatePasswordSectionAvailability();
+    roleSetLoggedIn(profile.baseRole, pw, true, profileId);
   } else {
     roleLoginError.style.display = 'block';
   }
@@ -2338,7 +2405,10 @@ roleLogoutBtn.addEventListener('click', () => roleLogout());
   let saved = null;
   try{ saved = JSON.parse(sessionStorage.getItem(ROLE_SESSION_KEY) || 'null'); }catch(e){}
   if(saved && saved.role && saved.password){
-    roleSetLoggedIn(saved.role, saved.password, false);
+    // CUSTOM_PROFILES n'est pas encore chargé à ce stade (chargement asynchrone, voir
+    // loadCustomProfiles) : on retente l'application du profil une fois celui-ci arrivé.
+    if(saved.profileId) PENDING_PROFILE_ID_FROM_SESSION = saved.profileId;
+    roleSetLoggedIn(saved.role, saved.password, false, saved.profileId || null);
   } else {
     roleApplyVisibility();
   }
@@ -2351,7 +2421,6 @@ const logoutBtn = document.getElementById('logoutBtn');
 // Appelé à chaque activation de l'onglet Admin : le bouton du menu n'étant visible qu'en
 // rôle Admin, l'accès est déjà authentifié — on retombe juste sur le premier sous-onglet.
 function adminOnTabOpen(){
-  updatePasswordSectionAvailability();
   document.querySelectorAll('.admin-subtab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
   document.querySelectorAll('.admin-subview').forEach((v,i) => v.style.display = i===0 ? 'block' : 'none');
   // Le panneau Fournisseurs vit ici même si l'onglet Suivi Fournisseur n'a encore jamais
@@ -2359,74 +2428,9 @@ function adminOnTabOpen(){
   loadSuiviEmails();
 }
 
-function updatePasswordSectionAvailability(){
-  const el = document.getElementById('pwChangeUnavailable');
-  const card = document.getElementById('pwChangeCard');
-  if(!el || !card) return;
-  el.style.display = ADMIN_REMOTE_MODE ? 'none' : 'block';
-  card.querySelectorAll('input, button').forEach(el2 => { el2.disabled = !ADMIN_REMOTE_MODE; });
-}
-
 logoutBtn.addEventListener('click', () => {
   roleLogout();
 });
-
-/* Changer le mot de passe Admin */
-const pwOld = document.getElementById('pwOld');
-const pwNew = document.getElementById('pwNew');
-const pwNew2 = document.getElementById('pwNew2');
-const pwChangeBtn = document.getElementById('pwChangeBtn');
-const pwChangeError = document.getElementById('pwChangeError');
-const pwChangeSuccess = document.getElementById('pwChangeSuccess');
-
-if(pwChangeBtn){
-  pwChangeBtn.addEventListener('click', async () => {
-    pwChangeError.classList.remove('show');
-    pwChangeSuccess.classList.remove('show');
-    if(!pwOld.value || !pwNew.value || !pwNew2.value){
-      pwChangeError.textContent = 'Merci de remplir les trois champs.';
-      pwChangeError.classList.add('show');
-      return;
-    }
-    if(pwNew.value !== pwNew2.value){
-      pwChangeError.textContent = 'Le nouveau mot de passe et sa confirmation ne correspondent pas.';
-      pwChangeError.classList.add('show');
-      return;
-    }
-    if(pwNew.value.length < 6){
-      pwChangeError.textContent = 'Le nouveau mot de passe doit contenir au moins 6 caractères.';
-      pwChangeError.classList.add('show');
-      return;
-    }
-    pwChangeBtn.disabled = true;
-    pwChangeBtn.textContent = 'Modification…';
-    try{
-      const res = await fetch(REMOTE_AUTH_API, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ action: 'change', oldPassword: pwOld.value, newPassword: pwNew.value })
-      });
-      const json = await res.json();
-      if(!res.ok || !json.ok){
-        pwChangeError.textContent = json.error || 'Impossible de changer le mot de passe.';
-        pwChangeError.classList.add('show');
-        pwChangeBtn.disabled = false;
-        pwChangeBtn.textContent = 'Changer le mot de passe';
-        return;
-      }
-      pwChangeSuccess.textContent = 'Mot de passe modifié avec succès. Vous allez être déconnecté — reconnectez-vous avec le nouveau mot de passe.';
-      pwChangeSuccess.classList.add('show');
-      pwOld.value = ''; pwNew.value = ''; pwNew2.value = '';
-      setTimeout(() => { roleLogout(); }, 2000);
-    } catch(err){
-      pwChangeError.textContent = "Impossible de contacter l'API. Cette fonctionnalité nécessite que le site soit déployé sur Netlify avec les fonctions serveur actives.";
-      pwChangeError.classList.add('show');
-    } finally {
-      pwChangeBtn.disabled = false;
-      pwChangeBtn.textContent = 'Changer le mot de passe';
-    }
-  });
-}
 
 /* ============ DÉPÔT FICHE ATELIER / SAV ============ */
 const ATELIER_API = '/.netlify/functions/atelier';
@@ -2454,59 +2458,6 @@ function atelierRunPendingBarcode(){
   barcodeRefInput.value = ref;
   atelierGenerateAndPrintBarcode();
 }
-
-/* Changer le mot de passe Operation (indépendant de l'Admin, même mécanisme) */
-const atelierPwOld = document.getElementById('atelierPwOld');
-const atelierPwNew = document.getElementById('atelierPwNew');
-const atelierPwNew2 = document.getElementById('atelierPwNew2');
-const atelierPwChangeBtn = document.getElementById('atelierPwChangeBtn');
-const atelierPwChangeError = document.getElementById('atelierPwChangeError');
-const atelierPwChangeSuccess = document.getElementById('atelierPwChangeSuccess');
-
-atelierPwChangeBtn.addEventListener('click', async () => {
-  atelierPwChangeError.classList.remove('show');
-  atelierPwChangeSuccess.classList.remove('show');
-  if(!atelierPwOld.value || !atelierPwNew.value || !atelierPwNew2.value){
-    atelierPwChangeError.textContent = 'Merci de remplir les trois champs.';
-    atelierPwChangeError.classList.add('show');
-    return;
-  }
-  if(atelierPwNew.value !== atelierPwNew2.value){
-    atelierPwChangeError.textContent = 'Le nouveau mot de passe et sa confirmation ne correspondent pas.';
-    atelierPwChangeError.classList.add('show');
-    return;
-  }
-  if(atelierPwNew.value.length < 6){
-    atelierPwChangeError.textContent = 'Le nouveau mot de passe doit contenir au moins 6 caractères.';
-    atelierPwChangeError.classList.add('show');
-    return;
-  }
-  atelierPwChangeBtn.disabled = true;
-  atelierPwChangeBtn.textContent = 'Modification…';
-  try{
-    const res = await fetch(REMOTE_AUTH_API, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'change', oldPassword: atelierPwOld.value, newPassword: atelierPwNew.value, scope: 'operation' })
-    });
-    const json = await res.json();
-    if(!res.ok || !json.ok){
-      atelierPwChangeError.textContent = json.error || 'Impossible de changer le mot de passe.';
-      atelierPwChangeError.classList.add('show');
-      return;
-    }
-    atelierPwChangeSuccess.textContent = 'Mot de passe modifié avec succès. Vous allez être déconnecté — reconnectez-vous avec le nouveau mot de passe.';
-    atelierPwChangeSuccess.classList.add('show');
-    atelierPwOld.value = ''; atelierPwNew.value = ''; atelierPwNew2.value = '';
-    setTimeout(() => { roleLogout(); }, 2000);
-  } catch(err){
-    atelierPwChangeError.textContent = "Impossible de contacter l'API. Cette fonctionnalité nécessite que le site soit déployé sur Netlify avec les fonctions serveur actives.";
-    atelierPwChangeError.classList.add('show');
-  } finally {
-    atelierPwChangeBtn.disabled = false;
-    atelierPwChangeBtn.textContent = 'Changer le mot de passe';
-  }
-});
 
 /* ---- Chargement à la demande de pdf.js et pdf-lib (comme Human.js pour la PDM) ---- */
 let atelierLibsPromise = null;
@@ -4894,6 +4845,8 @@ const TABS = [
 ];
 
 function activateTab(target){
+  const lockedView = document.getElementById('viewLocked');
+  if(lockedView) lockedView.style.display = 'none';
   TABS.forEach(t => {
     const active = t.btn === target.btn;
     t.btn.classList.toggle('active', active);
@@ -4912,8 +4865,9 @@ TABS.forEach(t => t.btn.addEventListener('click', () => activateTab(t)));
 
 
 /* ============ SUIVI FOURNISSEUR ============ */
-// Onglet visible seulement en rôle Operation ou Admin (voir data-role sur le nav-item) : les
-// deux ont le droit de modifier, donc plus de cadenas séparé à l'intérieur de l'onglet.
+// Onglet visible seulement pour les profils Operation/Administrateur (voir PROFILE_TAB_IDS et
+// roleApplyVisibility) : les deux ont le droit de modifier, donc plus de cadenas séparé à
+// l'intérieur de l'onglet.
 const suiviNewJob = document.getElementById('suiviNewJob');
 const suiviAddJobBtn = document.getElementById('suiviAddJobBtn');
 let SUIVI_DATA = {};
@@ -5055,6 +5009,7 @@ async function loadSuiviEmails(){
   } catch(e){ /* pas encore configuré / API indisponible : on garde les codes vides */ }
   SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.concat(SUIVI_FOURNISSEURS_CUSTOM);
   renderSuiviEmailConfigFields();
+  renderSuiviFournisseursList();
 }
 
 function renderSuiviEmailConfigFields(){
@@ -5181,6 +5136,390 @@ document.getElementById('suiviNewFournAddBtn').addEventListener('click', async (
     if(email) delete SUIVI_EMAILS.fournisseurs[value];
     errEl.textContent = "Impossible d'enregistrer : " + e.message;
     errEl.style.display = 'block';
+    return;
+  }
+  renderSuiviFournisseursList();
+});
+
+// Liste des fournisseurs (Admin > Fournisseurs) : les 5 fournisseurs de base ne sont pas
+// supprimables (utilisés par défaut dans toute l'app), seuls ceux ajoutés ici le sont.
+function renderSuiviFournisseursList(){
+  const wrap = document.getElementById('suiviFournisseursList');
+  if(!wrap) return;
+  wrap.innerHTML = SUIVI_FOURNISSEURS.map(f => {
+    const isCustom = SUIVI_FOURNISSEURS_CUSTOM.some(c => c.value === f.value);
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);">
+        <span>${escapeHtml(f.label)}${isCustom ? '' : ' <span class="sub" style="font-size:11px;">(par défaut)</span>'}</span>
+        ${isCustom ? `<button type="button" class="memo-remove-btn" data-del-fourn="${escapeHtml(f.value)}">Supprimer</button>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('suiviFournisseursList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-del-fourn]');
+  if(!btn) return;
+  const value = btn.dataset.delFourn;
+  const idx = SUIVI_FOURNISSEURS_CUSTOM.findIndex(c => c.value === value);
+  if(idx === -1) return;
+  if(CURRENT_ROLE !== 'admin'){
+    alert("Connecte-toi en Administrateur (sous le logo Tool Box) pour supprimer un fournisseur.");
+    return;
+  }
+  const removed = SUIVI_FOURNISSEURS_CUSTOM[idx];
+  if(!confirm(`Supprimer définitivement le fournisseur "${removed.label}" ? Les dossiers déjà enregistrés dans le Suivi Fournisseur avec ce fournisseur ne sont pas modifiés, mais il n'apparaîtra plus dans le menu déroulant.`)) return;
+
+  const removedEmail = SUIVI_EMAILS.fournisseurs[value];
+  const removedCode = SUIVI_FOURN_CODES[value];
+  SUIVI_FOURNISSEURS_CUSTOM.splice(idx, 1);
+  SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.concat(SUIVI_FOURNISSEURS_CUSTOM);
+  delete SUIVI_EMAILS.fournisseurs[value];
+  delete SUIVI_FOURN_CODES[value];
+
+  try{
+    await AppStorage.set('suivi-fournisseurs-custom', JSON.stringify(SUIVI_FOURNISSEURS_CUSTOM), 'operation');
+    await AppStorage.set('suivi-emails', JSON.stringify(SUIVI_EMAILS), 'operation');
+    await AppStorage.set('suivi-fournisseur-codes', JSON.stringify(SUIVI_FOURN_CODES), 'operation');
+  } catch(err){
+    // Retour en arrière si l'enregistrement échoue, pour ne pas laisser l'app dans un
+    // état incohérent avec ce que le serveur a réellement conservé.
+    SUIVI_FOURNISSEURS_CUSTOM.splice(idx, 0, removed);
+    SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.concat(SUIVI_FOURNISSEURS_CUSTOM);
+    if(removedEmail !== undefined) SUIVI_EMAILS.fournisseurs[value] = removedEmail;
+    if(removedCode !== undefined) SUIVI_FOURN_CODES[value] = removedCode;
+    alert("Impossible de supprimer : " + err.message);
+    return;
+  }
+  renderSuiviFournisseursList();
+  renderSuiviEmailConfigFields();
+  renderSuiviTable();
+});
+
+/* ---- Profils personnalisés (Admin > Profils) ----
+   Un profil = un nom + un mot de passe "de base" (Operation ou Admin, mot de passe partagé,
+   pas de mot de passe indépendant) + une liste d'onglets visibles. Apparaît dans le menu de
+   connexion sous Operation/Administrateur (valeur "profile:<id>"). Persisté via AppStorage
+   (scope 'admin' par défaut), clé 'app-custom-profiles'. Voir aussi CURRENT_PROFILE_ID /
+   CURRENT_PROFILE_TABS et roleApplyVisibility() plus haut dans le fichier. */
+
+// Identifiant technique stable pour un profil : version normalisée du nom, avec un suffixe
+// numérique en cas de collision (même principe que suiviSlug(), namespace séparé).
+function profileSlug(str){
+  const base = (str || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'profil';
+  let slug = base, n = 2;
+  while(CUSTOM_PROFILES.some(p => p.id === slug)){
+    slug = `${base}-${n}`;
+    n++;
+  }
+  return slug;
+}
+
+function renderProfileNewTabsCheckboxes(){
+  const wrap = document.getElementById('profileNewTabs');
+  if(!wrap) return;
+  wrap.innerHTML = PROFILE_TAB_IDS.map(id => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;">
+      <input type="checkbox" data-profile-tab="${id}" checked style="width:auto;">
+      ${escapeHtml(PROFILE_TAB_LABELS[id])}
+    </label>
+  `).join('');
+}
+
+// Ajoute tous les profils (les 3 de base + les personnalisés) au menu de connexion.
+function renderProfileLoginOptions(){
+  const sel = roleLoginUser;
+  if(!sel) return;
+  const prevValue = sel.value;
+  sel.innerHTML = '<option value="">Utilisateur…</option>' +
+    CUSTOM_PROFILES.map(p => `<option value="profile:${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join('');
+  if(Array.prototype.some.call(sel.options, o => o.value === prevValue)) sel.value = prevValue;
+}
+
+function profileRoleLabel(baseRole){
+  return baseRole === 'admin' ? 'Administrateur' : (baseRole === 'opticien' ? 'Opticien' : 'Operation');
+}
+
+function renderProfilesList(){
+  const wrap = document.getElementById('profilesList');
+  if(!wrap) return;
+  if(!CUSTOM_PROFILES.length){
+    wrap.innerHTML = '<p class="sub">Aucun profil créé pour le moment.</p>';
+    return;
+  }
+  wrap.innerHTML = CUSTOM_PROFILES.map(p => {
+    const tabsCheckboxes = PROFILE_TAB_IDS.map(id => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;">
+        <input type="checkbox" data-profile-tab-edit="${id}" ${p.tabs.includes(id) ? 'checked' : ''} style="width:auto;">
+        ${escapeHtml(PROFILE_TAB_LABELS[id])}
+      </label>
+    `).join('');
+    return `
+    <div style="padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <span>
+          <b>${escapeHtml(p.name)}</b>
+          <span class="sub" style="font-size:11px;">— accès ${profileRoleLabel(p.baseRole)} · ${p.tabs.length} onglet(s) visible(s)</span>
+        </span>
+        <span style="display:flex;gap:10px;flex-shrink:0;flex-wrap:wrap;">
+          <button type="button" class="btn-ghost-link" data-toggle-profile-tabs="${escapeHtml(p.id)}">✏️ Onglets</button>
+          <button type="button" class="btn-ghost-link" data-toggle-profile-pw="${escapeHtml(p.id)}">🔑 Mot de passe</button>
+          ${p.builtin ? '' : `<button type="button" class="memo-remove-btn" data-del-profile="${escapeHtml(p.id)}">Supprimer</button>`}
+        </span>
+      </div>
+      <div data-profile-tabs-form="${escapeHtml(p.id)}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;" data-profile-tabs-grid="${escapeHtml(p.id)}">${tabsCheckboxes}</div>
+        <button type="button" class="btn-ghost" data-profile-tabs-save="${escapeHtml(p.id)}" style="margin-top:8px;">Enregistrer</button>
+        <div class="modal-error" data-profile-tabs-error="${escapeHtml(p.id)}" style="display:none;margin-top:6px;"></div>
+      </div>
+      <div data-profile-pw-form="${escapeHtml(p.id)}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="password" data-profile-pw-input="${escapeHtml(p.id)}" placeholder="Nouveau mot de passe (6 caractères min.)" style="max-width:240px;">
+          <button type="button" class="btn-ghost" data-profile-pw-save="${escapeHtml(p.id)}">Enregistrer</button>
+        </div>
+        <div class="modal-error" data-profile-pw-error="${escapeHtml(p.id)}" style="display:none;margin-top:6px;"></div>
+        <span data-profile-pw-saved="${escapeHtml(p.id)}" style="display:none;margin-top:6px;color:#16A34A;font-size:12.5px;">Mot de passe modifié ✓</span>
+      </div>
+    </div>
+  `;}).join('');
+}
+
+// Fixe ou change le mot de passe d'un profil personnalisé (Admin > Profils). Réservé à un
+// identifiant Admin — voir netlify/functions/auth.js, action 'set-profile-password'.
+async function setProfilePassword(profileId, newPassword){
+  const res = await fetch(REMOTE_AUTH_API, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ action: 'set-profile-password', profileId, newPassword, adminPassword: CURRENT_ADMIN_PASSWORD })
+  });
+  if(res.status === 404){
+    throw new Error("cette fonctionnalité nécessite que le site soit déployé sur Netlify (fonctions serveur actives).");
+  }
+  let json = null;
+  try{ json = await res.json(); }catch(e){}
+  if(!res.ok || !json || !json.ok){
+    throw new Error((json && json.error) || ('Erreur serveur (' + res.status + ')'));
+  }
+}
+
+// Les 3 profils de base : toujours présents, non supprimables (voir p.builtin dans
+// renderProfilesList). Onglets par défaut alignés sur l'ancien système de rôles fixes (avant
+// que chaque niveau ne devienne un profil à mot de passe indépendant) : Opticien = onglets de
+// base, Operation = tout sauf Admin, Administrateur = tout. Mot de passe initial : voir
+// getProfileStoredHash côté serveur (Vision2026 pour Opticien ; Operation/Administrateur
+// reprennent l'ancien mot de passe partagé tant qu'aucun n'a été fixé ici).
+const BUILTIN_PROFILE_DEFS = [
+  { id:'opticien',  name:'Opticien',        baseRole:'opticien',  tabs:['tabPrecos','tabPd','tabMontures','tabCpam','tabSav'], builtin:true },
+  { id:'operation', name:'Operation',       baseRole:'operation', tabs:['tabPrecos','tabPd','tabMontures','tabCpam','tabSav','tabAtelier','tabSuivi'], builtin:true },
+  { id:'admin',     name:'Administrateur',  baseRole:'admin',     tabs:['tabPrecos','tabPd','tabMontures','tabCpam','tabSav','tabAtelier','tabSuivi','tabAdmin'], builtin:true },
+];
+
+async function loadCustomProfiles(){
+  try{
+    const { value } = await AppStorage.get('app-custom-profiles');
+    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
+    if(Array.isArray(parsed)) CUSTOM_PROFILES = parsed;
+  } catch(e){ /* pas encore configuré / API indisponible : on part des 3 profils de base */ }
+  // S'ils manquent (premier démarrage, ou liste vide) on les recrée avec leurs onglets par
+  // défaut. On n'écrit côté serveur que si on vient d'en ajouter, pour ne jamais écraser une
+  // liste déjà personnalisée par un simple rechargement de page.
+  let changed = false;
+  BUILTIN_PROFILE_DEFS.forEach(def => {
+    if(!CUSTOM_PROFILES.some(p => p.id === def.id)){
+      CUSTOM_PROFILES.push(Object.assign({}, def));
+      changed = true;
+    }
+  });
+  if(changed){
+    try{ await AppStorage.set('app-custom-profiles', JSON.stringify(CUSTOM_PROFILES)); }catch(e){ /* on retentera au prochain chargement */ }
+  }
+  renderProfileLoginOptions();
+  renderProfilesList();
+  // Une session mémorisée avec un profil a été restaurée avant que CUSTOM_PROFILES ne soit
+  // chargé (voir roleRestoreSession) : on applique la restriction d'onglets maintenant.
+  if(PENDING_PROFILE_ID_FROM_SESSION){
+    CURRENT_PROFILE_ID = PENDING_PROFILE_ID_FROM_SESSION;
+    PENDING_PROFILE_ID_FROM_SESSION = null;
+    applyCurrentProfileTabs();
+  }
+  roleApplyVisibility();
+}
+
+renderProfileNewTabsCheckboxes();
+
+document.getElementById('profileNewAddBtn').addEventListener('click', async () => {
+  const errEl = document.getElementById('profileNewError');
+  const savedEl = document.getElementById('profileNewSaved');
+  errEl.style.display = 'none';
+  savedEl.style.display = 'none';
+  if(CURRENT_ROLE !== 'admin'){
+    errEl.textContent = "Connecte-toi en Administrateur (sous le logo Tool Box) pour créer un profil.";
+    errEl.style.display = 'block';
+    return;
+  }
+  const nameInput = document.getElementById('profileNewName');
+  const name = nameInput.value.trim();
+  if(!name){
+    errEl.textContent = 'Le nom du profil est obligatoire.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const pwInput = document.getElementById('profileNewPw');
+  const pwConfirmInput = document.getElementById('profileNewPwConfirm');
+  const pw = pwInput.value;
+  if(pw.length < 6){
+    errEl.textContent = 'Le mot de passe du profil doit contenir au moins 6 caractères.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(pw !== pwConfirmInput.value){
+    errEl.textContent = 'La confirmation ne correspond pas au mot de passe saisi.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const baseRoleRaw = document.getElementById('profileNewBaseRole').value;
+  const baseRole = ['opticien','operation','admin'].includes(baseRoleRaw) ? baseRoleRaw : 'operation';
+  const tabs = Array.from(document.querySelectorAll('#profileNewTabs input[data-profile-tab]'))
+    .filter(cb => cb.checked).map(cb => cb.dataset.profileTab);
+  if(!tabs.length){
+    errEl.textContent = 'Coche au moins un onglet visible pour ce profil.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const id = profileSlug(name);
+  const profile = { id, name, baseRole, tabs };
+  CUSTOM_PROFILES.push(profile);
+
+  try{
+    await AppStorage.set('app-custom-profiles', JSON.stringify(CUSTOM_PROFILES));
+    await setProfilePassword(id, pw);
+    nameInput.value = '';
+    pwInput.value = '';
+    pwConfirmInput.value = '';
+    renderProfileNewTabsCheckboxes();
+    renderProfileLoginOptions();
+    renderProfilesList();
+    savedEl.style.display = 'inline';
+    setTimeout(() => { savedEl.style.display = 'none'; }, 2500);
+  } catch(e){
+    // Retour en arrière si l'enregistrement échoue, pour ne pas laisser l'app dans un
+    // état incohérent avec ce que le serveur a réellement conservé.
+    CUSTOM_PROFILES.pop();
+    errEl.textContent = "Impossible d'enregistrer : " + e.message;
+    errEl.style.display = 'block';
+  }
+});
+
+document.getElementById('profilesList').addEventListener('click', async (e) => {
+  const toggleTabsBtn = e.target.closest('[data-toggle-profile-tabs]');
+  if(toggleTabsBtn){
+    const form = document.querySelector(`[data-profile-tabs-form="${CSS.escape(toggleTabsBtn.dataset.toggleProfileTabs)}"]`);
+    if(form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    return;
+  }
+
+  const saveTabsBtn = e.target.closest('[data-profile-tabs-save]');
+  if(saveTabsBtn){
+    const id = saveTabsBtn.dataset.profileTabsSave;
+    const idx = CUSTOM_PROFILES.findIndex(p => p.id === id);
+    if(idx === -1) return;
+    const errEl = document.querySelector(`[data-profile-tabs-error="${CSS.escape(id)}"]`);
+    errEl.style.display = 'none';
+    if(CURRENT_ROLE !== 'admin'){
+      errEl.textContent = "Connecte-toi en Administrateur (sous le logo Tool Box) pour changer les onglets d'un profil.";
+      errEl.style.display = 'block';
+      return;
+    }
+    const grid = document.querySelector(`[data-profile-tabs-grid="${CSS.escape(id)}"]`);
+    const tabs = Array.from(grid.querySelectorAll('input[data-profile-tab-edit]'))
+      .filter(cb => cb.checked).map(cb => cb.dataset.profileTabEdit);
+    if(!tabs.length){
+      errEl.textContent = 'Coche au moins un onglet visible pour ce profil.';
+      errEl.style.display = 'block';
+      return;
+    }
+    const previousTabs = CUSTOM_PROFILES[idx].tabs;
+    CUSTOM_PROFILES[idx].tabs = tabs;
+    try{
+      await AppStorage.set('app-custom-profiles', JSON.stringify(CUSTOM_PROFILES));
+    } catch(err){
+      CUSTOM_PROFILES[idx].tabs = previousTabs;
+      errEl.textContent = "Impossible d'enregistrer : " + err.message;
+      errEl.style.display = 'block';
+      return;
+    }
+    if(CURRENT_PROFILE_ID === id){ applyCurrentProfileTabs(); roleApplyVisibility(); }
+    renderProfilesList();
+    return;
+  }
+
+  const toggleBtn = e.target.closest('[data-toggle-profile-pw]');
+  if(toggleBtn){
+    const form = document.querySelector(`[data-profile-pw-form="${CSS.escape(toggleBtn.dataset.toggleProfilePw)}"]`);
+    if(form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    return;
+  }
+
+  const saveBtn = e.target.closest('[data-profile-pw-save]');
+  if(saveBtn){
+    const id = saveBtn.dataset.profilePwSave;
+    const input = document.querySelector(`[data-profile-pw-input="${CSS.escape(id)}"]`);
+    const errEl = document.querySelector(`[data-profile-pw-error="${CSS.escape(id)}"]`);
+    const savedEl = document.querySelector(`[data-profile-pw-saved="${CSS.escape(id)}"]`);
+    errEl.style.display = 'none';
+    savedEl.style.display = 'none';
+    if(CURRENT_ROLE !== 'admin'){
+      errEl.textContent = "Connecte-toi en Administrateur (sous le logo Tool Box) pour changer ce mot de passe.";
+      errEl.style.display = 'block';
+      return;
+    }
+    const newPw = input.value;
+    if(newPw.length < 6){
+      errEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères.';
+      errEl.style.display = 'block';
+      return;
+    }
+    try{
+      await setProfilePassword(id, newPw);
+      input.value = '';
+      savedEl.style.display = 'inline';
+      setTimeout(() => { savedEl.style.display = 'none'; }, 2500);
+    } catch(err){
+      errEl.textContent = "Impossible d'enregistrer : " + err.message;
+      errEl.style.display = 'block';
+    }
+    return;
+  }
+
+  const delBtn = e.target.closest('[data-del-profile]');
+  if(delBtn){
+    const id = delBtn.dataset.delProfile;
+    const idx = CUSTOM_PROFILES.findIndex(p => p.id === id);
+    if(idx === -1) return;
+    if(CUSTOM_PROFILES[idx].builtin){
+      alert("Les 3 profils de base (Opticien / Operation / Administrateur) ne peuvent pas être supprimés.");
+      return;
+    }
+    if(CURRENT_ROLE !== 'admin'){
+      alert("Connecte-toi en Administrateur (sous le logo Tool Box) pour supprimer un profil.");
+      return;
+    }
+    const removed = CUSTOM_PROFILES[idx];
+    if(!confirm(`Supprimer définitivement le profil "${removed.name}" ? Il n'apparaîtra plus dans le menu de connexion.`)) return;
+
+    CUSTOM_PROFILES.splice(idx, 1);
+    try{
+      await AppStorage.set('app-custom-profiles', JSON.stringify(CUSTOM_PROFILES));
+    } catch(err){
+      CUSTOM_PROFILES.splice(idx, 0, removed);
+      alert("Impossible de supprimer : " + err.message);
+      return;
+    }
+    if(CURRENT_PROFILE_ID === id){ CURRENT_PROFILE_ID = null; CURRENT_PROFILE_TABS = null; }
+    renderProfileLoginOptions();
+    renderProfilesList();
+    roleApplyVisibility();
   }
 });
 
@@ -6392,6 +6731,7 @@ loadPrecosData();
 loadLensFormulas();
 loadSavMemos();
 loadClipPhotos();
+loadCustomProfiles();
 
 /* ---- Bookmarklet "Générer code-barre" ----
    Deux chemins d'entrée :
