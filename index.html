@@ -329,6 +329,16 @@
   .ra-mgmt-actions button:hover{border-color:var(--teal);color:var(--ink);}
   .ra-mgmt-actions button.danger:hover{border-color:#DC2626;color:#DC2626;}
 
+  /* Correction manuelle de SKU (Admin > Catalogues) */
+  .sku-fix-results{max-height:360px;overflow-y:auto;}
+  .sku-fix-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #EEF2F8;}
+  .sku-fix-row:first-child{border-top:none;}
+  .sku-fix-info{flex:1;min-width:170px;font-size:13px;color:var(--ink);}
+  .sku-fix-info .muted{color:var(--ink-soft);font-size:12px;margin-top:2px;}
+  #viewAdmin .sku-fix-row input[type=text]{width:150px;margin:0;padding:8px 10px;font-size:13px;}
+  .sku-fix-empty{color:var(--ink-soft);font-size:13px;padding:8px 0;}
+  .sku-fix-saved{color:#16A34A;font-size:12px;}
+
   /* Admin (onglet, plus modale) */
   #viewAdmin h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 4px;color:var(--teal-deep);}
   #viewAdmin p.sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;}
@@ -687,11 +697,15 @@
   }
   .glossaire-box.empty{color:var(--ink-soft);font-style:italic;background:transparent;border-style:dashed;}
   .glossaire-arrow{flex:none;width:16px;color:var(--ink-soft);text-align:center;font-size:13px;}
+  .glossaire-col-header.desc{flex:1.6;background:transparent;color:var(--ink-soft);text-align:left;padding:6px 4px 6px 10px;}
+  .glossaire-desc{flex:1.6;font-size:12px;color:var(--ink-soft);padding:7px 4px 7px 10px;word-break:break-word;}
+  .glossaire-desc.empty{font-style:italic;}
   .glossaire-notes{
     border-top:1.5px solid var(--line);padding-top:14px;font-size:13px;color:var(--ink-soft);
   }
   .glossaire-notes div{margin-bottom:4px;}
   .glossaire-notes strong{color:var(--ink);}
+  .glossaire-notes div.warn{color:var(--error);font-weight:600;}
 
   .precos-type-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
   .precos-type-btn{
@@ -752,7 +766,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.5</div>
+          <div class="brand-version">V3.7</div>
         </div>
       </div>
     </div>
@@ -1217,6 +1231,14 @@
           </div>
 
           <div class="admin-card">
+            <h2>Corriger un SKU manquant</h2>
+            <p class="sub">Recherchez une référence (marque, modèle, couleur, taille) et complétez son SKU à la main. Cette correction est indépendante du fichier importé : elle est réappliquée automatiquement à chaque nouvelle mise à jour de la base montures, tant que la référence garde la même marque/modèle/couleur/taille et que le fichier importé ne fournit pas déjà lui-même un SKU pour cette ligne.</p>
+            <div class="modal-error" id="skuFixError" style="display:none;"></div>
+            <input type="text" id="skuFixSearch" placeholder="Rechercher une référence… (2 caractères min.)">
+            <div id="skuFixResults" class="sku-fix-results"></div>
+          </div>
+
+          <div class="admin-card">
             <h2>Préconisations verres</h2>
             <p class="sub">Le fichier remplace entièrement la liste des verres à préconiser par mutuelle. Détection automatique du format : fichier simple à plat, ou fichier source complet (un onglet par mutuelle).</p>
             <div class="modal-error" id="precosUploadError"></div>
@@ -1277,6 +1299,59 @@
             </div>
           </div>
           <div class="verres-mgmt-panel" id="verresMgmtPanel"></div>
+        </div>
+
+        <div class="admin-card">
+          <h2>Table de correspondance HOYA / Seiko</h2>
+          <p class="sub">Ajoutez, modifiez ou supprimez les lignes du tableau affiché aux opticiens dans Préconisations (bouton « Table de correspondance verres/traitements »). Enregistré automatiquement — plus besoin de repasser par une mise à jour du site pour ces changements.</p>
+
+          <div class="ra-form">
+            <div class="ra-form-grid">
+              <div class="precos-field">
+                <label for="glossFormCategory">Catégorie</label>
+                <input type="text" id="glossFormCategory" list="glossCategoryList" placeholder="Ex. Verres, Traitements…">
+                <datalist id="glossCategoryList"></datalist>
+              </div>
+              <div class="precos-field">
+                <label for="glossFormSeiko">Seiko</label>
+                <input type="text" id="glossFormSeiko" placeholder="Ex. Seiko HD">
+              </div>
+              <div class="precos-field">
+                <label for="glossFormHoya">Hoya</label>
+                <input type="text" id="glossFormHoya" placeholder="Ex. Hilux">
+              </div>
+              <div class="precos-field" style="grid-column:1/-1;">
+                <label for="glossFormDesc">Description (optionnel)</label>
+                <input type="text" id="glossFormDesc" placeholder="Ex. Unif simple">
+              </div>
+            </div>
+            <button class="btn btn-primary" id="glossFormSubmit" style="width:auto;padding:11px 22px;margin-top:12px;">Ajouter la ligne</button>
+            <button class="btn-ghost" id="glossFormCancel" style="display:none;margin-top:12px;margin-left:12px;">Annuler la modification</button>
+            <div class="modal-error" id="glossFormError" style="display:none;margin-top:10px;"></div>
+          </div>
+
+          <div style="margin:22px 0 14px;border-top:1px solid var(--line);"></div>
+
+          <div id="glossMgmtList"></div>
+
+          <div style="margin:26px 0 14px;border-top:1.5px solid var(--line);"></div>
+
+          <h2 style="font-size:14px;">Notes générales</h2>
+          <p class="sub">Affichées sous le tableau ; cochez « Avertissement » pour un affichage en rouge (ex. contre-indication).</p>
+          <div class="ra-form">
+            <div class="ra-form-grid">
+              <div class="precos-field" style="grid-column:1/-1;">
+                <label for="glossNoteText">Texte de la note</label>
+                <input type="text" id="glossNoteText" placeholder="Ex. Jamais de FR avec les sensity">
+              </div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--ink);margin-bottom:12px;">
+              <input type="checkbox" id="glossNoteWarn" style="width:auto;margin:0;"> Avertissement (affiché en rouge)
+            </label>
+            <button class="btn btn-primary" id="glossNoteSubmit" style="width:auto;padding:11px 22px;">Ajouter la note</button>
+            <button class="btn-ghost" id="glossNoteCancel" style="display:none;margin-left:12px;">Annuler la modification</button>
+          </div>
+          <div id="glossNotesMgmtList" style="margin-top:10px;"></div>
         </div>
       </div>
 
@@ -1706,8 +1781,26 @@ async function verifyProfilePassword(profileId, pw){
 
 let DATA = [];
 let DB_META = { updatedAt: null, rowCount: 0, source: 'défaut' };
+// Corrections manuelles de SKU (Admin > Catalogues > "Corriger un SKU manquant") : stockées
+// séparément du fichier importé, sous une clé combinant marque/modèle/couleur/taille — et donc
+// réappliquées automatiquement à chaque import, tant que ces 4 champs ne changent pas dans le
+// nouveau fichier. Ne s'applique jamais si le fichier fournit déjà lui-même un SKU pour la ligne.
+let FRAMES_SKU_OVERRIDES = {};
 
-const PRECOS_GLOSSAIRE_V2 = {"categories":[{"title":"Verres unifocaux","rows":[{"seiko":"Sphérique HD","hoya":"TF Hilux"},{"seiko":"Asphérique HD","hoya":"TF Nulux"},{"seiko":"AZ HD","hoya":""},{"seiko":"Smartzoom","hoya":"Sync III"},{"seiko":"Indi-SV","hoya":"Nulux Identity V+"},{"seiko":"I-Xceed","hoya":"Nulux Identity V+ Eyegenius"}]},{"title":"Verres progressifs","rows":[{"seiko":"Vision X","hoya":"Amplitude Plus"},{"seiko":"Synergy Xtra","hoya":"Daynamic"},{"seiko":"Synergy Xtra Xceed","hoya":""},{"seiko":"Emblem XTW","hoya":"Lifestyle V+"},{"seiko":"Superior","hoya":"Balansis i"},{"seiko":"Superior Xceed","hoya":"Lifestyle 3i"},{"seiko":"Prime Xceed","hoya":"Lifestyle 4i"},{"seiko":"Brilliance X","hoya":""},{"seiko":"Brilliance Xceed","hoya":"Myself"}]},{"title":"Traitements","rows":[{"seiko":"SCC","hoya":"SHV"},{"seiko":"SRC","hoya":"HVLL"},{"seiko":"SRC-UV","hoya":"HVLL UV Control"},{"seiko":"SRB","hoya":"HVLL Blue Control"},{"seiko":"SRB-UV","hoya":"HVLL Blue UVC"},{"seiko":"IP+","hoya":"UV2.0"}]}],"notes":["Photochromique : Sensity","Verres dégressifs : Computer","Verres progressifs d'intérieur : Indoor"]};
+function frameOverrideKey(marque, modele, couleur, taille){
+  return [normalize(marque), normalize(modele), normalize(couleur), normalize(taille)].join('||');
+}
+
+function applyFramesSkuOverrides(){
+  if(!DATA || !DATA.length) return;
+  DATA.forEach(row => {
+    if(row[2]) return; // le fichier fournit déjà un SKU pour cette ligne : on ne touche pas
+    const key = frameOverrideKey(row[0], row[1], row[3], row[4]);
+    if(FRAMES_SKU_OVERRIDES[key]) row[2] = FRAMES_SKU_OVERRIDES[key];
+  });
+}
+
+const PRECOS_GLOSSAIRE_V2 = {"categories":[{"title":"Verres","rows":[{"seiko":"Seiko HD","hoya":"Hilux","desc":"Unif simple"},{"seiko":"","hoya":"TF Hilux","desc":"Unif FreeForm (juste pour la valo sur certains réseaux)"},{"seiko":"AS","hoya":"Nulux","desc":"Asphérique"},{"seiko":"Vision X","hoya":"Amplitude","desc":"Prog entrée de gamme"},{"seiko":"Brilliance X","hoya":"Lifestyle 4 Urban","desc":"Prog individualisé"},{"seiko":"Seiko Indoor","hoya":"Workstyle 3 Screen","desc":"Prog d'intérieur"},{"seiko":"Computer XT","hoya":"Supereader","desc":"Dégressif"},{"seiko":"Smartzoom","hoya":"Sync 3 T","desc":"Antifatigue"}]},{"title":"Photochromiques","rows":[{"seiko":"SY2","hoya":"SY2","desc":"Sensity 2 foncé avec les UV"},{"seiko":"SYD","hoya":"SYD","desc":"Sensity Dark foncé avec la luminosité (teinte résiduelle)"}]},{"title":"Traitements","rows":[{"seiko":"durci","hoya":"HA","desc":"Durci"},{"seiko":"SCC","hoya":"HV","desc":"AR 1"},{"seiko":"","hoya":"SHV","desc":"AR 2"},{"seiko":"SRC-ON","hoya":"HVLL UVC","desc":"AR 3"},{"seiko":"SRC-SC","hoya":"HVLL BC","desc":"AR Bleu"},{"seiko":"HSI","hoya":"HMCI","desc":"AR face interne"}]},{"title":"100% Santé","rows":[{"seiko":"Classe A unif","hoya":"Maxxee unif","desc":""},{"seiko":"Classe A prog","hoya":"Maxxee Prog","desc":""}]}],"notes":["⚠ Jamais de FR avec les sensity"]};
 
 function normalize(str){
   return (str||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -1728,7 +1821,10 @@ function loadData(){
     .then(() => AppStorage.get('frames-meta'))
     .then(res => { DB_META = JSON.parse(res.value); })
     .catch(() => {})
-    .finally(() => renderMeta());
+    .then(() => AppStorage.get('frames-sku-overrides'))
+    .then(res => { const o = JSON.parse(res.value); if(o) FRAMES_SKU_OVERRIDES = o; })
+    .catch(() => {})
+    .finally(() => { applyFramesSkuOverrides(); renderMeta(); renderSkuFixResults(); });
 }
 
 function renderMeta(){
@@ -1925,46 +2021,304 @@ precosMatFilter.querySelectorAll('.precos-type-btn').forEach(btn => {
 });
 
 /* Glossaire de correspondance verres/traitements (HOYA <-> Seiko) */
+// PRECOS_GLOSSAIRE_V2 (au-dessus) reste le contenu de secours au tout premier chargement ;
+// la version courante, modifiable depuis Admin > Gestion verres, vit dans PRECOS_GLOSSAIRE
+// (persistée via AppStorage, clé 'precos-glossaire' — voir loadPrecosGlossaire()).
 const glossaireToggleBtn = document.getElementById('glossaireToggleBtn');
 const glossairePanel = document.getElementById('glossairePanel');
-let glossaireRendered = false;
+let PRECOS_GLOSSAIRE = JSON.parse(JSON.stringify(PRECOS_GLOSSAIRE_V2));
 
 function renderGlossaire(){
-  if(glossaireRendered) return;
-  const categoriesHtml = PRECOS_GLOSSAIRE_V2.categories.map(cat => `
+  const categoriesHtml = PRECOS_GLOSSAIRE.categories.map(cat => `
     <div class="glossaire-category">
       <div class="glossaire-category-title">${escapeHtml(cat.title)}</div>
       <div class="glossaire-columns">
         <div class="glossaire-col-header seiko">SEIKO</div>
         <div class="glossaire-col-spacer"></div>
         <div class="glossaire-col-header hoya">HOYA</div>
+        <div class="glossaire-col-spacer"></div>
+        <div class="glossaire-col-header desc">Description</div>
       </div>
       ${cat.rows.map(r => `
         <div class="glossaire-pair">
-          <div class="glossaire-box">${escapeHtml(r.seiko)}</div>
+          <div class="glossaire-box${r.seiko ? '' : ' empty'}">${r.seiko ? escapeHtml(r.seiko) : '—'}</div>
           <div class="glossaire-arrow">→</div>
           <div class="glossaire-box${r.hoya ? '' : ' empty'}">${r.hoya ? escapeHtml(r.hoya) : '—'}</div>
+          <div class="glossaire-col-spacer"></div>
+          <div class="glossaire-desc${r.desc ? '' : ' empty'}">${r.desc ? escapeHtml(r.desc) : '—'}</div>
         </div>
       `).join('')}
     </div>
   `).join('');
-  const notesHtml = PRECOS_GLOSSAIRE_V2.notes.map(n => {
-    const parts = n.split(' : ');
-    return `<div>${parts.length===2 ? `<strong>${escapeHtml(parts[0])}</strong> : ${escapeHtml(parts[1])}` : escapeHtml(n)}</div>`;
+  const notesHtml = (PRECOS_GLOSSAIRE.notes || []).map(n => {
+    const isWarn = n.startsWith('⚠');
+    const text = isWarn ? n.slice(1).trim() : n;
+    const parts = text.split(' : ');
+    const inner = parts.length===2 ? `<strong>${escapeHtml(parts[0])}</strong> : ${escapeHtml(parts[1])}` : escapeHtml(text);
+    return `<div${isWarn ? ' class="warn"' : ''}>${isWarn ? '⚠ ' : ''}${inner}</div>`;
   }).join('');
   glossairePanel.innerHTML = `
     <div class="glossaire-title">Équivalences Seiko / Hoya</div>
     <div class="glossaire-categories">${categoriesHtml}</div>
     <div class="glossaire-notes">${notesHtml}</div>
   `;
-  glossaireRendered = true;
 }
 
 glossaireToggleBtn.addEventListener('click', () => {
   const showing = glossairePanel.style.display !== 'none';
-  if(!showing) renderGlossaire();
+  if(!showing) renderGlossaire(); // toujours régénéré : reflète immédiatement les modifs faites dans Admin
   glossairePanel.style.display = showing ? 'none' : 'block';
 });
+
+/* --- Admin > Gestion verres : édition du tableau HOYA / Seiko --- */
+function loadPrecosGlossaire(){
+  PRECOS_GLOSSAIRE = JSON.parse(JSON.stringify(PRECOS_GLOSSAIRE_V2));
+  renderGlossMgmt();
+
+  AppStorage.get('precos-glossaire')
+    .then(res => {
+      const g = JSON.parse(res.value);
+      if(g && Array.isArray(g.categories)) PRECOS_GLOSSAIRE = g;
+    })
+    .catch(() => {})
+    .finally(() => {
+      if(!PRECOS_GLOSSAIRE.notes) PRECOS_GLOSSAIRE.notes = [];
+      renderGlossMgmt();
+    });
+}
+
+function saveGlossaireData(){
+  return AppStorage.set('precos-glossaire', JSON.stringify(PRECOS_GLOSSAIRE)).catch(() => {});
+}
+
+function glossaireFindCategory(title){
+  return PRECOS_GLOSSAIRE.categories.find(c => c.title === title);
+}
+function glossaireEnsureCategory(title){
+  let cat = glossaireFindCategory(title);
+  if(!cat){ cat = { title, rows: [] }; PRECOS_GLOSSAIRE.categories.push(cat); }
+  return cat;
+}
+
+const glossFormCategory = document.getElementById('glossFormCategory');
+const glossCategoryList = document.getElementById('glossCategoryList');
+const glossFormSeiko = document.getElementById('glossFormSeiko');
+const glossFormHoya = document.getElementById('glossFormHoya');
+const glossFormDesc = document.getElementById('glossFormDesc');
+const glossFormSubmit = document.getElementById('glossFormSubmit');
+const glossFormCancel = document.getElementById('glossFormCancel');
+const glossFormError = document.getElementById('glossFormError');
+const glossMgmtList = document.getElementById('glossMgmtList');
+let glossEditRef = null; // { catTitle, rowIndex } pendant une édition, sinon null
+
+function clearGlossForm(){
+  glossFormCategory.value = '';
+  glossFormSeiko.value = '';
+  glossFormHoya.value = '';
+  glossFormDesc.value = '';
+  glossEditRef = null;
+  glossFormSubmit.textContent = 'Ajouter la ligne';
+  glossFormCancel.style.display = 'none';
+  if(glossFormError) glossFormError.style.display = 'none';
+}
+
+if(glossFormSubmit){
+  glossFormSubmit.addEventListener('click', () => {
+    const category = glossFormCategory.value.trim();
+    const seiko = glossFormSeiko.value.trim();
+    const hoya = glossFormHoya.value.trim();
+    const desc = glossFormDesc.value.trim();
+    if(!category){ glossFormCategory.focus(); return; }
+    if(!seiko && !hoya){
+      if(glossFormError){ glossFormError.textContent = 'Renseignez au moins Seiko ou Hoya.'; glossFormError.style.display = 'block'; }
+      return;
+    }
+    if(glossFormError) glossFormError.style.display = 'none';
+    if(glossEditRef){
+      const oldCat = glossaireFindCategory(glossEditRef.catTitle);
+      if(oldCat && oldCat.title === category){
+        oldCat.rows[glossEditRef.rowIndex] = { seiko, hoya, desc };
+      } else {
+        // Catégorie renommée pendant l'édition : on déplace la ligne vers la (nouvelle) catégorie.
+        if(oldCat){
+          oldCat.rows.splice(glossEditRef.rowIndex, 1);
+          if(!oldCat.rows.length) PRECOS_GLOSSAIRE.categories = PRECOS_GLOSSAIRE.categories.filter(c => c !== oldCat);
+        }
+        glossaireEnsureCategory(category).rows.push({ seiko, hoya, desc });
+      }
+    } else {
+      glossaireEnsureCategory(category).rows.push({ seiko, hoya, desc });
+    }
+    saveGlossaireData();
+    clearGlossForm();
+    renderGlossMgmt();
+  });
+}
+
+if(glossFormCancel){
+  glossFormCancel.addEventListener('click', clearGlossForm);
+}
+
+function renderGlossMgmt(){
+  if(!glossMgmtList || !PRECOS_GLOSSAIRE) return;
+
+  if(glossCategoryList){
+    glossCategoryList.innerHTML = PRECOS_GLOSSAIRE.categories.map(c => `<option value="${escapeHtml(c.title)}">`).join('');
+  }
+
+  if(!PRECOS_GLOSSAIRE.categories.length){
+    glossMgmtList.innerHTML = '<p class="sub">Aucune ligne pour le moment.</p>';
+  } else {
+    glossMgmtList.innerHTML = PRECOS_GLOSSAIRE.categories.map(cat => `
+      <div class="ra-mgmt-row">
+        <div class="ra-mgmt-row-head">
+          <div class="ra-card-title" style="margin-bottom:6px;">${escapeHtml(cat.title)}</div>
+          <div class="ra-mgmt-actions">
+            <button data-gloss-action="delete-cat" data-cat="${escapeHtml(cat.title)}" class="danger" type="button">Supprimer la catégorie</button>
+          </div>
+        </div>
+        ${cat.rows.map((r, i) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0;border-top:1px solid #EEF2F8;">
+            <div style="font-size:12.5px;color:var(--ink-soft);">
+              <b>${r.seiko ? escapeHtml(r.seiko) : '—'}</b> → <b>${r.hoya ? escapeHtml(r.hoya) : '—'}</b>${r.desc ? ` · ${escapeHtml(r.desc)}` : ''}
+            </div>
+            <div class="ra-mgmt-actions">
+              <button data-gloss-action="edit" data-cat="${escapeHtml(cat.title)}" data-idx="${i}" type="button">Modifier</button>
+              <button data-gloss-action="delete" data-cat="${escapeHtml(cat.title)}" data-idx="${i}" class="danger" type="button">Supprimer</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+  }
+
+  glossMgmtList.querySelectorAll('[data-gloss-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const catTitle = btn.dataset.cat;
+      const idx = parseInt(btn.dataset.idx);
+      const cat = glossaireFindCategory(catTitle);
+      if(!cat) return;
+      const r = cat.rows[idx];
+      glossFormCategory.value = catTitle;
+      glossFormSeiko.value = r.seiko || '';
+      glossFormHoya.value = r.hoya || '';
+      glossFormDesc.value = r.desc || '';
+      glossEditRef = { catTitle, rowIndex: idx };
+      glossFormSubmit.textContent = 'Enregistrer la modification';
+      glossFormCancel.style.display = 'inline-block';
+      glossFormCategory.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+  });
+  glossMgmtList.querySelectorAll('[data-gloss-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const catTitle = btn.dataset.cat;
+      const idx = parseInt(btn.dataset.idx);
+      const cat = glossaireFindCategory(catTitle);
+      if(!cat) return;
+      const r = cat.rows[idx];
+      if(!confirm(`Supprimer la ligne "${r.seiko || '—'} → ${r.hoya || '—'}" ?`)) return;
+      cat.rows.splice(idx, 1);
+      if(!cat.rows.length) PRECOS_GLOSSAIRE.categories = PRECOS_GLOSSAIRE.categories.filter(c => c !== cat);
+      saveGlossaireData();
+      clearGlossForm();
+      renderGlossMgmt();
+    });
+  });
+  glossMgmtList.querySelectorAll('[data-gloss-action="delete-cat"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const catTitle = btn.dataset.cat;
+      if(!confirm(`Supprimer toute la catégorie "${catTitle}" et ses lignes ?`)) return;
+      PRECOS_GLOSSAIRE.categories = PRECOS_GLOSSAIRE.categories.filter(c => c.title !== catTitle);
+      saveGlossaireData();
+      clearGlossForm();
+      renderGlossMgmt();
+    });
+  });
+
+  renderGlossNotesMgmt();
+}
+
+const glossNoteText = document.getElementById('glossNoteText');
+const glossNoteWarn = document.getElementById('glossNoteWarn');
+const glossNoteSubmit = document.getElementById('glossNoteSubmit');
+const glossNoteCancel = document.getElementById('glossNoteCancel');
+const glossNotesMgmtList = document.getElementById('glossNotesMgmtList');
+let glossNoteEditIndex = null;
+
+function clearGlossNoteForm(){
+  glossNoteText.value = '';
+  glossNoteWarn.checked = false;
+  glossNoteEditIndex = null;
+  glossNoteSubmit.textContent = 'Ajouter la note';
+  glossNoteCancel.style.display = 'none';
+}
+
+if(glossNoteSubmit){
+  glossNoteSubmit.addEventListener('click', () => {
+    const text = glossNoteText.value.trim();
+    if(!text){ glossNoteText.focus(); return; }
+    const stored = (glossNoteWarn.checked ? '⚠ ' : '') + text;
+    if(!PRECOS_GLOSSAIRE.notes) PRECOS_GLOSSAIRE.notes = [];
+    if(glossNoteEditIndex !== null){
+      PRECOS_GLOSSAIRE.notes[glossNoteEditIndex] = stored;
+    } else {
+      PRECOS_GLOSSAIRE.notes.push(stored);
+    }
+    saveGlossaireData();
+    clearGlossNoteForm();
+    renderGlossNotesMgmt();
+  });
+}
+if(glossNoteCancel){
+  glossNoteCancel.addEventListener('click', clearGlossNoteForm);
+}
+
+function renderGlossNotesMgmt(){
+  if(!glossNotesMgmtList || !PRECOS_GLOSSAIRE) return;
+  const notes = PRECOS_GLOSSAIRE.notes || [];
+  if(!notes.length){
+    glossNotesMgmtList.innerHTML = '<p class="sub">Aucune note pour le moment.</p>';
+    return;
+  }
+  glossNotesMgmtList.innerHTML = notes.map((n, i) => {
+    const isWarn = n.startsWith('⚠');
+    const text = isWarn ? n.slice(1).trim() : n;
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid #EEF2F8;">
+        <div style="font-size:13px;${isWarn ? 'color:var(--error);font-weight:600;' : 'color:var(--ink);'}">${isWarn ? '⚠ ' : ''}${escapeHtml(text)}</div>
+        <div class="ra-mgmt-actions">
+          <button data-note-action="edit" data-idx="${i}" type="button">Modifier</button>
+          <button data-note-action="delete" data-idx="${i}" class="danger" type="button">Supprimer</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  glossNotesMgmtList.querySelectorAll('[data-note-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.idx);
+      const n = PRECOS_GLOSSAIRE.notes[i];
+      const isWarn = n.startsWith('⚠');
+      glossNoteText.value = isWarn ? n.slice(1).trim() : n;
+      glossNoteWarn.checked = isWarn;
+      glossNoteEditIndex = i;
+      glossNoteSubmit.textContent = 'Enregistrer la modification';
+      glossNoteCancel.style.display = 'inline-block';
+      glossNoteText.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+  });
+  glossNotesMgmtList.querySelectorAll('[data-note-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.idx);
+      if(!confirm('Supprimer cette note ?')) return;
+      PRECOS_GLOSSAIRE.notes.splice(i, 1);
+      saveGlossaireData();
+      clearGlossNoteForm();
+      renderGlossNotesMgmt();
+    });
+  });
+}
+
+loadPrecosGlossaire();
 
 function precosResetFilters(){
   precosActiveType = 'Tous';
@@ -3504,7 +3858,9 @@ function publishFramesData(rows, sourceLabel){
   ]).then(() => {
     DATA = rows;
     DB_META = meta;
+    applyFramesSkuOverrides();
     renderMeta();
+    renderSkuFixResults();
   });
 }
 
@@ -3526,6 +3882,80 @@ publishBtn.addEventListener('click', () => {
     publishBtn.disabled = false;
   });
 });
+
+/* ============ ADMIN : Corriger un SKU manquant (recherche + saisie) ============ */
+const skuFixSearchInput = document.getElementById('skuFixSearch');
+const skuFixResultsEl = document.getElementById('skuFixResults');
+const skuFixErrorEl = document.getElementById('skuFixError');
+
+function renderSkuFixResults(){
+  if(!skuFixResultsEl) return;
+  const q = normalize(skuFixSearchInput ? skuFixSearchInput.value : '');
+  if(!q || q.length < 2){
+    skuFixResultsEl.innerHTML = '<div class="sku-fix-empty">Tapez au moins 2 caractères pour rechercher une référence.</div>';
+    return;
+  }
+  const matches = DATA.filter(row => (
+    normalize(row[0]).includes(q) || normalize(row[1]).includes(q) ||
+    normalize(row[3]).includes(q) || normalize(row[4]).includes(q)
+  )).slice(0, 40);
+  if(!matches.length){
+    skuFixResultsEl.innerHTML = '<div class="sku-fix-empty">Aucune référence trouvée.</div>';
+    return;
+  }
+  skuFixResultsEl.innerHTML = matches.map(row => {
+    const key = frameOverrideKey(row[0], row[1], row[3], row[4]);
+    return `
+      <div class="sku-fix-row" data-sku-fix-key="${escapeHtml(key)}">
+        <div class="sku-fix-info">
+          <b>${escapeHtml(row[0])} ${escapeHtml(row[1])}</b>
+          <div class="muted">${escapeHtml(row[3])} · ${escapeHtml(row[4])} · Côte B ${formatNum(row[5])} mm</div>
+        </div>
+        <input type="text" data-sku-fix-input placeholder="SKU" value="${escapeHtml(row[2]||'')}">
+        <button type="button" class="btn-ghost" data-sku-fix-save>Enregistrer</button>
+        <span class="sku-fix-saved" data-sku-fix-saved style="display:none;">Enregistré ✓</span>
+      </div>
+    `;
+  }).join('');
+}
+
+if(skuFixSearchInput){
+  skuFixSearchInput.addEventListener('input', renderSkuFixResults);
+}
+
+if(skuFixResultsEl){
+  skuFixResultsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-sku-fix-save]');
+    if(!btn) return;
+    const rowEl = btn.closest('[data-sku-fix-key]');
+    if(!rowEl) return;
+    if(skuFixErrorEl) skuFixErrorEl.style.display = 'none';
+    const key = rowEl.dataset.skuFixKey;
+    const input = rowEl.querySelector('[data-sku-fix-input]');
+    const value = input.value.trim();
+    const savedEl = rowEl.querySelector('[data-sku-fix-saved]');
+    if(value){
+      FRAMES_SKU_OVERRIDES[key] = value;
+    } else {
+      delete FRAMES_SKU_OVERRIDES[key];
+    }
+    // Met aussi à jour la ligne en mémoire tout de suite, sans attendre un rechargement.
+    DATA.forEach(r => { if(frameOverrideKey(r[0], r[1], r[3], r[4]) === key) r[2] = value; });
+    AppStorage.set('frames-sku-overrides', JSON.stringify(FRAMES_SKU_OVERRIDES))
+      .then(() => {
+        if(savedEl){
+          savedEl.style.display = 'inline';
+          setTimeout(() => { savedEl.style.display = 'none'; }, 2000);
+        }
+      })
+      .catch((err) => {
+        if(skuFixErrorEl){
+          skuFixErrorEl.textContent = "Erreur lors de l'enregistrement : " + err.message;
+          skuFixErrorEl.style.display = 'block';
+        }
+      });
+  });
+}
 
 /* ============ ADMIN : Photos clips (SKU -> photo + couleur clip) ============ */
 let jsZipLibPromise = null;
