@@ -329,6 +329,34 @@
   .ra-mgmt-actions button:hover{border-color:var(--teal);color:var(--ink);}
   .ra-mgmt-actions button.danger:hover{border-color:#DC2626;color:#DC2626;}
 
+  /* Ajout d'un SKU manquant directement depuis Hauteur Cote B (tous profils, nom obligatoire) */
+  .sku-add{margin:-6px 0 18px;padding:12px 14px;border:1.5px dashed #F5B98F;border-radius:10px;background:#FFF8F3;font-size:13px;}
+  .sku-add-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .sku-add-head span{color:#9A4A12;font-weight:500;}
+  .sku-add button{font:inherit;font-size:13px;padding:7px 12px;border-radius:7px;cursor:pointer;border:1.5px solid #FF6D1B;background:#fff;color:#C2530F;font-weight:500;}
+  .sku-add button.primary{background:#FF6D1B;color:#fff;}
+  .sku-add button:disabled{opacity:.6;cursor:wait;}
+  .sku-add-form{display:none;margin-top:10px;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+  .sku-add.open .sku-add-form{display:flex;}
+  .sku-add.open #fSkuAddOpen{display:none;}
+  .sku-add-form label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--ink-soft);flex:1 1 150px;}
+  .sku-add-form input{font:inherit;font-size:13px;padding:8px 10px;border:1.5px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);}
+  .sku-add-form input:focus{outline:none;border-color:#FF6D1B;}
+  .sku-add-msg{width:100%;font-size:12px;margin-top:2px;}
+  .sku-add-msg.err{color:#DC2626;}
+  .sku-add-msg.ok{color:#16A34A;}
+
+  /* Historique des corrections de SKU (Admin > Catalogues) */
+  .sku-log{margin-top:14px;border-top:1px solid #EEF2F8;padding-top:10px;}
+  .sku-log h3{font-size:13px;margin:0 0 6px;color:var(--ink);}
+  .sku-log-list{max-height:260px;overflow-y:auto;font-size:12px;}
+  .sku-log-row{padding:6px 0;border-top:1px dotted #E4E9F2;display:flex;gap:8px;flex-wrap:wrap;}
+  .sku-log-row:first-child{border-top:none;}
+  .sku-log-row .d{color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;min-width:108px;}
+  .sku-log-row .who{font-weight:600;color:var(--ink);}
+  .sku-log-row .chg{font-family:'IBM Plex Mono',monospace;}
+  .sku-log-row .src{color:var(--ink-soft);}
+
   /* Correction manuelle de SKU (Admin > Catalogues) */
   .sku-fix-results{max-height:360px;overflow-y:auto;}
   .sku-fix-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #EEF2F8;}
@@ -766,7 +794,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.8</div>
+          <div class="brand-version">V3.9</div>
         </div>
       </div>
     </div>
@@ -906,6 +934,20 @@
       <div class="coteb-readout">
         <div class="label">Côte B</div>
         <div class="value" id="fCoteB"></div>
+      </div>
+    </div>
+
+    <div class="sku-add" id="fSkuAdd" style="display:none;">
+      <div class="sku-add-head">
+        <span>⚠️ SKU manquant pour cette référence</span>
+        <button type="button" id="fSkuAddOpen">➕ Ajouter le SKU</button>
+      </div>
+      <div class="sku-add-form">
+        <label>SKU<input type="text" id="fSkuAddValue" maxlength="40" autocomplete="off" placeholder="ex. 8056597123456"></label>
+        <label>Votre nom (obligatoire)<input type="text" id="fSkuAddAuthor" maxlength="60" autocomplete="name" placeholder="Prénom Nom"></label>
+        <button type="button" class="primary" id="fSkuAddSave">Enregistrer</button>
+        <button type="button" id="fSkuAddCancel">Annuler</button>
+        <div class="sku-add-msg" id="fSkuAddMsg"></div>
       </div>
     </div>
 
@@ -1076,7 +1118,7 @@
     </div>
 
     <div class="pd-bookmarklet-footer">
-      <a id="pdPhotoBookmarklet" href="javascript:!function()%7Btry%7Bfetch(location.href).then(function(e)%7Breturn%20e.blob()%7D).then(function(e)%7Bvar%20t%3Dnew%20FileReader%3Bt.onload%3Dfunction()%7Bvar%20e%3Dt.result%2Ca%3Dwindow.open(%22https%3A%2F%2Ftoolboxbycevidentia.netlify.app%2F%22%2C%22_blank%22)%3Bif(a)%7Bvar%20n%3D!1%3Bwindow.addEventListener(%22message%22%2Co)%3Bvar%20r%3DsetInterval(function()%7Bif(n)clearInterval(r)%3Belse%20try%7Ba.postMessage(%7Btype%3A%22pd-photo%22%2CdataUrl%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7D%7D%2C400)%3BsetTimeout(function()%7BclearInterval(r)%2Cwindow.removeEventListener(%22message%22%2Co)%7D%2C15e3)%7Delse%20alert(%22Le%20navigateur%20a%20bloqu%C3%A9%20l'ouverture%20du%20nouvel%20onglet.%20Autorisez%20les%20pop-ups%20pour%20ce%20site.%22)%3Bfunction%20o(e)%7Be.data%26%26%22pd-photo-ack%22%3D%3D%3De.data.type%26%26(n%3D!0%2CclearInterval(r)%2Cwindow.removeEventListener(%22message%22%2Co))%7D%7D%2Ct.readAsDataURL(e)%7D).catch(function(e)%7Balert(%22Impossible%20de%20r%C3%A9cup%C3%A9rer%20la%20photo%20%3A%20%22%2Be.message)%7D)%7Dcatch(e)%7Balert(%22Erreur%20%3A%20%22%2Be.message)%7D%7D()%3B"
+      <a id="pdPhotoBookmarklet" href="javascript:!function()%7Btry%7Bfetch(location.href).then(function(e)%7Breturn%20e.blob()%7D).then(function(e)%7Bvar%20t%3Dnew%20FileReader%3Bt.onload%3Dfunction()%7Bvar%20e%3Dt.result%2Ca%3Dwindow.open(%22__TOOLBOX_ORIGIN__%2F%22%2C%22_blank%22)%3Bif(a)%7Bvar%20n%3D!1%3Bwindow.addEventListener(%22message%22%2Co)%3Bvar%20r%3DsetInterval(function()%7Bif(n)clearInterval(r)%3Belse%20try%7Ba.postMessage(%7Btype%3A%22pd-photo%22%2CdataUrl%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7D%7D%2C400)%3BsetTimeout(function()%7BclearInterval(r)%2Cwindow.removeEventListener(%22message%22%2Co)%7D%2C15e3)%7Delse%20alert(%22Le%20navigateur%20a%20bloqu%C3%A9%20l'ouverture%20du%20nouvel%20onglet.%20Autorisez%20les%20pop-ups%20pour%20ce%20site.%22)%3Bfunction%20o(e)%7Be.data%26%26%22pd-photo-ack%22%3D%3D%3De.data.type%26%26(n%3D!0%2CclearInterval(r)%2Cwindow.removeEventListener(%22message%22%2Co))%7D%7D%2Ct.readAsDataURL(e)%7D).catch(function(e)%7Balert(%22Impossible%20de%20r%C3%A9cup%C3%A9rer%20la%20photo%20%3A%20%22%2Be.message)%7D)%7Dcatch(e)%7Balert(%22Erreur%20%3A%20%22%2Be.message)%7D%7D()%3B"
          class="btn-ghost-link" onclick="return false;" title="Glisse-moi dans tes favoris, ne clique pas ici">🔖 Envoyer photo PDM vers le Tool Box</a>
       <span class="pd-bookmarklet-hint">Glissez ce bouton dans votre barre de favoris, puis cliquez-le depuis la photo du client sur C'Evidentia.</span>
     </div>
@@ -1236,6 +1278,10 @@
             <div class="modal-error" id="skuFixError" style="display:none;"></div>
             <input type="text" id="skuFixSearch" placeholder="Rechercher une référence… (2 caractères min.)">
             <div id="skuFixResults" class="sku-fix-results"></div>
+            <div class="sku-log">
+              <h3>Historique des modifications de SKU <button type="button" class="btn-ghost" id="skuLogRefresh" style="margin-left:8px;font-size:11.5px;padding:3px 8px;">Actualiser</button></h3>
+              <div class="sku-log-list" id="skuLogList"><div class="sku-fix-empty">Chargement…</div></div>
+            </div>
           </div>
 
           <div class="admin-card">
@@ -1556,7 +1602,7 @@
       <div class="admin-card" style="max-width:480px;margin-bottom:20px;">
         <h2>Génération automatique</h2>
         <p class="sub">Sur le site des envois, sélectionne la référence puis clique sur ce favori : le code-barre est rempli et imprimé automatiquement, sans mot de passe. Si cet onglet Tool Box est déjà ouvert, il est réutilisé.</p>
-        <a id="atelierBarcodeBookmarklet" href="javascript:!function()%7B%22use%20strict%22%3Bvar%20e%3D(window.getSelection%3Fwindow.getSelection().toString()%3A%22%22).trim()%3Bif(e)%7Bvar%20t%3Dwindow.open(%22%22%2C%22toolbox-cevidentia%22)%3Bif(t)%7Bvar%20n%3D!1%3Bwindow.addEventListener(%22message%22%2Cr)%3Bvar%20a%3DsetInterval(function()%7Bif(n)clearInterval(a)%3Belse%20try%7Bt.postMessage(%7Btype%3A%22barcode-ref%22%2Cref%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7D%7D%2C300)%3Btry%7Bt.postMessage(%7Btype%3A%22barcode-ref%22%2Cref%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7DsetTimeout(function()%7Bif(clearInterval(a)%2Cwindow.removeEventListener(%22message%22%2Cr)%2C!n)try%7Bt.location%3D%22https%3A%2F%2Ftoolboxbycevidentia.netlify.app%2F%3Fbarcode_ref%3D%22%2BencodeURIComponent(e)%7Dcatch(e)%7B%7D%7D%2C1200)%7D%7Dfunction%20r(e)%7Be.data%26%26%22barcode-ref-ack%22%3D%3D%3De.data.type%26%26(n%3D!0%2CclearInterval(a)%2Cwindow.removeEventListener(%22message%22%2Cr))%7D%7D()%3B"
+        <a id="atelierBarcodeBookmarklet" href="javascript:!function()%7B%22use%20strict%22%3Bvar%20e%3D(window.getSelection%3Fwindow.getSelection().toString()%3A%22%22).trim()%3Bif(e)%7Bvar%20t%3Dwindow.open(%22%22%2C%22toolbox-cevidentia%22)%3Bif(t)%7Bvar%20n%3D!1%3Bwindow.addEventListener(%22message%22%2Cr)%3Bvar%20a%3DsetInterval(function()%7Bif(n)clearInterval(a)%3Belse%20try%7Bt.postMessage(%7Btype%3A%22barcode-ref%22%2Cref%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7D%7D%2C300)%3Btry%7Bt.postMessage(%7Btype%3A%22barcode-ref%22%2Cref%3Ae%7D%2C%22*%22)%7Dcatch(e)%7B%7DsetTimeout(function()%7Bif(clearInterval(a)%2Cwindow.removeEventListener(%22message%22%2Cr)%2C!n)try%7Bt.location%3D%22__TOOLBOX_ORIGIN__%2F%3Fbarcode_ref%3D%22%2BencodeURIComponent(e)%7Dcatch(e)%7B%7D%7D%2C1200)%7D%7Dfunction%20r(e)%7Be.data%26%26%22barcode-ref-ack%22%3D%3D%3De.data.type%26%26(n%3D!0%2CclearInterval(a)%2Cwindow.removeEventListener(%22message%22%2Cr))%7D%7D()%3B"
            class="btn-ghost-link" onclick="return false;" title="Glisse-moi dans tes favoris, ne clique pas ici">🔖 Générer code-barre</a>
       </div>
     </div><!-- /atelierSubBarcode -->
@@ -1707,10 +1753,18 @@ function loadClipPhotos(){
 // Priorité à l'API serveur réelle (fonctionne partout, une fois déployée sur Netlify).
 // Repli sur window.storage (Claude uniquement) quand l'API n'est pas encore déployée,
 // pour continuer à pouvoir tester/itérer directement dans cette conversation.
+// Bookmarklets (Prise De Mesure + CodeBarre) : l'adresse du site n'est plus écrite en dur, elle
+// est injectée au chargement depuis l'adresse réelle de la page — plus rien à modifier si le
+// site Netlify est renommé à nouveau.
+document.querySelectorAll('#pdPhotoBookmarklet, #atelierBarcodeBookmarklet').forEach(a => {
+  a.setAttribute('href', a.getAttribute('href').split('__TOOLBOX_ORIGIN__').join(encodeURIComponent(location.origin)));
+});
+
 const REMOTE_DATA_API = '/.netlify/functions/data';
 const REMOTE_AUTH_API = '/.netlify/functions/auth';
 let CURRENT_ADMIN_PASSWORD = null; // mot de passe validé pour la session admin en cours (mémoire uniquement)
 let CURRENT_OPERATION_PASSWORD = null; // idem pour le rôle Operation (scope serveur 'operation', ex-'atelier')
+let CURRENT_PROFILE_PASSWORD = null; // mot de passe du profil connecté, quel qu'il soit (Opticien compris) — sert uniquement aux actions serveur ouvertes à tous (ex. ajout de SKU manquant)
 let CURRENT_ATELIER_PASSWORD = null; // fixé par la connexion Operation/Admin (voir roleSetLoggedIn) — déclaré ici (et non plus bas) pour que roleRestoreSession() puisse y écrire dès le chargement de la page
 
 const AppStorage = {
@@ -1778,6 +1832,33 @@ async function verifyProfilePassword(profileId, pw){
   }
 }
 
+
+// Enregistre (ou supprime, Administrateur uniquement) une correction de SKU via l'action serveur
+// dédiée 'sku-override' : une seule entrée modifiée à la fois + journalisation qui/quand/quoi.
+async function saveSkuOverride({ key, sku, author, ref, origin }){
+  const pw = CURRENT_PROFILE_PASSWORD || CURRENT_ADMIN_PASSWORD || CURRENT_OPERATION_PASSWORD;
+  if(!pw) throw new Error('Vous devez être connecté pour enregistrer un SKU.');
+  const profile = (typeof CUSTOM_PROFILES !== 'undefined' && CURRENT_PROFILE_ID) ? CUSTOM_PROFILES.find(p => p.id === CURRENT_PROFILE_ID) : null;
+  let res;
+  try{
+    res = await fetch(REMOTE_DATA_API, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'sku-override', key, sku, author, ref, origin, password: pw, profile: profile ? profile.name : (CURRENT_ROLE || '') })
+    });
+  } catch(e){ throw new Error('Serveur injoignable, réessayez.'); }
+  let json = {};
+  try{ json = await res.json(); }catch(e){}
+  if(!res.ok || !json.ok){
+    if(res.status === 404) throw new Error("Fonction serveur non déployée (data.js).");
+    throw new Error(json.error || ('Erreur serveur (' + res.status + ')'));
+  }
+  if(json.overrides && typeof json.overrides === 'object') FRAMES_SKU_OVERRIDES = json.overrides;
+  // Met à jour les lignes en mémoire tout de suite, sans rechargement.
+  DATA.forEach(r => { if(frameOverrideKey(r[0], r[1], r[3], r[4]) === key) r[2] = sku; });
+  if(typeof renderSkuLog === 'function') renderSkuLog();
+  return json;
+}
 
 let DATA = [];
 let DB_META = { updatedAt: null, rowCount: 0, source: 'défaut' };
@@ -2532,8 +2613,11 @@ document.addEventListener('click', (e) => {
 const resultEl = document.getElementById('result');
 const emptyState = document.getElementById('emptyState');
 
+let CURRENT_FRAME_ROW = null;
 function displayFrameResult(row){
+  CURRENT_FRAME_ROW = row;
   const [marque, modele, sku, couleur, taille, coteb] = row;
+  skuAddReset(!String(sku || '').trim());
   document.getElementById('fBrand').textContent = marque;
   document.getElementById('fModel').textContent = modele || '—';
   const metaParts = [];
@@ -2578,6 +2662,57 @@ document.getElementById('fPhotoWrap').addEventListener('click', () => {
 });
 photoLightbox.addEventListener('click', () => photoLightbox.classList.remove('show'));
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') photoLightbox.classList.remove('show'); });
+
+/* ---- Ajout d'un SKU manquant depuis Hauteur Cote B (tous profils connectés, nom obligatoire) ---- */
+const skuAddEl = document.getElementById('fSkuAdd');
+const skuAddValue = document.getElementById('fSkuAddValue');
+const skuAddAuthor = document.getElementById('fSkuAddAuthor');
+const skuAddSaveBtn = document.getElementById('fSkuAddSave');
+const skuAddMsg = document.getElementById('fSkuAddMsg');
+const SKU_AUTHOR_LS = 'toolbox-sku-author';
+
+function skuAddSetMsg(text, kind){
+  skuAddMsg.textContent = text || '';
+  skuAddMsg.className = 'sku-add-msg' + (kind ? ' ' + kind : '');
+}
+function skuAddReset(show){
+  skuAddEl.style.display = show ? 'block' : 'none';
+  skuAddEl.classList.remove('open');
+  skuAddValue.value = '';
+  skuAddSetMsg('');
+  skuAddSaveBtn.disabled = false;
+}
+document.getElementById('fSkuAddOpen').addEventListener('click', () => {
+  skuAddEl.classList.add('open');
+  if(!skuAddAuthor.value){ try{ skuAddAuthor.value = localStorage.getItem(SKU_AUTHOR_LS) || ''; }catch(e){} }
+  skuAddValue.focus();
+});
+document.getElementById('fSkuAddCancel').addEventListener('click', () => { skuAddEl.classList.remove('open'); skuAddSetMsg(''); });
+[skuAddValue, skuAddAuthor].forEach(el => el.addEventListener('keydown', (e) => { if(e.key === 'Enter') skuAddSaveBtn.click(); }));
+skuAddSaveBtn.addEventListener('click', async () => {
+  const row = CURRENT_FRAME_ROW;
+  if(!row) return;
+  const sku = skuAddValue.value.trim();
+  const author = skuAddAuthor.value.trim().replace(/\s+/g, ' ');
+  if(!sku){ skuAddSetMsg('Saisissez le SKU.', 'err'); skuAddValue.focus(); return; }
+  if(!/^[A-Za-z0-9._\-\/ ]{1,40}$/.test(sku)){ skuAddSetMsg('SKU invalide : lettres, chiffres, . _ - / uniquement.', 'err'); skuAddValue.focus(); return; }
+  if(author.length < 2){ skuAddSetMsg('Indiquez votre nom avant d\'enregistrer.', 'err'); skuAddAuthor.focus(); return; }
+  const [marque, modele, , couleur, taille] = row;
+  if(!confirm(`Enregistrer le SKU ${sku} pour ${marque} ${modele} (${couleur || '—'} · ${taille || '—'}) ?\nModification enregistrée au nom de : ${author}`)) return;
+  skuAddSaveBtn.disabled = true;
+  skuAddSetMsg('Enregistrement…');
+  try{
+    await saveSkuOverride({ key: frameOverrideKey(marque, modele, couleur, taille), sku, author, ref: { marque, modele, couleur, taille }, origin: 'coteb' });
+    try{ localStorage.setItem(SKU_AUTHOR_LS, author); }catch(e){}
+    row[2] = sku;
+    displayFrameResult(row); // le SKU est désormais connu : le bloc d'ajout se masque
+    const meta = document.getElementById('fMeta');
+    meta.textContent = meta.textContent + '  ✓ SKU enregistré par ' + author;
+  } catch(err){
+    skuAddSaveBtn.disabled = false;
+    skuAddSetMsg(err.message, 'err');
+  }
+});
 
 function selectFrame(row){
   const [marque, modele] = row;
@@ -2695,6 +2830,7 @@ function roleApplyVisibility(){
 
 function roleSetLoggedIn(role, pw, remember, profileId){
   CURRENT_ROLE = role;
+  CURRENT_PROFILE_PASSWORD = pw || null;
   if(role === 'admin'){
     CURRENT_ADMIN_PASSWORD = pw;
     CURRENT_ATELIER_PASSWORD = pw; // le serveur accepte aussi le mdp Admin pour l'Atelier
@@ -2719,6 +2855,7 @@ function roleSetLoggedIn(role, pw, remember, profileId){
 
 function roleLogout(){
   CURRENT_ROLE = null;
+  CURRENT_PROFILE_PASSWORD = null;
   CURRENT_ADMIN_PASSWORD = null;
   CURRENT_OPERATION_PASSWORD = null;
   CURRENT_ATELIER_PASSWORD = null;
@@ -3934,14 +4071,11 @@ if(skuFixResultsEl){
     const input = rowEl.querySelector('[data-sku-fix-input]');
     const value = input.value.trim();
     const savedEl = rowEl.querySelector('[data-sku-fix-saved]');
-    if(value){
-      FRAMES_SKU_OVERRIDES[key] = value;
-    } else {
-      delete FRAMES_SKU_OVERRIDES[key];
-    }
-    // Met aussi à jour la ligne en mémoire tout de suite, sans attendre un rechargement.
-    DATA.forEach(r => { if(frameOverrideKey(r[0], r[1], r[3], r[4]) === key) r[2] = value; });
-    AppStorage.set('frames-sku-overrides', JSON.stringify(FRAMES_SKU_OVERRIDES))
+    const refRow = DATA.find(r => frameOverrideKey(r[0], r[1], r[3], r[4]) === key) || [];
+    const adminProfile = CURRENT_PROFILE_ID ? CUSTOM_PROFILES.find(p => p.id === CURRENT_PROFILE_ID) : null;
+    const author = adminProfile ? adminProfile.name : 'Administrateur';
+    saveSkuOverride({ key, sku: value, author, origin: 'admin',
+      ref: { marque: refRow[0] || '', modele: refRow[1] || '', couleur: refRow[3] || '', taille: refRow[4] || '' } })
       .then(() => {
         if(savedEl){
           savedEl.style.display = 'inline';
@@ -3956,6 +4090,33 @@ if(skuFixResultsEl){
       });
   });
 }
+
+/* ---- Historique des modifications de SKU (qui / quand / quoi), le plus récent en haut ---- */
+const skuLogListEl = document.getElementById('skuLogList');
+function renderSkuLog(){
+  if(!skuLogListEl) return;
+  fetch(`${REMOTE_DATA_API}?key=${encodeURIComponent('frames-sku-overrides-log')}`)
+    .then(r => r.ok ? r.json() : { value: null })
+    .then(j => {
+      let log = [];
+      try{ log = JSON.parse(j.value || '[]'); }catch(e){}
+      if(!Array.isArray(log) || !log.length){
+        skuLogListEl.innerHTML = '<div class="sku-fix-empty">Aucune modification enregistrée pour l\'instant.</div>';
+        return;
+      }
+      skuLogListEl.innerHTML = log.slice(-200).reverse().map(e => {
+        const d = new Date(e.at);
+        const when = isNaN(d) ? '' : d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+        const ref = e.ref ? [e.ref.marque, e.ref.modele, e.ref.couleur, e.ref.taille].filter(Boolean).join(' · ') : e.key;
+        const chg = (e.old ? escapeHtml(e.old) : '∅') + ' → ' + (e.new ? escapeHtml(e.new) : '<i>supprimé</i>');
+        return `<div class="sku-log-row"><span class="d">${escapeHtml(when)}</span><span class="who">${escapeHtml(e.author)}</span><span>${escapeHtml(ref)}</span><span class="chg">${chg}</span><span class="src">(${e.origin === 'admin' ? 'Admin' : 'Cote B'}${e.profile ? ' · ' + escapeHtml(e.profile) : ''})</span></div>`;
+      }).join('');
+    })
+    .catch(() => { skuLogListEl.innerHTML = '<div class="sku-fix-empty">Historique indisponible.</div>'; });
+}
+const skuLogRefreshBtn = document.getElementById('skuLogRefresh');
+if(skuLogRefreshBtn) skuLogRefreshBtn.addEventListener('click', renderSkuLog);
+renderSkuLog();
 
 /* ============ ADMIN : Photos clips (SKU -> photo + couleur clip) ============ */
 let jsZipLibPromise = null;
