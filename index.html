@@ -356,6 +356,10 @@
   .sku-log-row .who{font-weight:600;color:var(--ink);}
   .sku-log-row .chg{font-family:'IBM Plex Mono',monospace;}
   .sku-log-row .src{color:var(--ink-soft);}
+  .sku-log-row{align-items:center;}
+  .sku-log-undo{font:inherit;font-size:12px;line-height:1;padding:4px 6px;border:1px solid #F3C1C1;border-radius:6px;background:#fff;cursor:pointer;}
+  .sku-log-undo:hover{background:#FEF2F2;border-color:#DC2626;}
+  .sku-log-undo:disabled{opacity:.3;cursor:default;background:#fff;border-color:var(--line);}
 
   /* Correction manuelle de SKU (Admin > Catalogues) */
   .sku-fix-results{max-height:360px;overflow-y:auto;}
@@ -1279,8 +1283,12 @@
             <input type="text" id="skuFixSearch" placeholder="Rechercher une référence… (2 caractères min.)">
             <div id="skuFixResults" class="sku-fix-results"></div>
             <div class="sku-log">
-              <h3>Historique des modifications de SKU <button type="button" class="btn-ghost" id="skuLogRefresh" style="margin-left:8px;font-size:11.5px;padding:3px 8px;">Actualiser</button></h3>
-              <div class="sku-log-list" id="skuLogList"><div class="sku-fix-empty">Chargement…</div></div>
+              <h3>Historique des modifications de SKU
+                <button type="button" class="btn-ghost" id="skuLogToggle" style="margin-left:8px;font-size:11.5px;padding:3px 8px;">Afficher</button>
+                <button type="button" class="btn-ghost" id="skuLogRefresh" style="margin-left:4px;font-size:11.5px;padding:3px 8px;display:none;">Actualiser</button>
+              </h3>
+              <div class="sku-log-list" id="skuLogList" style="display:none;"></div>
+              <div class="modal-error" id="skuLogError" style="display:none;"></div>
             </div>
           </div>
 
@@ -4091,32 +4099,86 @@ if(skuFixResultsEl){
   });
 }
 
-/* ---- Historique des modifications de SKU (qui / quand / quoi), le plus récent en haut ---- */
+/* ---- Historique des modifications de SKU (qui / quand / quoi), le plus récent en haut ----
+   Replié par défaut (pour ne pas allonger la page Admin) : chargé seulement à l'ouverture.
+   Bouton 🗑 devant chaque ligne = annuler cette modification (remet l'ancien SKU, ou supprime
+   le SKU s'il n'y en avait pas avant). Actif uniquement sur la modification la plus récente de
+   chaque référence, et seulement si le SKU actuel est toujours celui de cette ligne. */
 const skuLogListEl = document.getElementById('skuLogList');
+const skuLogToggleBtn = document.getElementById('skuLogToggle');
+const skuLogRefreshBtn = document.getElementById('skuLogRefresh');
+const skuLogErrorEl = document.getElementById('skuLogError');
+let SKU_LOG_OPEN = false;
+let SKU_LOG_CACHE = [];
+
 function renderSkuLog(){
-  if(!skuLogListEl) return;
+  if(!skuLogListEl || !SKU_LOG_OPEN) return; // replié : on ne charge rien
+  skuLogListEl.innerHTML = '<div class="sku-fix-empty">Chargement…</div>';
   fetch(`${REMOTE_DATA_API}?key=${encodeURIComponent('frames-sku-overrides-log')}`)
     .then(r => r.ok ? r.json() : { value: null })
     .then(j => {
       let log = [];
       try{ log = JSON.parse(j.value || '[]'); }catch(e){}
-      if(!Array.isArray(log) || !log.length){
+      if(!Array.isArray(log)) log = [];
+      SKU_LOG_CACHE = log;
+      if(skuLogToggleBtn) skuLogToggleBtn.textContent = `Masquer (${log.length})`;
+      if(!log.length){
         skuLogListEl.innerHTML = '<div class="sku-fix-empty">Aucune modification enregistrée pour l\'instant.</div>';
         return;
       }
-      skuLogListEl.innerHTML = log.slice(-200).reverse().map(e => {
+      const lastIdxByKey = {};
+      log.forEach((e, i) => { lastIdxByKey[e.key] = i; });
+      const rows = [];
+      for(let i = log.length - 1; i >= 0 && rows.length < 200; i--){
+        const e = log[i];
         const d = new Date(e.at);
         const when = isNaN(d) ? '' : d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
         const ref = e.ref ? [e.ref.marque, e.ref.modele, e.ref.couleur, e.ref.taille].filter(Boolean).join(' · ') : e.key;
         const chg = (e.old ? escapeHtml(e.old) : '∅') + ' → ' + (e.new ? escapeHtml(e.new) : '<i>supprimé</i>');
-        return `<div class="sku-log-row"><span class="d">${escapeHtml(when)}</span><span class="who">${escapeHtml(e.author)}</span><span>${escapeHtml(ref)}</span><span class="chg">${chg}</span><span class="src">(${e.origin === 'admin' ? 'Admin' : 'Cote B'}${e.profile ? ' · ' + escapeHtml(e.profile) : ''})</span></div>`;
-      }).join('');
+        const current = FRAMES_SKU_OVERRIDES[e.key] || '';
+        const canUndo = lastIdxByKey[e.key] === i && current === (e.new || '') && (e.old || '') !== (e.new || '');
+        const undoTitle = canUndo
+          ? (e.old ? `Annuler : remettre le SKU ${e.old}` : 'Annuler : supprimer ce SKU')
+          : 'Déjà modifié depuis (voir la ligne plus récente)';
+        rows.push(`<div class="sku-log-row"><button type="button" class="sku-log-undo" data-sku-log-undo="${i}" title="${escapeHtml(undoTitle)}"${canUndo ? '' : ' disabled'}>🗑</button><span class="d">${escapeHtml(when)}</span><span class="who">${escapeHtml(e.author)}</span><span>${escapeHtml(ref)}</span><span class="chg">${chg}</span><span class="src">(${e.origin === 'admin' ? 'Admin' : 'Cote B'}${e.profile ? ' · ' + escapeHtml(e.profile) : ''})</span></div>`);
+      }
+      skuLogListEl.innerHTML = rows.join('');
     })
     .catch(() => { skuLogListEl.innerHTML = '<div class="sku-fix-empty">Historique indisponible.</div>'; });
 }
-const skuLogRefreshBtn = document.getElementById('skuLogRefresh');
+
+if(skuLogToggleBtn){
+  skuLogToggleBtn.addEventListener('click', () => {
+    SKU_LOG_OPEN = !SKU_LOG_OPEN;
+    skuLogListEl.style.display = SKU_LOG_OPEN ? 'block' : 'none';
+    skuLogRefreshBtn.style.display = SKU_LOG_OPEN ? 'inline-block' : 'none';
+    if(skuLogErrorEl) skuLogErrorEl.style.display = 'none';
+    if(SKU_LOG_OPEN) renderSkuLog(); else skuLogToggleBtn.textContent = 'Afficher';
+  });
+}
 if(skuLogRefreshBtn) skuLogRefreshBtn.addEventListener('click', renderSkuLog);
-renderSkuLog();
+
+if(skuLogListEl){
+  skuLogListEl.addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('[data-sku-log-undo]');
+    if(!btn || btn.disabled) return;
+    const e = SKU_LOG_CACHE[parseInt(btn.dataset.skuLogUndo, 10)];
+    if(!e) return;
+    const ref = e.ref ? [e.ref.marque, e.ref.modele, e.ref.couleur, e.ref.taille].filter(Boolean).join(' · ') : e.key;
+    const what = e.old ? `remettre l'ancien SKU ${e.old}` : 'supprimer le SKU';
+    if(!confirm(`Annuler la modification de ${e.author} sur ${ref} ?\n(${e.new || '∅'} → ${what})`)) return;
+    const adminProfile = CURRENT_PROFILE_ID ? CUSTOM_PROFILES.find(p => p.id === CURRENT_PROFILE_ID) : null;
+    btn.disabled = true;
+    if(skuLogErrorEl) skuLogErrorEl.style.display = 'none';
+    try{
+      await saveSkuOverride({ key: e.key, sku: e.old || '', author: adminProfile ? adminProfile.name : 'Administrateur', ref: e.ref || {}, origin: 'admin' });
+      renderSkuFixResults();
+    } catch(err){
+      btn.disabled = false;
+      if(skuLogErrorEl){ skuLogErrorEl.textContent = "Erreur lors de l'annulation : " + err.message; skuLogErrorEl.style.display = 'block'; }
+    }
+  });
+}
 
 /* ============ ADMIN : Photos clips (SKU -> photo + couleur clip) ============ */
 let jsZipLibPromise = null;
