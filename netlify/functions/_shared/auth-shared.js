@@ -7,7 +7,7 @@ const { getStore } = require('@netlify/blobs');
 const crypto = require('crypto');
 
 const DEFAULT_PASSWORD = 'Teamops2026'; // mot de passe Admin initial
-const SITE_ID = '1073646c-ef38-4e99-b77a-2a7aaa928b25'; // Project ID Netlify (lapdmbycevidentia)
+const SITE_ID = '1073646c-ef38-4e99-b77a-2a7aaa928b25'; // Project ID Netlify (toolboxbycevidentia, ex-lapdmbycevidentia)
 
 // Clé de stockage Blobs utilisée pour chaque zone protégée. Garder ces noms identiques
 // partout : c'est ce qui permet à auth.js (changement de mot de passe) et à data.js /
@@ -78,7 +78,7 @@ function profileIdFromScope(scope) {
 // niveau le plus faible (onglets de base, aucune écriture serveur ne le requiert jamais) —
 // il ne doit JAMAIS pouvoir autoriser une zone 'operation'/'atelier'/'admin'.
 const ROLE_LEVELS = { opticien: 0, operation: 1, admin: 2 };
-const SCOPE_MIN_LEVEL = { admin: 2, operation: 1, atelier: 1 };
+const SCOPE_MIN_LEVEL = { admin: 2, operation: 1, atelier: 1, opticien: 0 };
 
 // Renvoie le hash du mot de passe propre d'un profil. Pour les 2 profils de base historiques
 // ('operation' et 'admin', anciennement les seuls rôles protégés par mot de passe), tant
@@ -135,7 +135,23 @@ async function checkScopeAuthorized(dataStore, authStore, password, scope) {
   return isCustomProfileAuthorized(dataStore, authStore, pwHash, resolved);
 }
 
+// Vérifie qu'un mot de passe correspond à N'IMPORTE QUEL profil connecté (Opticien compris).
+// Utilisé uniquement pour les rares écritures ouvertes à tous les profils (ex. ajout d'un SKU
+// manquant depuis l'onglet Hauteur Cote B) — ces écritures passent par une action serveur
+// dédiée et limitée (voir data.js, action 'sku-override'), jamais par l'écriture générique.
+async function checkAnyProfileAuthorized(dataStore, authStore, password) {
+  if (!password) return false;
+  const pwHash = hashPw(password);
+  for (const id of ['opticien', 'operation', 'admin']) {
+    const h = await getProfileStoredHash(authStore, id);
+    if (h && h === pwHash) return true;
+  }
+  if (await checkScopeAuthorized(dataStore, authStore, password, 'operation')) return true;
+  return isCustomProfileAuthorized(dataStore, authStore, pwHash, 'opticien');
+}
+
 module.exports = {
+  checkAnyProfileAuthorized,
   blobStore, hashPw, resolveScope, getStoredHash, SCOPE_KEYS, DEFAULT_PASSWORD, SITE_ID,
   profilePasswordKey, isProfileScope, profileIdFromScope, isCustomProfileAuthorized, checkScopeAuthorized,
   getProfileStoredHash, ROLE_LEVELS, SCOPE_MIN_LEVEL,
