@@ -1,32 +1,66 @@
 // netlify/functions/atelier.js
-// Stockage des dépôts de fiches atelier/SAV (onglet "Dépôt Fiche Atelier / SAV") et de leur
-// journal archivé. Le mot de passe utilisé est celui du scope 'atelier' (voir _shared/auth-shared.js) :
-// initialisé sur le mot de passe Admin courant au premier accès, puis indépendant dès qu'il
-// est changé (changement fait via auth.js, action 'change', scope 'atelier').
+// Onglet Atelier > "Fusion FT" (V3.10).
 //
-// Fichiers déposés : stockés temporairement dans Netlify Blobs (store 'toolbox-atelier-files'),
-// un par un, jusqu'à ce que la fusion du jour soit lancée. Une fois la fusion terminée et
-// téléchargée côté client, les fichiers du jour sont purgés — seul un résumé texte reste
-// archivé indéfiniment (store 'toolbox-atelier-archive'), pour pouvoir vérifier plus tard
-// qu'une fiche a bien été reçue tel jour.
+// Les fiches atelier (PDF Cosium, donnees de sante) ne transitent JAMAIS par ce serveur :
+// elles sont deposees par les admins dans la bibliotheque SharePoint "Fiches Atelier",
+// puis lues, triees et fusionnees uniquement dans le navigateur du poste qui imprime.
 //
-// POST { action:'verify-only', password }                                -> { ok }
-// POST { action:'deposit', password, day, batchId, depositor, filename, base64 }
-//   -> ajoute un fichier au dépôt en attente du jour                     -> { ok, id }
-// GET  ?action=pool&password=...                                        -> { ok, days: { 'YYYY-MM-DD': [ {batchId,depositor,time,files:[{id,filename}]} ] } }
-// GET  ?action=file&password=...&id=...                                 -> { ok, filename, base64 }
-// POST { action:'purge-and-archive', password, day, summary }
-//   -> supprime les fichiers en attente du jour et archive le résumé     -> { ok }
-// GET  ?action=search&password=...&job=...                              -> { ok, matches: [ {day, mergedAt} ] }
+// Ce serveur ne stocke que l'HISTORIQUE des lots valides, sans aucune donnee patient :
+//   { id, date, jourDepot, lot, pages, jobs:[...], entries:[{ job, hash }] }
+//   - job  : numero de job (ex. "J1011000300"), "FORMULAIRE" ou null
+//   - hash : empreinte SHA-256 tronquee du texte de la page (sert a reperer une fiche deja
+//            imprimee un autre jour ; ne permet pas de retrouver le contenu)
+// Aucun nom de fichier, aucun nom de client.
+//
+// Store 'toolbox-atelier-history' : un blob par mois ('YYYY-MM') = tableau de lots.
+// Historique conserve 12 mois.
+//
+// GET  ?action=history&password=...          -> { ok, lots: [...] }   (12 derniers mois)
+// GET  ?action=search&password=...&job=...   -> { ok, matches: [ {day, mergedAt} ] }  (ancien journal, avant V3.10)
+// POST { action:'verify-only', password }    -> { ok }
+// POST { action:'record-lot', password, lot } -> { ok }
+// POST { action:'purge-legacy', password }   -> { ok, deleted }  supprime les PDF encore stockes
+//                                               par l'ancien sous-onglet "Depot Atelier / SAV"
 
-const crypto = require('crypto');
 const { blobStore, checkScopeAuthorized } = require('./_shared/auth-shared');
 
-// Accepte le mot de passe Operation (scope 'atelier', historique), le mot de passe Admin (un
-// compte Admin doit pouvoir utiliser l'Atelier sans connaître le mot de passe Operation), ou le
-// mot de passe propre d'un profil personnalisé habilité (Admin > Profils).
+const HISTORY_MONTHS = 12;
+
 async function checkPassword(dataStore, authStore, password) {
   return checkScopeAuthorized(dataStore, authStore, password, 'atelier');
+}
+
+function monthKey(d) {
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0');
+}
+
+function recentMonthKeys(n) {
+  const keys = [];
+  const d = new Date();
+  d.setUTCDate(1);
+  for (let i = 0; i < n; i++) {
+    keys.push(monthKey(d));
+    d.setUTCMonth(d.getUTCMonth() - 1);
+  }
+  return keys;
+}
+
+// Nettoyage defensif : seuls les champs attendus, aucun champ libre (pas de nom de fichier).
+function sanitizeLot(lot) {
+  const s = (v, max) => String(v == null ? '' : v).slice(0, max);
+  const entries = Array.isArray(lot.entries) ? lot.entries.slice(0, 5000) : [];
+  return {
+    id: s(lot.id, 64),
+    date: new Date(lot.date || Date.now()).toISOString(),
+    jourDepot: /^\d{4}-\d{2}-\d{2}$/.test(lot.jourDepot || '') ? lot.jourDepot : null,
+    lot: s(lot.lot, 80),
+    pages: Number(lot.pages) || entries.length,
+    jobs: (Array.isArray(lot.jobs) ? lot.jobs : []).map((j) => s(j, 20)).filter((j) => /^J\d{6,12}$/.test(j)).slice(0, 5000),
+    entries: entries.map((e) => ({
+      job: e && e.job && (/^J\d{6,12}$/.test(e.job) || e.job === 'FORMULAIRE') ? e.job : null,
+      hash: /^[0-9a-f]{8,64}$/.test((e && e.hash) || '') ? e.hash : null,
+    })),
+  };
 }
 
 exports.handler = async (event) => {
@@ -35,24 +69,7 @@ exports.handler = async (event) => {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
-
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: cors, body: '' };
-  }
-
-  if (!process.env.NETLIFY_BLOBS_TOKEN) {
-    return {
-      statusCode: 500,
-      headers: { ...cors, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: "Variable d'environnement NETLIFY_BLOBS_TOKEN manquante sur le site Netlify." }),
-    };
-  }
-
-  const authStore = blobStore('toolbox-auth');
-  const dataStore = blobStore('toolbox-data'); // pour retrouver les profils personnalisés (voir checkScopeAuthorized)
-  const filesStore = blobStore('toolbox-atelier-files');
-  const indexStore = blobStore('toolbox-atelier-index');
-  const archiveStore = blobStore('toolbox-atelier-archive');
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
 
   const json = (statusCode, obj) => ({
     statusCode,
@@ -60,46 +77,42 @@ exports.handler = async (event) => {
     body: JSON.stringify(obj),
   });
 
+  if (!process.env.NETLIFY_BLOBS_TOKEN) {
+    return json(500, { error: "Variable d'environnement NETLIFY_BLOBS_TOKEN manquante sur le site Netlify." });
+  }
+
+  const authStore = blobStore('toolbox-auth');
+  const dataStore = blobStore('toolbox-data');
+  const historyStore = blobStore('toolbox-atelier-history');
+  const archiveStore = blobStore('toolbox-atelier-archive'); // ancien journal (lecture seule)
+
   // -------------------- GET --------------------
   if (event.httpMethod === 'GET') {
     const qs = event.queryStringParameters || {};
-    const action = qs.action;
-
     if (!(await checkPassword(dataStore, authStore, qs.password))) {
       return json(401, { ok: false, error: 'Mot de passe incorrect.' });
     }
 
-    if (action === 'pool') {
-      const days = {};
-      const list = await indexStore.list();
-      for (const entry of list.blobs || []) {
-        const day = entry.key;
-        const raw = await indexStore.get(day);
-        days[day] = raw ? JSON.parse(raw) : [];
+    if (qs.action === 'history') {
+      const lots = [];
+      for (const key of recentMonthKeys(HISTORY_MONTHS + 1)) {
+        const raw = await historyStore.get(key, { type: 'json' });
+        if (Array.isArray(raw)) lots.push(...raw);
       }
-      return json(200, { ok: true, days });
+      const limit = Date.now() - HISTORY_MONTHS * 31 * 864e5;
+      return json(200, { ok: true, lots: lots.filter((l) => new Date(l.date).getTime() >= limit) });
     }
 
-    if (action === 'file') {
-      if (!qs.id) return json(400, { ok: false, error: "Paramètre 'id' manquant." });
-      const raw = await filesStore.get(qs.id, { type: 'json' });
-      if (!raw) return json(404, { ok: false, error: 'Fichier introuvable (déjà fusionné/purgé ?).' });
-      return json(200, { ok: true, filename: raw.filename, base64: raw.base64 });
-    }
-
-    if (action === 'search') {
+    if (qs.action === 'search') {
       const job = String(qs.job || '').replace(/\D/g, '');
-      if (!job) return json(400, { ok: false, error: "Paramètre 'job' manquant." });
+      if (!job) return json(400, { ok: false, error: "Parametre 'job' manquant." });
       const matches = [];
       const list = await archiveStore.list();
       for (const entry of list.blobs || []) {
         const raw = await archiveStore.get(entry.key, { type: 'json' });
         if (!raw) continue;
-        const runs = Array.isArray(raw) ? raw : [raw];
-        runs.forEach((run) => {
-          if ((run.numericJobs || []).map(String).indexOf(job) >= 0) {
-            matches.push({ day: entry.key, mergedAt: run.mergedAt });
-          }
+        (Array.isArray(raw) ? raw : [raw]).forEach((run) => {
+          if ((run.numericJobs || []).map(String).indexOf(job) >= 0) matches.push({ day: entry.key, mergedAt: run.mergedAt });
         });
       }
       return json(200, { ok: true, matches });
@@ -111,11 +124,7 @@ exports.handler = async (event) => {
   // -------------------- POST --------------------
   if (event.httpMethod === 'POST') {
     let body;
-    try {
-      body = JSON.parse(event.body || '{}');
-    } catch (e) {
-      return json(400, { ok: false, error: 'JSON invalide.' });
-    }
+    try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { ok: false, error: 'JSON invalide.' }); }
 
     if (body.action === 'verify-only') {
       const ok = await checkPassword(dataStore, authStore, body.password);
@@ -126,50 +135,32 @@ exports.handler = async (event) => {
       return json(401, { ok: false, error: 'Mot de passe incorrect.' });
     }
 
-    if (body.action === 'deposit') {
-      const { day, batchId, depositor, filename, base64 } = body;
-      if (!day || !batchId || !filename || !base64) {
-        return json(400, { ok: false, error: 'Champs manquants pour le dépôt.' });
-      }
-      const id = `${day}__${batchId}__${crypto.randomUUID()}`;
-      await filesStore.set(id, JSON.stringify({ filename, base64 }));
-
-      const raw = await indexStore.get(day);
-      const batches = raw ? JSON.parse(raw) : [];
-      let batch = batches.find((b) => b.batchId === batchId);
-      if (!batch) {
-        batch = { batchId, depositor: depositor || 'Non renseigné', time: new Date().toISOString(), files: [] };
-        batches.push(batch);
-      }
-      batch.files.push({ id, filename });
-      await indexStore.set(day, JSON.stringify(batches));
-
-      return json(200, { ok: true, id });
+    if (body.action === 'record-lot') {
+      if (!body.lot || typeof body.lot !== 'object') return json(400, { ok: false, error: "Parametre 'lot' manquant." });
+      const lot = sanitizeLot(body.lot);
+      const key = monthKey(new Date(lot.date));
+      const existing = (await historyStore.get(key, { type: 'json' })) || [];
+      if (!existing.some((l) => l.id && l.id === lot.id)) existing.push(lot); // idempotent
+      await historyStore.set(key, JSON.stringify(existing));
+      // Purge des mois trop anciens
+      const keep = new Set(recentMonthKeys(HISTORY_MONTHS + 1));
+      const list = await historyStore.list();
+      for (const b of list.blobs || []) { if (!keep.has(b.key)) await historyStore.delete(b.key); }
+      return json(200, { ok: true });
     }
 
-    if (body.action === 'purge-and-archive') {
-      const { day, summary } = body;
-      if (!day) return json(400, { ok: false, error: "Paramètre 'day' manquant." });
-
-      const raw = await indexStore.get(day);
-      const batches = raw ? JSON.parse(raw) : [];
-      for (const batch of batches) {
-        for (const f of batch.files) {
-          await filesStore.delete(f.id);
-        }
+    if (body.action === 'purge-legacy') {
+      let deleted = 0;
+      for (const name of ['toolbox-atelier-files', 'toolbox-atelier-index']) {
+        const store = blobStore(name);
+        const list = await store.list();
+        for (const b of list.blobs || []) { await store.delete(b.key); deleted++; }
       }
-      await indexStore.delete(day);
-
-      const existingRaw = await archiveStore.get(day, { type: 'json' });
-      const existing = Array.isArray(existingRaw) ? existingRaw : existingRaw ? [existingRaw] : [];
-      existing.push({ ...(summary || {}), mergedAt: new Date().toISOString() });
-      await archiveStore.set(day, JSON.stringify(existing));
-
-      return json(200, { ok: true });
+      return json(200, { ok: true, deleted });
     }
 
     return json(400, { ok: false, error: 'Action inconnue.' });
   }
 
-  return json(405, { ok: false, error: 'Méthode non autorisée.' });
+  return json(405, { ok: false, error: 'Methode non autorisee.' });
 };

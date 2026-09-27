@@ -798,7 +798,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.9</div>
+          <div class="brand-version">V3.10</div>
         </div>
       </div>
     </div>
@@ -1596,7 +1596,7 @@
 
     <div class="sub-tabs" style="display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);">
       <button class="sub-tab-btn active" id="atelierSubTabBarcode" type="button">CodeBarre</button>
-      <button class="sub-tab-btn" id="atelierSubTabDeposit" type="button">Dépôt Atelier / SAV</button>
+      <button class="sub-tab-btn" id="atelierSubTabFusion" type="button">Fusion FT</button>
     </div>
 
     <div id="atelierSubBarcode">
@@ -1615,89 +1615,77 @@
       </div>
     </div><!-- /atelierSubBarcode -->
 
-    <div id="atelierSubDeposit" style="display:none;">
-
-      <div id="atelierMainView">
+    <div id="atelierSubFusion" style="display:none;">
 
       <div class="admin-card" style="margin-bottom:20px;">
-        <h2>1. Déposer des fiches</h2>
-
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-          <div style="flex:2;min-width:200px;">
-            <label for="atelierDepositorInput">Déposé par (optionnel)</label>
-            <input type="text" id="atelierDepositorInput" placeholder="Ex. Julie">
-          </div>
-          <div style="flex:1;min-width:160px;">
-            <label for="atelierDayInput">Jour de dépôt</label>
-            <input type="date" id="atelierDayInput">
-          </div>
+        <h2>1. Dossier « Fiches Atelier » (SharePoint)</h2>
+        <p class="sub">Les fiches sont déposées par les admins dans la bibliothèque SharePoint. Elles sont lues, triées et fusionnées <b>uniquement sur ce poste</b> : aucun PDF n'est envoyé à la Tool Box. Seuls les numéros de job imprimés sont gardés dans l'historique.</p>
+        <div id="ftFolderState" class="sub" style="margin:8px 0;">Aucun dossier connecté.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="ftConnectBtn" style="width:auto;padding:11px 22px;margin-top:0;">Connecter le dossier</button>
+          <button class="btn btn-ghost" id="ftRefreshBtn" style="width:auto;padding:11px 18px;margin-top:0;" disabled>Actualiser</button>
+          <a class="btn-ghost-link" id="ftSharepointLink" href="https://evidentia.sharepoint.com/sites/Atelier/Fiches%20Atelier/Forms/AllItems.aspx" target="_blank" rel="noopener">Ouvrir la bibliothèque SharePoint ↗</a>
         </div>
-
-        <div class="modal-error" id="atelierDepositError"></div>
-
-        <div class="dropzone" id="atelierDropzone">
-          <div>Glissez des fichiers PDF ici, ou cliquez pour les choisir</div>
-          <div class="file-name" id="atelierDzText"></div>
-          <input type="file" id="atelierFileInput" accept="application/pdf" multiple>
-        </div>
-
-        <div id="atelierFileList"></div>
-
-        <button class="btn btn-primary" id="atelierAddDepositBtn" style="width:auto;padding:11px 22px;margin-top:14px;" disabled>Ajouter au dépôt de ce jour</button>
+        <p class="sub" style="margin-top:10px;font-size:12px;">Une seule fois par poste : choisir le dossier synchronisé « Fiches Atelier » (celui qui contient <b>A_traiter</b> et <b>Traites</b>). Fonctionne dans Edge ou Chrome.</p>
       </div>
 
       <div class="admin-card" style="margin-bottom:20px;">
-        <h2>Vérifier une fiche précise</h2>
+        <h2>🔎 Rechercher un n° de job</h2>
+        <p class="sub">Cherche dans les fiches déposées en attente et dans l'historique des fiches déjà imprimées.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="text" id="atelierSearchInput" placeholder="Ex. J101055210 ou 101055210" style="flex:1;min-width:220px;">
-          <button class="btn btn-ghost" id="atelierSearchBtn" style="width:auto;margin-top:0;padding:11px 18px;">Rechercher</button>
+          <input type="text" id="ftSearchInput" placeholder="Ex. J1011000300 ou 1011000300" style="flex:1;min-width:220px;">
+          <button class="btn btn-ghost" id="ftSearchBtn" style="width:auto;margin-top:0;padding:11px 18px;">Rechercher</button>
         </div>
-        <div id="atelierSearchResult" style="margin-top:10px;"></div>
+        <div id="ftSearchResult" style="margin-top:10px;"></div>
       </div>
 
-      <div class="admin-card" id="atelierPoolCard" style="margin-bottom:20px;display:none;">
-        <h2>2. Jours en attente de fusion</h2>
-        <p class="sub">La fusion automatique a lieu chaque matin à 9h30 pour le jour clôturé la veille. Un jour non encore fusionné reste séparé — un nouveau jour de dépôt n'y ajoute rien. Tu peux aussi forcer la fusion manuellement.</p>
-        <div id="atelierPoolList"></div>
-        <div id="atelierProgressWrap" style="display:none;">
-          <div class="progress-track"><div class="progress-fill" id="atelierProgressFill"></div></div>
-          <div class="atelier-log-line" id="atelierLogLine">—</div>
+      <div class="admin-card" id="ftPendingCard" style="margin-bottom:20px;display:none;">
+        <h2>2. Fiches en attente — par jour de dépôt</h2>
+        <p class="sub">Rien n'est fusionné ni déplacé sans ton clic. Traite de préférence du jour le plus ancien au plus récent.</p>
+        <div id="ftDayList"></div>
+        <div id="ftProgressWrap" style="display:none;">
+          <div class="progress-track"><div class="progress-fill" id="ftProgressFill"></div></div>
+          <div class="atelier-log-line" id="ftLogLine">—</div>
         </div>
       </div>
 
-      <div id="atelierResults" style="display:none;">
+      <div id="ftResults" style="display:none;">
         <div class="admin-card" style="margin-bottom:20px;">
-          <h2>3. Résultat de la fusion</h2>
-          <p class="sub">Vérifie le résumé avant de télécharger — les fiches sans numéro et les fiches SAV sont placées en tête, suivies des jobs classés par ordre croissant.</p>
-          <div class="summary-grid" id="atelierSummaryGrid"></div>
-          <div class="modal-success show" id="atelierOrderFlagOk" style="display:none;">✓ Ordre croissant vérifié sur les jobs numériques.</div>
-          <div class="modal-error show" id="atelierOrderFlagBad" style="display:none;">✗ Anomalie détectée dans l'ordre — à vérifier avant envoi.</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px;">
-            <div style="font-size:13px;color:var(--ink-soft);">Fichier de sortie : <b id="atelierOutName" style="color:var(--ink);font-family:'IBM Plex Mono',monospace;">—</b></div>
-            <button class="btn btn-primary" id="atelierDownloadBtn" style="width:auto;padding:11px 22px;">Télécharger le PDF trié</button>
+          <h2>3. Résultat — <span id="ftResDay"></span></h2>
+          <div class="summary-grid" id="ftSummaryGrid"></div>
+          <div id="ftHistBox"></div>
+          <div class="modal-success show" id="ftOrderOk" style="display:none;">✓ Ordre vérifié : formulaires en tête, puis sans n°, puis jobs croissants.</div>
+          <div class="modal-error show" id="ftOrderBad" style="display:none;">✗ Anomalie détectée dans l'ordre — à vérifier avant impression.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px;">
+            <button class="btn btn-primary" id="ftPrintBtn" style="width:auto;padding:11px 22px;margin-top:0;">Ouvrir pour imprimer</button>
+            <button class="btn btn-ghost" id="ftSaveBtn" style="width:auto;padding:11px 18px;margin-top:0;">Télécharger le PDF</button>
+            <span style="font-size:13px;color:var(--ink-soft);">Fichier : <b id="ftOutName" style="color:var(--ink);font-family:'IBM Plex Mono',monospace;">—</b></span>
+          </div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+            <button class="btn btn-primary" id="ftArchiveBtn" style="width:auto;padding:11px 22px;margin-top:0;background:#16A34A;">OK, valider ce jour → libérer le dossier</button>
+            <div class="sub" style="margin-top:6px;">Déplace les fiches de ce jour dans Traites\<span id="ftArchName"></span> (avec le PDF fusionné) et enregistre les numéros de job dans l'historique.</div>
           </div>
         </div>
-
         <div class="admin-card" style="margin-bottom:20px;">
           <h2>Détail page par page</h2>
-          <p class="sub">Ordre final dans le PDF fusionné.</p>
           <table>
             <thead><tr><th style="width:32px;">#</th><th>Job détecté</th><th>Fichier source</th><th>Page</th><th>Statut</th></tr></thead>
-            <tbody id="atelierDetailBody"></tbody>
+            <tbody id="ftDetailBody"></tbody>
           </table>
         </div>
       </div>
 
       <div class="admin-card" style="margin-bottom:20px;">
-        <h2>Journal — jours déjà fusionnés</h2>
-        <div id="atelierArchiveLog"><div class="sub" id="atelierArchiveEmpty">Aucun jour fusionné pour le moment.</div></div>
+        <h2>Derniers lots imprimés</h2>
+        <div id="ftLots"><div class="sub">—</div></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--ink-soft);">
+          Supprimer du dossier Traites les archives (PDF) de plus de
+          <input type="number" id="ftRetention" min="1" max="3650" value="30" style="width:80px;padding:6px 8px;"> jours (au moment de chaque validation).
+        </div>
+        <div style="margin-top:12px;"><button class="btn btn-ghost" id="ftPurgeLegacyBtn" style="width:auto;padding:8px 14px;margin-top:0;font-size:12.5px;">Purger les anciennes fiches stockées sur la Tool Box (avant V3.10)</button> <span class="sub" id="ftPurgeLegacyMsg"></span></div>
       </div>
 
-      <button class="btn-ghost" id="atelierLogoutBtn">Se déconnecter</button>
-
-      </div><!-- /atelierMainView -->
-
-    </div><!-- /atelierSubDeposit -->
+    </div><!-- /atelierSubFusion -->
 
   </div><!-- /viewAtelier -->
 
@@ -2931,14 +2919,13 @@ logoutBtn.addEventListener('click', () => {
   roleLogout();
 });
 
-/* ============ DÉPÔT FICHE ATELIER / SAV ============ */
+/* ============ ATELIER (CodeBarre + Fusion FT) ============ */
 const ATELIER_API = '/.netlify/functions/atelier';
 let pendingBarcodeRef = null; // rempli via le lien ?barcode_ref=... (bookmarklet "Générer code-barre")
 // Nom de fenêtre : permet au bookmarklet code-barre de retrouver CET onglet s'il est déjà
 // ouvert, et donc de réutiliser la session en cours au lieu de redemander le mot de passe.
 window.name = 'toolbox-cevidentia';
 
-const atelierMainView = document.getElementById('atelierMainView');
 
 // Appelé à chaque activation de l'onglet Atelier depuis le menu latéral : l'onglet lui-même
 // n'étant visible qu'en rôle Operation ou Admin, l'accès est déjà authentifié — on retombe
@@ -2958,606 +2945,418 @@ function atelierRunPendingBarcode(){
   atelierGenerateAndPrintBarcode();
 }
 
-/* ---- Chargement à la demande de pdf.js et pdf-lib (comme Human.js pour la PDM) ---- */
+/* ============ FUSION FT (V3.10) ============
+   Les fiches atelier (PDF Cosium = données de santé) ne passent JAMAIS par Netlify :
+   - dépôt par les admins dans la bibliothèque SharePoint "Fiches Atelier" (dossier A_traiter)
+   - lecture/tri/fusion ici, dans le navigateur, via l'accès au dossier synchronisé (File System Access API)
+   - librairies PDF servies par le site lui-même (/vendor), aucun CDN tiers dans cette page
+   Seul l'historique des lots (n° de job + empreinte de page, sans nom de fichier ni nom client)
+   est envoyé à /.netlify/functions/atelier. */
 let atelierLibsPromise = null;
 function atelierLoadLibs(){
   if(atelierLibsPromise) return atelierLibsPromise;
-  atelierLibsPromise = new Promise((resolve, reject) => {
-    const s1 = document.createElement('script');
-    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    s1.onload = () => {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const s2 = document.createElement('script');
-      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
-      s2.onload = () => resolve();
-      s2.onerror = () => reject(new Error("La librairie de fusion PDF n'a pas pu être chargée."));
-      document.head.appendChild(s2);
-    };
-    s1.onerror = () => reject(new Error("La librairie de lecture PDF n'a pas pu être chargée."));
-    document.head.appendChild(s1);
+  const load = (src) => new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve;
+    s.onerror = () => reject(new Error('Chargement impossible : ' + src));
+    document.head.appendChild(s);
   });
+  atelierLibsPromise = (async () => {
+    await load('/vendor/pdf.min.js');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdf.worker.min.js';
+    await load('/vendor/pdf-lib.min.js');
+  })();
+  atelierLibsPromise.catch(() => { atelierLibsPromise = null; });
   return atelierLibsPromise;
 }
 
-/* ---- Compression des fiches trop lourdes avant dépôt ----
-   La fonction Netlify tourne sur AWS Lambda : 6 Mo maximum pour le corps d'une requête.
-   Les fiches sont envoyées en base64 (+33 %) dans du JSON, d'où un plafond réel d'environ
-   4 Mo de PDF brut. Au-delà, on tente de compresser avant de refuser.
-
-   ATTENTION — la fusion (atelierExtractPageRecord) lit la COUCHE TEXTE des PDF pour trouver
-   le numéro de job JXXXXXX, repérer les pages "FORMULAIRE" et exclure les Colissimo.
-   Rastériser bêtement un PDF détruirait cette couche et casserait tout le tri. D'où deux
-   étapes, de la moins destructrice à la plus efficace :
-     1. Compression SANS perte (réécriture pdf-lib avec object streams). Rapide, fidélité
-        parfaite, mais gain quasi nul sur un PDF contenant de grosses images.
-     2. Rastérisation JPEG progressive AVEC réinjection du texte d'origine en calque
-        invisible (opacity 0) : l'image devient légère et pdf.js retrouve malgré tout
-        l'intégralité du texte, donc les numéros de job et les pages FORMULAIRE restent
-        détectés. Vérifié sur fiches de test : 9,6 Mo -> 1,9 Mo, texte identique au caractère
-        près, tous les numéros de job préservés. */
-const ATELIER_MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 Mo de PDF brut ~= 5,5 Mo une fois en base64
-
-function atelierFormatSize(bytes){
-  return bytes >= 1024*1024
-    ? (bytes/(1024*1024)).toFixed(1) + ' Mo'
-    : (bytes/1024).toFixed(0) + ' Ko';
-}
-
-function atelierBytesToBase64(bytes){
-  // Conversion par tranches : String.fromCharCode.apply sature la pile sur un gros fichier.
-  let bin = '';
-  const CHUNK = 0x8000;
-  for(let i=0; i<bytes.length; i+=CHUNK){
-    bin += String.fromCharCode.apply(null, bytes.subarray(i, i+CHUNK));
-  }
-  return btoa(bin);
-}
-
-function atelierFileToBytes(file){
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(new Uint8Array(r.result));
-    r.onerror = () => reject(new Error('Lecture du fichier impossible.'));
-    r.readAsArrayBuffer(file);
-  });
-}
-
-// Helvetica (encodage WinAnsi) ne sait pas coder tous les caractères Unicode : pdf-lib
-// lèverait une erreur. Les accents français passent, le reste devient une espace.
-function atelierSanitizeWinAnsi(s){
-  return s.replace(/[^\x20-\x7E -ÿ]/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-async function atelierLosslessShrink(bytes){
-  const { PDFDocument } = PDFLib;
-  const doc = await PDFDocument.load(bytes.slice(0), { ignoreEncryption: true });
-  return new Uint8Array(await doc.save({ useObjectStreams: true }));
-}
-
-// Rastérise chaque page en JPEG, puis redessine le texte d'origine par-dessus en
-// totalement transparent : invisible à l'œil et à l'impression, mais getTextContent()
-// le retrouve intégralement, donc la fusion continue de trier par numéro de job.
-async function atelierRasterizeKeepingText(bytes, dpi, quality){
-  const { PDFDocument, StandardFonts } = PDFLib;
-  const src = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
-  const out = await PDFDocument.create();
-  const font = await out.embedFont(StandardFonts.Helvetica);
-  const scale = dpi / 72; // pdf.js : échelle 1 = 72 DPI
-  for(let i=1; i<=src.numPages; i++){
-    const page = await src.getPage(i);
-    const viewport = page.getViewport({ scale });
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(viewport.width));
-    canvas.height = Math.max(1, Math.round(viewport.height));
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height); // évite un fond noir sur les PDF transparents
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    const jpg = await out.embedJpg(canvas.toDataURL('image/jpeg', quality));
-    const base = page.getViewport({ scale: 1 }); // taille d'origine en points
-    const p = out.addPage([base.width, base.height]);
-    p.drawImage(jpg, { x:0, y:0, width: base.width, height: base.height });
-
-    const text = atelierSanitizeWinAnsi((await page.getTextContent()).items.map(it => it.str).join(' '));
-    if(text){
-      p.drawText(text, { x:2, y: base.height - 8, size:6, font, opacity:0, maxWidth: base.width - 4, lineHeight:7 });
-    }
-    canvas.width = 0; canvas.height = 0; // libère la mémoire au fil des pages
-  }
-  return new Uint8Array(await out.save({ useObjectStreams: true }));
-}
-
-async function atelierCompressPdf(bytes, setStatus){
-  await atelierLoadLibs();
-  // 1. Sans perte d'abord : si ça suffit, le PDF reste strictement intact.
-  setStatus('compression sans perte…');
-  const lossless = await atelierLosslessShrink(bytes);
-  const best0 = lossless.length < bytes.length ? lossless : bytes;
-  if(best0.length <= ATELIER_MAX_UPLOAD_BYTES) return { bytes: best0, rasterized: false };
-
-  // 2. Sinon rastérisation progressive, texte réinjecté à chaque fois.
-  let best = best0;
-  for(const s of [ {dpi:150, q:0.72}, {dpi:120, q:0.60}, {dpi:100, q:0.50} ]){
-    setStatus(`compression image ${s.dpi} DPI…`);
-    best = await atelierRasterizeKeepingText(bytes, s.dpi, s.q);
-    if(best.length <= ATELIER_MAX_UPLOAD_BYTES) break;
-  }
-  return { bytes: best, rasterized: true };
-}
-
-/* ---- Dépôt (sélection en cours, pas encore envoyée) ---- */
-let atelierPendingFiles = [];
-const atelierDropzone = document.getElementById('atelierDropzone');
-const atelierFileInput = document.getElementById('atelierFileInput');
-const atelierFileListEl = document.getElementById('atelierFileList');
-const atelierAddDepositBtn = document.getElementById('atelierAddDepositBtn');
-const atelierDepositError = document.getElementById('atelierDepositError');
-const atelierDepositorInput = document.getElementById('atelierDepositorInput');
-const atelierDayInput = document.getElementById('atelierDayInput');
-
-function atelierTodayStr(){
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-atelierDayInput.value = atelierTodayStr();
-
-function atelierFormatDayLabel(dayStr){
-  const d = new Date(dayStr + 'T00:00:00');
-  return d.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
-}
-
-atelierDropzone.addEventListener('click', () => atelierFileInput.click());
-atelierDropzone.addEventListener('dragover', (e) => { e.preventDefault(); atelierDropzone.classList.add('drag'); });
-atelierDropzone.addEventListener('dragleave', () => atelierDropzone.classList.remove('drag'));
-atelierDropzone.addEventListener('drop', (e) => {
-  e.preventDefault(); atelierDropzone.classList.remove('drag');
-  atelierAddFiles([...e.dataTransfer.files]);
-});
-atelierFileInput.addEventListener('change', () => { atelierAddFiles([...atelierFileInput.files]); atelierFileInput.value=''; });
-
-function atelierAddFiles(files){
-  const added = [];
-  files.forEach(f => {
-    if(f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')){
-      const item = { file: f, id: crypto.randomUUID(), bytes: null, size: f.size, status: 'ready', note: '' };
-      atelierPendingFiles.push(item);
-      added.push(item);
-    }
-  });
-  atelierRenderFileList();
-  // Les fiches trop lourdes sont compressées tout de suite : l'opticien voit le résultat
-  // dans la liste avant même de cliquer sur "Ajouter au dépôt".
-  added.filter(it => it.size > ATELIER_MAX_UPLOAD_BYTES).forEach(atelierProcessOversized);
-}
-
-async function atelierProcessOversized(item){
-  const originalSize = item.size;
-  item.status = 'processing';
-  item.note = 'analyse…';
-  atelierRenderFileList();
-  try{
-    const bytes = await atelierFileToBytes(item.file);
-    const { bytes: out, rasterized } = await atelierCompressPdf(bytes, (msg) => {
-      item.note = msg;
-      atelierRenderFileList();
-    });
-    if(out.length > ATELIER_MAX_UPLOAD_BYTES){
-      item.status = 'error';
-      item.note = `trop lourd même après compression (${atelierFormatSize(out.length)}) — rescannez cette fiche en qualité réduite ou en noir et blanc`;
-    } else {
-      item.bytes = out;
-      item.size = out.length;
-      item.status = 'ready';
-      item.note = `compressé depuis ${atelierFormatSize(originalSize)}${rasterized ? ' (image allégée, texte conservé)' : ' (sans perte)'}`;
-    }
-  } catch(e){
-    item.status = 'error';
-    item.note = 'compression impossible : ' + (e.message || 'erreur inconnue');
-  }
-  atelierRenderFileList();
-}
-
-function atelierRenderFileList(){
-  atelierFileListEl.innerHTML = '';
-  atelierPendingFiles.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'file-chip';
-    const color = item.status === 'error' ? '#DC2626' : 'var(--ink-soft)';
-    const note = item.note ? ` <span style="color:${color};">— ${escapeHtml(item.note)}</span>` : '';
-    row.innerHTML = `<span>${escapeHtml(item.file.name)} <span style="color:var(--ink-soft);">(${atelierFormatSize(item.size)})</span>${note}</span><span class="rm" data-id="${item.id}">Retirer</span>`;
-    atelierFileListEl.appendChild(row);
-  });
-  atelierFileListEl.querySelectorAll('.rm').forEach(el => {
-    el.addEventListener('click', () => {
-      atelierPendingFiles = atelierPendingFiles.filter(f => f.id !== el.dataset.id);
-      atelierRenderFileList();
-    });
-  });
-  // On n'autorise l'envoi que si tout est prêt : aucune compression en cours, aucun fichier en erreur.
-  const blocked = atelierPendingFiles.some(f => f.status !== 'ready');
-  atelierAddDepositBtn.disabled = atelierPendingFiles.length === 0 || blocked;
-}
-
-function atelierFileToBase64(file){
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result).split(',')[1]);
-    r.onerror = () => reject(new Error('Lecture du fichier impossible.'));
-    r.readAsDataURL(file);
-  });
-}
-
-atelierAddDepositBtn.addEventListener('click', async () => {
-  if(atelierPendingFiles.length === 0) return;
-  atelierDepositError.classList.remove('show');
-  atelierAddDepositBtn.disabled = true;
-  atelierAddDepositBtn.textContent = 'Envoi en cours…';
-  const day = atelierDayInput.value || atelierTodayStr();
-  const batchId = crypto.randomUUID();
-  const depositor = atelierDepositorInput.value.trim() || 'Non renseigné';
-  try{
-    for(const item of atelierPendingFiles){
-      // item.bytes n'est rempli que si le fichier a dû être compressé.
-      const base64 = item.bytes ? atelierBytesToBase64(item.bytes) : await atelierFileToBase64(item.file);
-      const res = await fetch(ATELIER_API, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'deposit', password: CURRENT_ATELIER_PASSWORD, day, batchId, depositor, filename: item.file.name, base64 })
-      });
-      const json = await res.json();
-      if(!res.ok || !json.ok) throw new Error(json.error || 'Échec de l\'envoi.');
-    }
-    atelierPendingFiles = [];
-    atelierDepositorInput.value = '';
-    atelierDayInput.value = atelierTodayStr();
-    atelierRenderFileList();
-    await atelierRenderPool();
-  } catch(err){
-    atelierDepositError.textContent = err.message || "Impossible de contacter l'API. Cette fonctionnalité nécessite que le site soit déployé sur Netlify avec les fonctions serveur actives.";
-    atelierDepositError.classList.add('show');
-  } finally {
-    atelierAddDepositBtn.disabled = atelierPendingFiles.length === 0;
-    atelierAddDepositBtn.textContent = 'Ajouter au dépôt de ce jour';
-  }
-});
-
-/* ---- Jours en attente (récupérés depuis le serveur) ---- */
-const atelierPoolCard = document.getElementById('atelierPoolCard');
-const atelierPoolList = document.getElementById('atelierPoolList');
-let atelierLastPool = {};
-
-async function atelierRenderPool(){
-  try{
-    const res = await fetch(`${ATELIER_API}?action=pool&password=${encodeURIComponent(CURRENT_ATELIER_PASSWORD)}`);
-    const json = await res.json();
-    if(!res.ok || !json.ok) throw new Error(json.error || 'Impossible de charger les dépôts en attente.');
-    atelierLastPool = json.days || {};
-  } catch(e){
-    atelierLastPool = {};
-  }
-
-  const days = Object.keys(atelierLastPool).sort();
-  atelierPoolCard.style.display = days.length ? 'block' : 'none';
-  atelierPoolList.innerHTML = '';
-
-  days.forEach(day => {
-    const batches = atelierLastPool[day];
-    const totalFiles = batches.reduce((s,b) => s + b.files.length, 0);
-    const block = document.createElement('div');
-    block.className = 'day-block';
-    const depRows = batches.map(b => {
-      const t = new Date(b.time);
-      const hh = String(t.getHours()).padStart(2,'0');
-      const mn = String(t.getMinutes()).padStart(2,'0');
-      return `<div class="deposit-row"><span>${b.depositor} — ${b.files.length} fichier(s)</span><span style="color:var(--ink-soft);">${hh}:${mn}</span></div>`;
-    }).join('');
-    block.innerHTML = `
-      <div class="day-block-head">
-        <div>
-          <div class="day-block-title">${atelierFormatDayLabel(day)}</div>
-          <div class="day-block-meta">${batches.length} dépôt(s) — ${totalFiles} fichier(s) au total</div>
-        </div>
-        <button class="btn btn-primary atelier-day-merge" data-day="${day}" style="width:auto;padding:10px 18px;">Fusionner ce jour</button>
-      </div>
-      ${depRows}
-    `;
-    atelierPoolList.appendChild(block);
-  });
-
-  atelierPoolList.querySelectorAll('.atelier-day-merge').forEach(btn => {
-    btn.addEventListener('click', () => atelierRunPipeline(btn.dataset.day));
-  });
-}
-
-/* ---- Extraction, tri, fusion ---- */
 const ATELIER_RE_JOB_FOOTER = /Job\s*n[°o]\s*:\s*J\s*(\d{6,12})/i;
 const ATELIER_RE_JOB_ANY    = /\bJ\s*(\d{6,12})\b/;
 const ATELIER_RE_EXCLUDE    = /colissimo|chronopost/i;
 const ATELIER_RE_FORMULAIRE = /FORMULAIRE/i;
 
-function atelierSimpleHash(str){
-  let h = 0;
-  for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) | 0; }
-  return h.toString();
+async function ftPageHash(text){
+  const norm = text.replace(/\s+/g,' ').trim();
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(norm));
+  return [...new Uint8Array(buf)].slice(0,8).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-function atelierBase64ToBytes(base64){
-  const bin = atob(base64);
-  const bytes = new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
-}
-
-async function atelierExtractPageRecord(pdfDoc, pageIndex, srcName, origCounter){
+// Règles de tri inchangées : FORMULAIRE en tête, puis sans n° (ordre de lecture), puis jobs croissants.
+async function ftExtractRecord(pdfDoc, pageIndex, src, orig){
   const page = await pdfDoc.getPage(pageIndex+1);
-  const textContent = await page.getTextContent();
-  const fullText = textContent.items.map(it => it.str).join(' ');
-  const record = { src: srcName, pageIndex, orig: origCounter, text: fullText, isColissimo: ATELIER_RE_EXCLUDE.test(fullText), job: null };
-  if(record.isColissimo) return record;
-
-  // Les pages "FORMULAIRE" (bon de retour SAV) vont toujours en tête, même si un numéro
-  // ressemblant à un job (JXXXXXX) apparaît ailleurs sur la page par coïncidence — le titre
-  // du document prime sur toute détection de numéro.
-  if(ATELIER_RE_FORMULAIRE.test(fullText)){
-    record.job = {type:'none', value:null, label:'Sans numéro'};
-    return record;
-  }
-
-  const m = ATELIER_RE_JOB_FOOTER.exec(fullText) || ATELIER_RE_JOB_ANY.exec(fullText);
-  if(m){ record.job = {type:'numeric', value:Number(m[1]), label:'J'+m[1]}; return record; }
-  record.job = {type:'none', value:null, label:'Sans numéro'};
-  return record;
+  const tc = await page.getTextContent();
+  const text = tc.items.map(it => it.str).join(' ');
+  const r = { src, pageIndex, orig, isCarrier: ATELIER_RE_EXCLUDE.test(text), job:{type:'none', label:'Sans n°'}, formulaire:false };
+  r.hash = await ftPageHash(text);
+  if(r.isCarrier) return r;
+  if(ATELIER_RE_FORMULAIRE.test(text)){ r.formulaire = true; r.job = {type:'none', label:'FORMULAIRE'}; return r; }
+  const m = ATELIER_RE_JOB_FOOTER.exec(text) || ATELIER_RE_JOB_ANY.exec(text);
+  if(m) r.job = {type:'numeric', value:Number(m[1]), label:'J'+m[1]};
+  return r;
 }
 
+const ftPad = n => String(n).padStart(2,'0');
+const ftFmtDate = d => { d = new Date(d); return `${ftPad(d.getDate())}/${ftPad(d.getMonth()+1)}/${d.getFullYear()} ${ftPad(d.getHours())}h${ftPad(d.getMinutes())}`; };
+const ftDayKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${ftPad(d.getMonth()+1)}-${ftPad(d.getDate())}`; };
+const ftDayLabel = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('fr-FR',{weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'}); };
+const $ft = id => document.getElementById(id);
 
-async function atelierRunPipeline(day){
-  const progressWrap = document.getElementById('atelierProgressWrap');
-  const progressFill = document.getElementById('atelierProgressFill');
-  const logLine = document.getElementById('atelierLogLine');
-  progressWrap.style.display = 'block';
-  document.getElementById('atelierResults').style.display = 'none';
-  document.querySelectorAll('.atelier-day-merge').forEach(b => b.disabled = true);
+// Mémorisation du dossier choisi (IndexedDB, propre à ce navigateur/poste)
+const ftIdb = {
+  open(){ return new Promise((res,rej) => { const r = indexedDB.open('toolboxFusionFT',1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async get(k){ try{ const db = await this.open(); return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }); }catch(e){ return undefined; } },
+  async set(k,v){ try{ const db = await this.open(); await new Promise(res => { const t = db.transaction('kv','readwrite'); t.objectStore('kv').put(v,k); t.oncomplete = res; t.onerror = res; }); }catch(e){} }
+};
 
+let ftRoot = null, ftInbox = null, ftArchiveDir = null;
+let ftPending = [];          // {name, file, handle}
+let ftLots = [];             // historique serveur
+let ftAnalysis = null;
+let ftOutBytes = null, ftOutName = '';
+
+try{ const r = localStorage.getItem('ft-retention'); if(r) $ft('ftRetention').value = r; }catch(e){}
+$ft('ftRetention').addEventListener('change', () => { try{ localStorage.setItem('ft-retention', $ft('ftRetention').value); }catch(e){} });
+
+/* ---- Historique (serveur) ---- */
+async function ftLoadHistory(){
   try{
-    logLine.textContent = 'Chargement des librairies PDF…';
-    await atelierLoadLibs();
-
-    const batches = atelierLastPool[day] || [];
-    const flatFiles = []; // {id, filename, depositor}
-    batches.forEach(b => b.files.forEach(f => flatFiles.push({ id:f.id, filename:f.filename, depositor:b.depositor })));
-
-    const loaded = []; // {name, bytes, pdfjsDoc, pageCount}
-    let counted = 0;
-    for(const item of flatFiles){
-      logLine.textContent = `Téléchargement de ${item.filename}…`;
-      const res = await fetch(`${ATELIER_API}?action=file&password=${encodeURIComponent(CURRENT_ATELIER_PASSWORD)}&id=${encodeURIComponent(item.id)}`);
-      const json = await res.json();
-      if(!res.ok || !json.ok) throw new Error(json.error || `Impossible de récupérer ${item.filename}.`);
-      const bytes = atelierBase64ToBytes(json.base64);
-      const pdfjsDoc = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
-      loaded.push({ name: item.filename, bytes, pdfjsDoc, pageCount: pdfjsDoc.numPages });
-      counted++;
-      progressFill.style.width = ((counted/Math.max(flatFiles.length,1))*40) + '%';
-    }
-
-    let records = [];
-    let origCounter = 0;
-    let filesDone = 0;
-    for(const doc of loaded){
-      for(let p=0; p<doc.pageCount; p++){
-        logLine.textContent = `Analyse ${doc.name} — page ${p+1}/${doc.pageCount}`;
-        const rec = await atelierExtractPageRecord(doc.pdfjsDoc, p, doc.name, origCounter++);
-        rec.docRef = doc;
-        records.push(rec);
-      }
-      filesDone++;
-      progressFill.style.width = (40 + (filesDone/Math.max(loaded.length,1))*30) + '%';
-    }
-
-    const colissimoExcluded = records.filter(r => r.isColissimo);
-    records = records.filter(r => !r.isColissimo);
-    const totalInPages = records.length + colissimoExcluded.length;
-
-    const seenHash = new Map();
-    const kept = [];
-    const duplicates = [];
-    records.forEach(r => {
-      const h = atelierSimpleHash(r.text.replace(/\s+/g,' ').trim());
-      if(seenHash.has(h)){ r.wasKept = false; duplicates.push(r); }
-      else { r.wasKept = true; seenHash.set(h, r); kept.push(r); }
-    });
-
-    const frontGroup = kept.filter(r => r.job.type === 'none').sort((a,b) => a.orig - b.orig);
-    const numericGroups = new Map();
-    kept.forEach(r => {
-      if(r.job.type === 'numeric'){
-        if(!numericGroups.has(r.job.value)) numericGroups.set(r.job.value, []);
-        numericGroups.get(r.job.value).push(r);
-      }
-    });
-    const numericKeysSorted = [...numericGroups.keys()].sort((a,b) => a-b);
-    const numericOrdered = [];
-    numericKeysSorted.forEach(k => numericOrdered.push(...numericGroups.get(k)));
-    const finalOrder = [...frontGroup, ...numericOrdered];
-
-    const jobsSeq = finalOrder.filter(r => r.job.type==='numeric').map(r => r.job.value);
-    let isSorted = true;
-    for(let i=0;i<jobsSeq.length-1;i++){ if(jobsSeq[i] > jobsSeq[i+1]){ isSorted = false; break; } }
-
-    logLine.textContent = 'Fusion du PDF final…';
-    progressFill.style.width = '80%';
-
-    const { PDFDocument } = PDFLib;
-    const outDoc = await PDFDocument.create();
-    const srcCache = new Map();
-    for(const doc of loaded){ srcCache.set(doc.name, await PDFDocument.load(doc.bytes)); }
-    for(const r of finalOrder){
-      const plDoc = srcCache.get(r.src);
-      const [copiedPage] = await outDoc.copyPages(plDoc, [r.pageIndex]);
-      outDoc.addPage(copiedPage);
-    }
-    const outBytes = await outDoc.save();
-    progressFill.style.width = '100%';
-    logLine.textContent = `Terminé — ${finalOrder.length} pages fusionnées.`;
-
-    const [yy, mo, da] = day.split('-');
-    const outName = `${da}${mo}-${finalOrder.length}-trié.pdf`;
-
-    atelierRenderResults({ totalInPages, colissimoExcluded, duplicates, frontGroup, numericOrdered, finalOrder, isSorted, outName, outBytes });
-
-    const summary = {
-      dayLabel: atelierFormatDayLabel(day), totalInPages, finalOrderCount: finalOrder.length,
-      numericJobs: numericKeysSorted, frontCount: frontGroup.length,
-      duplicatesCount: duplicates.length, colissimoCount: colissimoExcluded.length,
-      deposits: batches.map(b => ({ depositor: b.depositor, files: b.files.length, time: b.time })),
-    };
-
-    const purgeRes = await fetch(ATELIER_API, {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'purge-and-archive', password: CURRENT_ATELIER_PASSWORD, day, summary })
-    });
-    const purgeJson = await purgeRes.json();
-    if(!purgeRes.ok || !purgeJson.ok) throw new Error(purgeJson.error || "La fusion a réussi mais l'archivage a échoué — réessaie ou signale le problème.");
-
-    atelierRenderArchiveEntry({ ...summary, mergedAt: new Date() });
-    await atelierRenderPool();
-
-    // Téléchargement automatique du PDF fusionné
-    const blob = new Blob([outBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = outName;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-
-  } catch(err){
-    logLine.textContent = 'Erreur : ' + (err.message || 'échec de la fusion.');
-  } finally {
-    setTimeout(() => { progressWrap.style.display = 'none'; }, 800);
-    document.querySelectorAll('.atelier-day-merge').forEach(b => b.disabled = false);
-  }
-}
-
-function atelierRenderResults(data){
-  const {totalInPages, duplicates, frontGroup, numericOrdered, finalOrder, isSorted, outName, outBytes} = data;
-  document.getElementById('atelierResults').style.display = 'block';
-  document.getElementById('atelierSummaryGrid').innerHTML = `
-    <div class="stat"><div class="num">${totalInPages}</div><div class="lbl">Pages reçues</div></div>
-    <div class="stat"><div class="num">${finalOrder.length}</div><div class="lbl">Pages fusionnées</div></div>
-    <div class="stat"><div class="num">${frontGroup.length}</div><div class="lbl">Sans numéro (dont SAV)</div></div>
-    <div class="stat"><div class="num">${numericOrdered.length}</div><div class="lbl">Pages job numériques</div></div>
-    <div class="stat"><div class="num">${duplicates.length}</div><div class="lbl">Doublons supprimés</div></div>
-  `;
-  document.getElementById('atelierOrderFlagOk').style.display = isSorted ? 'block' : 'none';
-  document.getElementById('atelierOrderFlagBad').style.display = isSorted ? 'none' : 'block';
-  document.getElementById('atelierOutName').textContent = outName;
-
-  const body = document.getElementById('atelierDetailBody');
-  body.innerHTML = '';
-  finalOrder.forEach((r, i) => {
-    const badge = r.job.type === 'numeric' ? '<span class="badge badge-ok">Job</span>' : '<span class="badge badge-neutral">Sans n°</span>';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${r.job.label}</td><td>${r.src}</td><td>p${r.pageIndex+1}</td><td>${badge}</td>`;
-    body.appendChild(tr);
-  });
-  duplicates.forEach(r => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>—</td><td>${r.job ? r.job.label : '—'}</td><td>${r.src}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">Doublon retiré</span></td>`;
-    body.appendChild(tr);
-  });
-  data.colissimoExcluded.forEach(r => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>—</td><td>—</td><td>${r.src}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">Étiquette transporteur exclue</span></td>`;
-    body.appendChild(tr);
-  });
-
-  document.getElementById('atelierDownloadBtn').onclick = () => {
-    const blob = new Blob([outBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = outName;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-  };
-}
-
-function atelierRenderArchiveEntry(log){
-  const el = document.getElementById('atelierArchiveLog');
-  const empty = document.getElementById('atelierArchiveEmpty');
-  if(empty) empty.style.display = 'none';
-  const depositRows = log.deposits.map(d => {
-    const t = new Date(d.time);
-    const hh = String(t.getHours()).padStart(2,'0');
-    const mn = String(t.getMinutes()).padStart(2,'0');
-    return `<div style="font-size:12.5px;margin-top:4px;">${hh}:${mn} — <b>${d.depositor}</b> (${d.files} fichier(s))</div>`;
-  }).join('');
-  const jobsPreview = log.numericJobs.length ? log.numericJobs.map(j => 'J'+j).join(', ') : '—';
-  const entry = document.createElement('div');
-  entry.style.borderTop = '1px solid var(--line)';
-  entry.style.paddingTop = '12px';
-  entry.style.marginTop = '12px';
-  entry.style.fontSize = '13px';
-  entry.innerHTML = `
-    <div style="text-transform:capitalize;"><b>Jour fusionné :</b> ${log.dayLabel}</div>
-    <div><b>Fusionné le :</b> ${log.mergedAt.toLocaleDateString('fr-FR')} à ${String(log.mergedAt.getHours()).padStart(2,'0')}:${String(log.mergedAt.getMinutes()).padStart(2,'0')}</div>
-    <div><b>Dépôts :</b> ${log.deposits.length}</div>
-    ${depositRows}
-    <div style="margin-top:6px;"><b>Pages reçues :</b> ${log.totalInPages} — <b>Pages fusionnées :</b> ${log.finalOrderCount}</div>
-    <div><b>Sans numéro (dont SAV) :</b> ${log.frontCount} — <b>Doublons :</b> ${log.duplicatesCount} — <b>Étiquettes transporteur exclues :</b> ${log.colissimoCount}</div>
-    <div style="margin-top:6px;"><b>Jobs numériques :</b></div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;word-break:break-all;">${jobsPreview}</div>
-  `;
-  el.prepend(entry);
-}
-
-/* ---- Recherche d'une fiche (interroge le journal archivé côté serveur, tous jours confondus) ---- */
-const atelierSearchInput = document.getElementById('atelierSearchInput');
-const atelierSearchBtn = document.getElementById('atelierSearchBtn');
-atelierSearchBtn.addEventListener('click', atelierSearchJob);
-atelierSearchInput.addEventListener('keydown', (e) => { if(e.key==='Enter') atelierSearchJob(); });
-
-async function atelierSearchJob(){
-  const raw = atelierSearchInput.value.trim();
-  const resultEl = document.getElementById('atelierSearchResult');
-  if(!raw){ resultEl.innerHTML = ''; return; }
-  const digits = raw.replace(/\D/g,'');
-  if(!digits){ resultEl.innerHTML = '<div class="modal-error show">Numéro de job invalide.</div>'; return; }
-  resultEl.innerHTML = '<div class="sub">Recherche…</div>';
-  try{
-    const res = await fetch(`${ATELIER_API}?action=search&password=${encodeURIComponent(CURRENT_ATELIER_PASSWORD)}&job=${encodeURIComponent(digits)}`);
+    const res = await fetch(`${ATELIER_API}?action=history&password=${encodeURIComponent(CURRENT_ATELIER_PASSWORD)}`);
     const json = await res.json();
-    if(!res.ok || !json.ok) throw new Error(json.error || 'Recherche impossible.');
-    if(!json.matches || json.matches.length === 0){
-      resultEl.innerHTML = `<div class="modal-error show">✗ Aucune fiche avec le job « ${raw} » n'a été retrouvée dans le journal archivé.</div>`;
-      return;
+    if(!res.ok || !json.ok) throw new Error(json.error || 'Historique indisponible.');
+    ftLots = json.lots || [];
+  }catch(e){ console.warn(e); }
+  ftRenderLots();
+  return ftLots;
+}
+function ftRenderLots(){
+  const lots = ftLots.slice().sort((a,b) => b.date.localeCompare(a.date)).slice(0,20);
+  $ft('ftLots').innerHTML = lots.length
+    ? `<table><thead><tr><th>Validé le</th><th>Dépôts du</th><th>Lot</th><th>Pages</th><th>Jobs</th></tr></thead><tbody>` +
+      lots.map(l => `<tr><td>${ftFmtDate(l.date)}</td><td>${l.jourDepot ? ftDayLabel(l.jourDepot) : '—'}</td><td>${escapeHtml(l.lot||'')}</td><td>${l.pages}</td><td>${(l.jobs||[]).length}</td></tr>`).join('') + `</tbody></table>`
+    : '<div class="sub">Aucun lot validé pour l\'instant.</div>';
+}
+
+/* ---- Dossier SharePoint synchronisé ---- */
+async function ftEnsurePerm(h){
+  if(!h.queryPermission) return true;
+  if(await h.queryPermission({mode:'readwrite'}) === 'granted') return true;
+  return (await h.requestPermission({mode:'readwrite'})) === 'granted';
+}
+async function ftConnect(){
+  if(!window.showDirectoryPicker){ alert("Ce navigateur ne permet pas l'accès aux dossiers. Utilisez Microsoft Edge ou Google Chrome."); return; }
+  try{
+    let h = await ftIdb.get('root');
+    if(h && !(await ftEnsurePerm(h))) h = null;
+    if(!h){ h = await window.showDirectoryPicker({ id:'fichesAtelier', mode:'readwrite' }); if(!(await ftEnsurePerm(h))) return; }
+    if(/^(a_traiter|traites)$/i.test(h.name)){ alert(`Vous avez choisi le sous-dossier « ${h.name} ». Choisissez le dossier parent « Fiches Atelier ».`); await ftIdb.set('root', null); return; }
+    ftRoot = h;
+    ftInbox = await ftRoot.getDirectoryHandle('A_traiter', {create:true});
+    ftArchiveDir = await ftRoot.getDirectoryHandle('Traites', {create:true});
+    await ftIdb.set('root', h);
+    $ft('ftFolderState').innerHTML = `<span style="color:#16A34A;font-weight:600;">✓ Connecté :</span> <b>${escapeHtml(ftRoot.name)}</b>`;
+    $ft('ftConnectBtn').textContent = 'Changer / reconnecter';
+    $ft('ftRefreshBtn').disabled = false;
+    await ftLoadInbox();
+  }catch(e){ if(e.name !== 'AbortError') alert('Connexion impossible : ' + e.message); }
+}
+$ft('ftConnectBtn').addEventListener('click', ftConnect);
+$ft('ftRefreshBtn').addEventListener('click', () => ftLoadInbox());
+
+async function ftLoadInbox(){
+  ftPending = [];
+  for await (const [name, h] of ftInbox.entries()){
+    if(h.kind === 'file' && /\.pdf$/i.test(name)) ftPending.push({ name, file: await h.getFile(), handle: h });
+  }
+  ftPending.sort((a,b) => a.file.lastModified - b.file.lastModified || a.name.localeCompare(b.name,'fr',{numeric:true}));
+  $ft('ftResults').style.display = 'none'; ftAnalysis = null;
+  ftRenderPending();
+}
+
+function ftGroupByDay(){
+  const g = new Map();
+  ftPending.forEach(p => { const k = ftDayKey(p.file.lastModified); if(!g.has(k)) g.set(k, []); g.get(k).push(p); });
+  return [...g.entries()].sort((a,b) => a[0].localeCompare(b[0]));
+}
+function ftRenderPending(){
+  $ft('ftPendingCard').style.display = '';
+  const days = ftGroupByDay();
+  $ft('ftDayList').innerHTML = days.length ? days.map(([k, list], i) => `
+    <div class="day-block">
+      <div class="day-block-head">
+        <div>
+          <div class="day-block-title">${ftDayLabel(k)}</div>
+          <div class="day-block-meta">${list.length} fichier(s)${i===0 && days.length>1 ? ' · <b style="color:var(--brass);">le plus ancien</b>' : ''}</div>
+        </div>
+        <button class="btn btn-primary ft-day-run" data-k="${k}" style="width:auto;padding:10px 18px;margin-top:0;">Fusionner ce jour</button>
+      </div>
+      ${list.map(p => `<div class="deposit-row"><span>${escapeHtml(p.name)}</span><span style="color:var(--ink-soft);">déposé à ${ftPad(new Date(p.file.lastModified).getHours())}h${ftPad(new Date(p.file.lastModified).getMinutes())}</span></div>`).join('')}
+    </div>`).join('')
+    : '<div class="sub">Aucune fiche en attente dans A_traiter.</div>';
+  document.querySelectorAll('.ft-day-run').forEach(b => b.addEventListener('click', () => ftRunDay(b.dataset.k)));
+}
+function ftProgress(p, msg){ $ft('ftProgressWrap').style.display = 'block'; $ft('ftProgressFill').style.width = p + '%'; if(msg) $ft('ftLogLine').textContent = msg; }
+
+/* ---- Analyse + fusion d'un jour ---- */
+async function ftRunDay(k){
+  const files = ftPending.filter(p => ftDayKey(p.file.lastModified) === k);
+  document.querySelectorAll('.ft-day-run').forEach(b => b.disabled = true);
+  $ft('ftResults').style.display = 'none';
+  try{
+    ftProgress(2, 'Chargement des librairies PDF…');
+    await atelierLoadLibs();
+    await ftLoadHistory();
+    const loaded = [];
+    for(let i=0;i<files.length;i++){
+      const p = files[i];
+      ftProgress(5 + i/files.length*20, `Lecture de ${p.name}…`);
+      const bytes = new Uint8Array(await p.file.arrayBuffer());
+      try{ const doc = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise; loaded.push({ name:p.name, bytes, doc, pages:doc.numPages }); }
+      catch(err){ throw new Error(`Le fichier « ${p.name} » n'est pas un PDF lisible.`); }
     }
-    const rows = json.matches.map(m => {
-      const d = new Date(m.mergedAt);
-      return `<div style="font-size:13px;margin-top:4px;">J${digits} — dépôt du <b>${atelierFormatDayLabel(m.day)}</b>, fusionné le ${d.toLocaleDateString('fr-FR')}</div>`;
-    }).join('');
-    resultEl.innerHTML = `<div class="modal-success show">✓ ${json.matches.length} occurrence(s) trouvée(s)</div>${rows}`;
-  } catch(err){
-    resultEl.innerHTML = `<div class="modal-error show">${err.message || "Impossible de contacter l'API."}</div>`;
+    let records = [], orig = 0, total = loaded.reduce((s,d) => s + d.pages, 0), done = 0;
+    for(const d of loaded) for(let p=0;p<d.pages;p++){
+      records.push(await ftExtractRecord(d.doc, p, d.name, orig++));
+      done++; ftProgress(25 + done/total*50, `Analyse ${d.name} — page ${p+1}/${d.pages}`);
+    }
+    loaded.forEach(d => d.doc.destroy());
+
+    const histByHash = new Map(), histByJob = new Map();
+    ftLots.forEach(l => (l.entries||[]).forEach(e => {
+      if(e.hash && !histByHash.has(e.hash)) histByHash.set(e.hash, l);
+      if(e.job && e.job !== 'FORMULAIRE'){ if(!histByJob.has(e.job)) histByJob.set(e.job, []); histByJob.get(e.job).push(l); }
+    }));
+    const carriers = records.filter(r => r.isCarrier);
+    records = records.filter(r => !r.isCarrier);
+    const seen = new Set(), kept = [], dups = [], already = [];
+    for(const r of records){
+      if(seen.has(r.hash)){ dups.push(r); continue; }
+      seen.add(r.hash);
+      const h = histByHash.get(r.hash);
+      if(h){ r.histPrinted = h; already.push(r); continue; }
+      if(r.job.type === 'numeric' && histByJob.has(r.job.label)) r.histJob = histByJob.get(r.job.label);
+      kept.push(r);
+    }
+    ftAnalysis = { day:k, files, loaded, total, carriers, dups, already, kept, forceReprint:new Set() };
+    await ftBuildPdf();
+    $ft('ftResults').scrollIntoView({behavior:'smooth'});
+  }catch(err){
+    $ft('ftLogLine').textContent = 'Erreur : ' + (err.message || err);
+  }finally{
+    document.querySelectorAll('.ft-day-run').forEach(b => b.disabled = false);
   }
 }
 
-/* ---- Sous-onglets Atelier : Dépôt / CodeBarre ---- */
-const atelierSubTabDeposit = document.getElementById('atelierSubTabDeposit');
+async function ftBuildPdf(){
+  const a = ftAnalysis;
+  const pool = [...a.kept, ...a.already.filter(r => a.forceReprint.has(r.hash))];
+  a.formulaires = pool.filter(r => r.formulaire).sort((x,y) => x.orig - y.orig);
+  a.noNum = pool.filter(r => !r.formulaire && r.job.type === 'none').sort((x,y) => x.orig - y.orig);
+  a.numeric = pool.filter(r => r.job.type === 'numeric').sort((x,y) => x.job.value - y.job.value || x.orig - y.orig);
+  a.order = [...a.formulaires, ...a.noNum, ...a.numeric];
+  ftOutBytes = null;
+  if(a.order.length){
+    ftProgress(85, 'Fusion du PDF final…');
+    const { PDFDocument } = PDFLib;
+    const out = await PDFDocument.create();
+    const cache = new Map();
+    for(const d of a.loaded) cache.set(d.name, await PDFDocument.load(d.bytes, { ignoreEncryption:true }));
+    for(const r of a.order){ const [pg] = await out.copyPages(cache.get(r.src), [r.pageIndex]); out.addPage(pg); }
+    ftOutBytes = await out.save();
+  }
+  const now = new Date(); const [yy,mm,dd] = a.day.split('-');
+  ftOutName = `${dd}${mm}-${a.order.length}-trie.pdf`;
+  a.archName = `${a.day}_fusion-${ftPad(now.getDate())}${ftPad(now.getMonth()+1)}-${ftPad(now.getHours())}h${ftPad(now.getMinutes())}`;
+  ftProgress(100, a.order.length ? `${ftDayLabel(a.day)} : ${a.order.length} page(s) à imprimer, issues de ${a.loaded.length} fichier(s).` : 'Aucune nouvelle page à imprimer.');
+  ftRenderResults();
+}
+
+function ftRenderResults(){
+  const a = ftAnalysis;
+  $ft('ftResDay').textContent = 'dépôts du ' + ftDayLabel(a.day);
+  const jobs = new Set(a.numeric.map(r => r.job.value));
+  $ft('ftSummaryGrid').innerHTML = [
+    [a.loaded.length,'Fichiers'],[a.total,'Pages reçues'],[a.order.length,'Pages à imprimer'],[jobs.size,'Jobs distincts'],
+    [a.dups.length,'Doublons du jour'],[a.already.length,'Déjà imprimées avant'],[a.carriers.length,'Étiquettes exclues']
+  ].map(([n,l]) => `<div class="stat"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join('');
+
+  let hb = '';
+  if(a.already.length){
+    hb += `<div class="modal-error show">⚠ ${a.already.length} page(s) identique(s) à une fiche déjà imprimée : retirée(s) du PDF. Coche pour réimprimer.</div>
+      <table style="margin-bottom:12px;"><thead><tr><th>Réimprimer ?</th><th>Page</th><th>Fichier</th><th>Déjà imprimée le</th></tr></thead><tbody>` +
+      a.already.map(r => `<tr><td><input type="checkbox" class="ft-reprint" data-h="${r.hash}" ${a.forceReprint.has(r.hash)?'checked':''}></td><td>${r.job.label}</td><td>${escapeHtml(r.src)} (p${r.pageIndex+1})</td><td>${ftFmtDate(r.histPrinted.date)} — ${escapeHtml(r.histPrinted.lot||'')}</td></tr>`).join('') + `</tbody></table>`;
+  }
+  const seenJob = a.kept.filter(r => r.histJob);
+  if(seenJob.length){
+    const byJob = new Map(); seenJob.forEach(r => byJob.set(r.job.label, r.histJob));
+    hb += `<div class="modal-error show" style="background:#FFE7D8;color:var(--brass);">ℹ ${byJob.size} job(s) déjà présent(s) dans un lot précédent avec un contenu différent (fiche mise à jour ?) : conservé(s), à vérifier — ` +
+      [...byJob].map(([j,ls]) => `<b>${j}</b> (${[...new Set(ls.map(l => ftFmtDate(l.date).slice(0,10)))].join(', ')})`).join(' · ') + `</div>`;
+  }
+  $ft('ftHistBox').innerHTML = hb;
+  document.querySelectorAll('.ft-reprint').forEach(cb => cb.addEventListener('change', async () => {
+    cb.checked ? a.forceReprint.add(cb.dataset.h) : a.forceReprint.delete(cb.dataset.h);
+    await ftBuildPdf();
+  }));
+
+  const seq = a.numeric.map(r => r.job.value);
+  const sorted = seq.every((v,i) => i === 0 || seq[i-1] <= v);
+  $ft('ftOrderOk').style.display = a.order.length && sorted ? 'block' : 'none';
+  $ft('ftOrderBad').style.display = a.order.length && !sorted ? 'block' : 'none';
+  $ft('ftOutName').textContent = a.order.length ? ftOutName : '—';
+  $ft('ftPrintBtn').disabled = $ft('ftSaveBtn').disabled = !ftOutBytes;
+  $ft('ftArchiveBtn').disabled = false;
+  $ft('ftArchName').textContent = a.archName;
+
+  const badge = r => r.formulaire ? '<span class="badge badge-warn">FORMULAIRE</span>' : r.job.type === 'numeric' ? '<span class="badge badge-ok">Job</span>' : '<span class="badge badge-neutral">Sans n°</span>';
+  const rows = a.order.map((r,i) => `<tr><td>${i+1}</td><td>${r.job.label}</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td>${badge(r)}${r.histPrinted ? ' <span class="badge badge-danger">réimpression</span>' : r.histJob ? ' <span class="badge badge-warn">job déjà vu</span>' : ''}</td></tr>`);
+  a.dups.forEach(r => rows.push(`<tr><td>—</td><td>${r.job.label}</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">Doublon retiré</span></td></tr>`));
+  a.already.filter(r => !a.forceReprint.has(r.hash)).forEach(r => rows.push(`<tr><td>—</td><td>${r.job.label}</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">Déjà imprimée</span></td></tr>`));
+  a.carriers.forEach(r => rows.push(`<tr><td>—</td><td>—</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">Étiquette transporteur exclue</span></td></tr>`));
+  $ft('ftDetailBody').innerHTML = rows.join('');
+  $ft('ftResults').style.display = 'block';
+}
+
+function ftBlobUrl(){ return URL.createObjectURL(new Blob([ftOutBytes], {type:'application/pdf'})); }
+$ft('ftPrintBtn').addEventListener('click', () => { if(ftOutBytes) window.open(ftBlobUrl(), '_blank'); });
+$ft('ftSaveBtn').addEventListener('click', () => { if(!ftOutBytes) return; const el = document.createElement('a'); el.href = ftBlobUrl(); el.download = ftOutName; document.body.appendChild(el); el.click(); el.remove(); });
+
+/* ---- Validation : archivage SharePoint + historique serveur ---- */
+$ft('ftArchiveBtn').addEventListener('click', async () => {
+  const a = ftAnalysis; if(!a || !ftRoot) return;
+  if(!confirm(`Confirmer : l'impression est bonne ?\n\nLes ${a.files.length} fichier(s) du ${ftDayLabel(a.day)} vont être déplacés de A_traiter vers Traites\\${a.archName} et les numéros de job ajoutés à l'historique.`)) return;
+  $ft('ftArchiveBtn').disabled = true;
+  try{
+    // 1) Historique (serveur) : numéros de job + empreintes, aucun nom de fichier
+    const lot = {
+      id: crypto.randomUUID(), date: new Date().toISOString(), jourDepot: a.day, lot: ftOutName, pages: a.order.length,
+      jobs: [...new Set(a.numeric.map(r => r.job.label))],
+      entries: a.order.map(r => ({ job: r.job.type === 'numeric' ? r.job.label : (r.formulaire ? 'FORMULAIRE' : null), hash: r.hash }))
+    };
+    const res = await fetch(ATELIER_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'record-lot', password: CURRENT_ATELIER_PASSWORD, lot }) });
+    const json = await res.json().catch(() => ({}));
+    if(!res.ok || !json.ok) throw new Error(json.error || "Enregistrement de l'historique impossible. Rien n'a été déplacé : réessaie.");
+    // 2) Archive SharePoint : PDF fusionné + fiches du jour, puis retrait de A_traiter
+    const dest = await ftArchiveDir.getDirectoryHandle(a.archName, {create:true});
+    if(ftOutBytes){ const fh = await dest.getFileHandle(ftOutName, {create:true}); const w = await fh.createWritable(); await w.write(ftOutBytes); await w.close(); }
+    let moved = 0;
+    for(const p of a.files){
+      const fh = await dest.getFileHandle(p.name, {create:true});
+      const w = await fh.createWritable(); await w.write(p.file); await w.close();
+      await ftInbox.removeEntry(p.name);
+      moved++;
+    }
+    // 3) Purge des archives trop anciennes
+    const days = Number($ft('ftRetention').value) || 30, limit = Date.now() - days*864e5; let purged = 0;
+    for await (const [name, h] of ftArchiveDir.entries()){
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(name);
+      if(h.kind === 'directory' && m && new Date(+m[1], +m[2]-1, +m[3]).getTime() < limit){ try{ await ftArchiveDir.removeEntry(name, {recursive:true}); purged++; }catch(e){} }
+    }
+    alert(`${ftDayLabel(a.day)} validé : ${moved} fichier(s) déplacé(s) vers Traites\\${a.archName}.` + (purged ? `\n${purged} ancienne(s) archive(s) supprimée(s).` : ''));
+    await ftLoadHistory();
+    await ftLoadInbox();
+  }catch(e){
+    alert('Erreur pendant la validation : ' + e.message);
+    $ft('ftArchiveBtn').disabled = false;
+  }
+});
+
+/* ---- Recherche : fiches en attente (lecture locale) + historique (serveur) ---- */
+const ftScanCache = new Map();
+async function ftScanPending(p){
+  const key = `${p.name}|${p.file.lastModified}|${p.file.size}`;
+  if(ftScanCache.has(key)) return ftScanCache.get(key);
+  const out = [];
+  try{
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(await p.file.arrayBuffer()) }).promise;
+    for(let i=0;i<doc.numPages;i++){ const r = await ftExtractRecord(doc, i, p.name, i); out.push({ page:i+1, job: r.job.type === 'numeric' ? r.job.label : null }); }
+    doc.destroy();
+  }catch(e){}
+  ftScanCache.set(key, out);
+  return out;
+}
+async function ftSearch(){
+  const raw = $ft('ftSearchInput').value.trim();
+  const el = $ft('ftSearchResult');
+  if(!raw){ el.innerHTML = ''; return; }
+  const digits = raw.replace(/\D/g,'');
+  const qj = digits ? 'J' + digits : null;
+  el.innerHTML = '<div class="sub">Recherche…</div>';
+  try{
+    await ftLoadHistory();
+    let html = '';
+    if(ftPending.length){
+      await atelierLoadLibs();
+      const pend = [];
+      for(const p of ftPending){
+        const pages = await ftScanPending(p);
+        const hits = qj ? pages.filter(x => x.job && x.job.includes(qj)) : [];
+        if(hits.length) hits.forEach(x => pend.push({ p, page:x.page, job:x.job }));
+        else if(p.name.toUpperCase().includes(raw.toUpperCase())) pend.push({ p, page:null, job:null });
+      }
+      if(pend.length) html += `<div class="modal-error show" style="background:#FFE7D8;color:var(--brass);">📥 ${pend.length} résultat(s) en attente dans A_traiter (déposé, pas encore fusionné)</div>` +
+        pend.map(x => `<div style="font-size:13px;margin:4px 0;">${escapeHtml(x.job||'—')} — ${escapeHtml(x.p.name)}${x.page ? ' p' + x.page : ''} — déposé le ${ftFmtDate(x.p.file.lastModified)}</div>`).join('');
+    }
+    const hist = [];
+    if(qj) ftLots.forEach(l => { if((l.entries||[]).some(e => e.job && e.job.includes(qj))) hist.push(l); });
+    if(hist.length) html += `<div class="modal-success show" style="margin-top:8px;">🖨 Déjà imprimé dans ${hist.length} lot(s)</div>` +
+      hist.sort((x,y) => y.date.localeCompare(x.date)).map(l => `<div style="font-size:13px;margin:4px 0;">Lot <b>${escapeHtml(l.lot)}</b> — dépôts du ${l.jourDepot ? ftDayLabel(l.jourDepot) : '—'}, validé le ${ftFmtDate(l.date)}</div>`).join('');
+    // Ancien journal (avant V3.10)
+    if(digits){
+      try{
+        const res = await fetch(`${ATELIER_API}?action=search&password=${encodeURIComponent(CURRENT_ATELIER_PASSWORD)}&job=${encodeURIComponent(digits)}`);
+        const json = await res.json();
+        if(res.ok && json.ok && json.matches && json.matches.length){
+          html += `<div class="sub" style="margin-top:8px;">Ancien journal (avant V3.10) :</div>` +
+            json.matches.map(m => `<div style="font-size:13px;margin:4px 0;">J${digits} — dépôt du <b>${atelierFormatDayLabel(m.day)}</b>, fusionné le ${new Date(m.mergedAt).toLocaleDateString('fr-FR')}</div>`).join('');
+        }
+      }catch(e){}
+    }
+    if(!html) html = `<div class="modal-error show">✗ Aucune trace de « ${escapeHtml(raw)} » : ni en attente${ftRoot ? '' : ' (dossier non connecté)'}, ni imprimé sur les 12 derniers mois.</div>`;
+    el.innerHTML = html;
+  }catch(err){
+    el.innerHTML = `<div class="modal-error show">${escapeHtml(err.message || 'Recherche impossible.')}</div>`;
+  }
+}
+function atelierFormatDayLabel(dayStr){
+  return new Date(dayStr + 'T00:00:00').toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+}
+$ft('ftSearchBtn').addEventListener('click', ftSearch);
+$ft('ftSearchInput').addEventListener('keydown', e => { if(e.key === 'Enter') ftSearch(); });
+
+/* ---- Purge des PDF stockés par l'ancien sous-onglet "Dépôt Atelier / SAV" ---- */
+$ft('ftPurgeLegacyBtn').addEventListener('click', async () => {
+  if(!confirm("Supprimer définitivement de la Tool Box (Netlify) toutes les fiches PDF encore stockées par l'ancien système de dépôt ?\n\nL'ancien journal des numéros de job est conservé.")) return;
+  $ft('ftPurgeLegacyMsg').textContent = 'Purge en cours…';
+  try{
+    const res = await fetch(ATELIER_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'purge-legacy', password: CURRENT_ATELIER_PASSWORD }) });
+    const json = await res.json();
+    if(!res.ok || !json.ok) throw new Error(json.error || 'Purge impossible.');
+    $ft('ftPurgeLegacyMsg').textContent = `✓ ${json.deleted} élément(s) supprimé(s).`;
+  }catch(e){ $ft('ftPurgeLegacyMsg').textContent = 'Erreur : ' + e.message; }
+});
+
+async function ftOnOpen(){
+  ftLoadHistory();
+  if(ftRoot) return;
+  const h = await ftIdb.get('root');
+  if(h){ $ft('ftFolderState').innerHTML = `Dossier mémorisé : <b>${escapeHtml(h.name)}</b> — clique sur « Connecter » pour l'ouvrir.`; $ft('ftConnectBtn').textContent = 'Connecter'; }
+  if(!window.showDirectoryPicker) $ft('ftFolderState').innerHTML = `<span style="color:var(--error);">Ce navigateur ne gère pas l'accès aux dossiers : utilise Microsoft Edge ou Google Chrome.</span>`;
+}
+
+/* ---- Sous-onglets Atelier : CodeBarre / Fusion FT ---- */
+const atelierSubTabFusion = document.getElementById('atelierSubTabFusion');
 const atelierSubTabBarcode = document.getElementById('atelierSubTabBarcode');
-const atelierSubDeposit = document.getElementById('atelierSubDeposit');
+const atelierSubFusion = document.getElementById('atelierSubFusion');
 const atelierSubBarcode = document.getElementById('atelierSubBarcode');
 
 function atelierShowSubTab(which){
-  const isDeposit = which === 'deposit';
-  atelierSubDeposit.style.display = isDeposit ? 'block' : 'none';
-  atelierSubBarcode.style.display = isDeposit ? 'none' : 'block';
-  atelierSubTabDeposit.classList.toggle('active', isDeposit);
-  atelierSubTabBarcode.classList.toggle('active', !isDeposit);
-  // L'onglet Atelier entier n'est visible qu'en rôle Operation/Admin : plus de mot de passe
-  // séparé à ce stade, on affiche directement le contenu.
-  if(isDeposit) atelierRenderPool();
+  const isFusion = which === 'fusion';
+  atelierSubFusion.style.display = isFusion ? 'block' : 'none';
+  atelierSubBarcode.style.display = isFusion ? 'none' : 'block';
+  atelierSubTabFusion.classList.toggle('active', isFusion);
+  atelierSubTabBarcode.classList.toggle('active', !isFusion);
+  if(isFusion) ftOnOpen();
 }
-atelierSubTabDeposit.addEventListener('click', () => atelierShowSubTab('deposit'));
+atelierSubTabFusion.addEventListener('click', () => atelierShowSubTab('fusion'));
 atelierSubTabBarcode.addEventListener('click', () => atelierShowSubTab('barcode'));
 
 /* ---- Générateur de code-barres (Code 128), 100% côté client, rien n'est conservé ---- */
@@ -5492,7 +5291,7 @@ const TABS = [
   { btn: tabPd, view: viewPd, title: 'Prise De Mesure', subtitle: 'Calibrez avec une carte bancaire ou Vitale, positionnez les repères' },
   { btn: tabMontures, view: viewMontures, title: 'Hauteur Cote B', subtitle: 'Recherchez une monture, la hauteur se calcule automatiquement' },
   { btn: tabSav, view: viewSav, title: 'SAV Lunettes', subtitle: 'Formulaire de demande au service après-vente C·Evidentia' },
-  { btn: tabAtelier, view: viewAtelier, title: 'Atelier', subtitle: 'Code-barres, dépôt et fusion des fiches (accès Operation/Administrateur)', onActivate: atelierOnTabOpen },
+  { btn: tabAtelier, view: viewAtelier, title: 'Atelier', subtitle: 'Code-barres et fusion des fiches atelier (accès Operation/Administrateur)', onActivate: atelierOnTabOpen },
   { btn: tabSuivi, view: viewSuivi, title: 'Suivi Fournisseur', subtitle: '', onActivate: loadSuiviFournisseur, wide: true },
   { btn: tabAdmin, view: viewAdmin, title: 'Administrateur', subtitle: 'Mise à jour des bases montures et préconisations (accès protégé)', onActivate: adminOnTabOpen },
 ];
