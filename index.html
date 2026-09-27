@@ -1680,7 +1680,6 @@
           Supprimer du dossier Traites les archives (PDF) de plus de
           <input type="number" id="ftRetention" min="1" max="3650" value="30" style="width:80px;padding:6px 8px;"> jours (au moment de chaque validation).
         </div>
-        <div style="margin-top:12px;"><button class="btn btn-ghost" id="ftPurgeLegacyBtn" style="width:auto;padding:8px 14px;margin-top:0;font-size:12.5px;">Purger les anciennes fiches stockées sur la Tool Box (avant V3.10)</button> <span class="sub" id="ftPurgeLegacyMsg"></span></div>
       </div>
       <div class="admin-card" style="margin-bottom:20px;">
         <h2>5. Dossier « Fiches Atelier » (SharePoint)</h2>
@@ -3378,24 +3377,12 @@ function atelierFormatDayLabel(dayStr){
 $ft('ftSearchBtn').addEventListener('click', ftSearch);
 $ft('ftSearchInput').addEventListener('keydown', e => { if(e.key === 'Enter') ftSearch(); });
 
-/* ---- Purge des PDF stockés par l'ancien sous-onglet "Dépôt Atelier / SAV" ---- */
-$ft('ftPurgeLegacyBtn').addEventListener('click', async () => {
-  if(!confirm("Supprimer définitivement de la Tool Box (Netlify) toutes les fiches PDF encore stockées par l'ancien système de dépôt ?\n\nL'ancien journal des numéros de job est conservé.")) return;
-  $ft('ftPurgeLegacyMsg').textContent = 'Purge en cours…';
-  try{
-    const res = await fetch(ATELIER_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'purge-legacy', password: CURRENT_ATELIER_PASSWORD }) });
-    const json = await res.json();
-    if(!res.ok || !json.ok) throw new Error(json.error || 'Purge impossible.');
-    $ft('ftPurgeLegacyMsg').textContent = `✓ ${json.deleted} élément(s) supprimé(s).`;
-  }catch(e){ $ft('ftPurgeLegacyMsg').textContent = 'Erreur : ' + e.message; }
-});
-
 async function ftRenderConnectHint(){
   const el = $ft('ftConnectHint');
   if(ftRoot){ el.innerHTML = ''; return; }
   const h = await ftIdb.get('root');
   el.innerHTML = `<button class="btn btn-primary" id="ftConnectBtn2" style="width:auto;padding:10px 18px;margin-top:0;">${h ? 'Ouvrir le dossier « ' + escapeHtml(h.name) + ' »' : 'Connecter le dossier Fiches Atelier'}</button>` +
-    (h ? '' : ' <span class="sub">(une seule fois par poste — voir encadré 5)</span>');
+    '';
   $ft('ftConnectBtn2').addEventListener('click', ftConnect);
   $ft('ftDayList').innerHTML = '';
 }

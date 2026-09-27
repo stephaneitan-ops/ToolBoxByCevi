@@ -22,8 +22,8 @@
 // GET  ?action=search&password=...&job=...   -> { ok, matches: [ {day, mergedAt} ] }  (ancien journal, avant V3.10)
 // POST { action:'verify-only', password }    -> { ok }
 // POST { action:'record-lot', password, lot } -> { ok }
-// POST { action:'purge-legacy', password }   -> { ok, deleted }  supprime les PDF encore stockes
-//                                               par l'ancien sous-onglet "Depot Atelier / SAV"
+// Au premier appel 'history', les PDF encore stockes par l'ancien sous-onglet "Depot Atelier / SAV"
+// (stores 'toolbox-atelier-files' et 'toolbox-atelier-index') sont supprimes automatiquement, une seule fois.
 
 const { blobStore, checkScopeAuthorized } = require('./_shared/auth-shared');
 
@@ -115,6 +115,18 @@ exports.handler = async (event) => {
     return stats;
   }
 
+  // Suppression unique des fiches PDF stockees par l'ancien systeme de depot (avant V3.10)
+  async function purgeLegacyOnce() {
+    const flag = await statsStore.get('legacy-purged');
+    if (flag) return;
+    for (const name of ['toolbox-atelier-files', 'toolbox-atelier-index']) {
+      const store = blobStore(name);
+      const list = await store.list();
+      for (const b of list.blobs || []) await store.delete(b.key);
+    }
+    await statsStore.set('legacy-purged', new Date().toISOString());
+  }
+
   // -------------------- GET --------------------
   if (event.httpMethod === 'GET') {
     const qs = event.queryStringParameters || {};
@@ -129,6 +141,7 @@ exports.handler = async (event) => {
         if (Array.isArray(raw)) lots.push(...raw);
       }
       const limit = Date.now() - HISTORY_MONTHS * 31 * 864e5;
+      await purgeLegacyOnce();
       const stats = await readStats();
       return json(200, { ok: true, lots: lots.filter((l) => new Date(l.date).getTime() >= limit), stats: stats.days });
     }
@@ -185,16 +198,6 @@ exports.handler = async (event) => {
       const list = await historyStore.list();
       for (const b of list.blobs || []) { if (!keep.has(b.key)) await historyStore.delete(b.key); }
       return json(200, { ok: true });
-    }
-
-    if (body.action === 'purge-legacy') {
-      let deleted = 0;
-      for (const name of ['toolbox-atelier-files', 'toolbox-atelier-index']) {
-        const store = blobStore(name);
-        const list = await store.list();
-        for (const b of list.blobs || []) { await store.delete(b.key); deleted++; }
-      }
-      return json(200, { ok: true, deleted });
     }
 
     return json(400, { ok: false, error: 'Action inconnue.' });
