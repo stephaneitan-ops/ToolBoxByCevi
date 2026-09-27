@@ -14,8 +14,11 @@
 //
 // Store 'toolbox-atelier-history' : un blob par mois ('YYYY-MM') = tableau de lots.
 // Historique conserve 12 mois.
+// Store 'toolbox-atelier-stats', cle 'daily' : compteurs par jour de depot, conserves sans limite
+//   { days: { 'YYYY-MM-DD': { lots, pages, jobs } }, legacyImported: true }
+//   (a la premiere lecture, les jours de l'ancien journal d'avant V3.10 y sont repris)
 //
-// GET  ?action=history&password=...          -> { ok, lots: [...] }   (12 derniers mois)
+// GET  ?action=history&password=...          -> { ok, lots: [...], stats: { 'YYYY-MM-DD': {lots,pages,jobs} } }
 // GET  ?action=search&password=...&job=...   -> { ok, matches: [ {day, mergedAt} ] }  (ancien journal, avant V3.10)
 // POST { action:'verify-only', password }    -> { ok }
 // POST { action:'record-lot', password, lot } -> { ok }
@@ -85,6 +88,32 @@ exports.handler = async (event) => {
   const dataStore = blobStore('toolbox-data');
   const historyStore = blobStore('toolbox-atelier-history');
   const archiveStore = blobStore('toolbox-atelier-archive'); // ancien journal (lecture seule)
+  const statsStore = blobStore('toolbox-atelier-stats');
+
+  async function readStats() {
+    let stats = await statsStore.get('daily', { type: 'json' });
+    if (!stats || !stats.days) stats = { days: {} };
+    if (!stats.legacyImported) {
+      // Reprise unique de l'ancien journal (compteurs uniquement)
+      try {
+        const list = await archiveStore.list();
+        for (const entry of list.blobs || []) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.key) || stats.days[entry.key]) continue;
+          const raw = await archiveStore.get(entry.key, { type: 'json' });
+          if (!raw) continue;
+          const runs = Array.isArray(raw) ? raw : [raw];
+          stats.days[entry.key] = {
+            lots: runs.length,
+            pages: runs.reduce((s, r) => s + (Number(r.finalOrderCount) || 0), 0),
+            jobs: runs.reduce((s, r) => s + ((r.numericJobs || []).length), 0),
+          };
+        }
+      } catch (e) { /* ancien journal absent : rien a reprendre */ }
+      stats.legacyImported = true;
+      await statsStore.set('daily', JSON.stringify(stats));
+    }
+    return stats;
+  }
 
   // -------------------- GET --------------------
   if (event.httpMethod === 'GET') {
@@ -100,7 +129,8 @@ exports.handler = async (event) => {
         if (Array.isArray(raw)) lots.push(...raw);
       }
       const limit = Date.now() - HISTORY_MONTHS * 31 * 864e5;
-      return json(200, { ok: true, lots: lots.filter((l) => new Date(l.date).getTime() >= limit) });
+      const stats = await readStats();
+      return json(200, { ok: true, lots: lots.filter((l) => new Date(l.date).getTime() >= limit), stats: stats.days });
     }
 
     if (qs.action === 'search') {
@@ -140,8 +170,16 @@ exports.handler = async (event) => {
       const lot = sanitizeLot(body.lot);
       const key = monthKey(new Date(lot.date));
       const existing = (await historyStore.get(key, { type: 'json' })) || [];
-      if (!existing.some((l) => l.id && l.id === lot.id)) existing.push(lot); // idempotent
-      await historyStore.set(key, JSON.stringify(existing));
+      const isNew = !existing.some((l) => l.id && l.id === lot.id); // idempotent
+      if (isNew) {
+        existing.push(lot);
+        await historyStore.set(key, JSON.stringify(existing));
+        const stats = await readStats();
+        const day = lot.jourDepot || lot.date.slice(0, 10);
+        const cur = stats.days[day] || { lots: 0, pages: 0, jobs: 0 };
+        stats.days[day] = { lots: cur.lots + 1, pages: cur.pages + lot.pages, jobs: cur.jobs + lot.jobs.length };
+        await statsStore.set('daily', JSON.stringify(stats));
+      }
       // Purge des mois trop anciens
       const keep = new Set(recentMonthKeys(HISTORY_MONTHS + 1));
       const list = await historyStore.list();

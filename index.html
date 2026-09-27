@@ -1595,11 +1595,11 @@
   <div id="viewAtelier" style="display:none;">
 
     <div class="sub-tabs" style="display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);">
-      <button class="sub-tab-btn active" id="atelierSubTabBarcode" type="button">CodeBarre</button>
-      <button class="sub-tab-btn" id="atelierSubTabFusion" type="button">Fusion FT</button>
+      <button class="sub-tab-btn active" id="atelierSubTabFusion" type="button">Fusion FT</button>
+      <button class="sub-tab-btn" id="atelierSubTabBarcode" type="button">CodeBarre</button>
     </div>
 
-    <div id="atelierSubBarcode">
+    <div id="atelierSubBarcode" style="display:none;">
       <div class="admin-card" style="max-width:480px;margin-bottom:14px;">
         <h2>Générateur de code-barres</h2>
         <label for="barcodeRefInput">Référence</label>
@@ -1615,8 +1615,7 @@
       </div>
     </div><!-- /atelierSubBarcode -->
 
-    <div id="atelierSubFusion" style="display:none;">
-
+    <div id="atelierSubFusion">
       <div class="admin-card" style="margin-bottom:20px;">
         <h2>1. Dossier « Fiches Atelier » (SharePoint)</h2>
         <p class="sub">Les fiches sont déposées par les admins dans la bibliothèque SharePoint. Elles sont lues, triées et fusionnées <b>uniquement sur ce poste</b> : aucun PDF n'est envoyé à la Tool Box. Seuls les numéros de job imprimés sont gardés dans l'historique.</p>
@@ -1628,17 +1627,6 @@
         </div>
         <p class="sub" style="margin-top:10px;font-size:12px;">Une seule fois par poste : choisir le dossier synchronisé « Fiches Atelier » (celui qui contient <b>A_traiter</b> et <b>Traites</b>). Fonctionne dans Edge ou Chrome.</p>
       </div>
-
-      <div class="admin-card" style="margin-bottom:20px;">
-        <h2>🔎 Rechercher un n° de job</h2>
-        <p class="sub">Cherche dans les fiches déposées en attente et dans l'historique des fiches déjà imprimées.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="text" id="ftSearchInput" placeholder="Ex. J1011000300 ou 1011000300" style="flex:1;min-width:220px;">
-          <button class="btn btn-ghost" id="ftSearchBtn" style="width:auto;margin-top:0;padding:11px 18px;">Rechercher</button>
-        </div>
-        <div id="ftSearchResult" style="margin-top:10px;"></div>
-      </div>
-
       <div class="admin-card" id="ftPendingCard" style="margin-bottom:20px;display:none;">
         <h2>2. Fiches en attente — par jour de dépôt</h2>
         <p class="sub">Rien n'est fusionné ni déplacé sans ton clic. Traite de préférence du jour le plus ancien au plus récent.</p>
@@ -1648,10 +1636,9 @@
           <div class="atelier-log-line" id="ftLogLine">—</div>
         </div>
       </div>
-
       <div id="ftResults" style="display:none;">
         <div class="admin-card" style="margin-bottom:20px;">
-          <h2>3. Résultat — <span id="ftResDay"></span></h2>
+          <h2>Résultat — <span id="ftResDay"></span></h2>
           <div class="summary-grid" id="ftSummaryGrid"></div>
           <div id="ftHistBox"></div>
           <div class="modal-success show" id="ftOrderOk" style="display:none;">✓ Ordre vérifié : formulaires en tête, puis sans n°, puis jobs croissants.</div>
@@ -1674,9 +1661,31 @@
           </table>
         </div>
       </div>
-
       <div class="admin-card" style="margin-bottom:20px;">
-        <h2>Derniers lots imprimés</h2>
+        <h2>3. 🔎 Rechercher un n° de job</h2>
+        <p class="sub">Cherche dans les fiches déposées en attente et dans l'historique des fiches déjà imprimées.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="ftSearchInput" placeholder="Ex. J1011000300 ou 1011000300" style="flex:1;min-width:220px;">
+          <button class="btn btn-ghost" id="ftSearchBtn" style="width:auto;margin-top:0;padding:11px 18px;">Rechercher</button>
+        </div>
+        <div id="ftSearchResult" style="margin-top:10px;"></div>
+      </div>
+      <div class="admin-card" style="margin-bottom:20px;">
+        <h2>4. Statistiques de volume</h2>
+        <p class="sub">Volume des fiches validées, par date de dépôt. Conservé sans limite de durée (uniquement des compteurs, aucune donnée patient).</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+          <select id="ftStatsMode" style="width:auto;padding:8px 10px;">
+            <option value="month">Par mois</option>
+            <option value="period">Par période du mois (1–10 / 11–20 / 21–fin)</option>
+            <option value="weekday">Par jour de la semaine</option>
+            <option value="year">Par année</option>
+          </select>
+          <select id="ftStatsYear" style="width:auto;padding:8px 10px;"></select>
+        </div>
+        <div id="ftStats"><div class="sub">Aucune donnée pour l'instant.</div></div>
+      </div>
+      <div class="admin-card" style="margin-bottom:20px;">
+        <h2>5. Derniers lots imprimés</h2>
         <div id="ftLots"><div class="sub">—</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--ink-soft);">
           Supprimer du dossier Traites les archives (PDF) de plus de
@@ -1684,7 +1693,6 @@
         </div>
         <div style="margin-top:12px;"><button class="btn btn-ghost" id="ftPurgeLegacyBtn" style="width:auto;padding:8px 14px;margin-top:0;font-size:12.5px;">Purger les anciennes fiches stockées sur la Tool Box (avant V3.10)</button> <span class="sub" id="ftPurgeLegacyMsg"></span></div>
       </div>
-
     </div><!-- /atelierSubFusion -->
 
   </div><!-- /viewAtelier -->
@@ -2931,7 +2939,7 @@ window.name = 'toolbox-cevidentia';
 // n'étant visible qu'en rôle Operation ou Admin, l'accès est déjà authentifié — on retombe
 // juste sur CodeBarre par défaut.
 function atelierOnTabOpen(){
-  atelierShowSubTab('barcode');
+  atelierShowSubTab('fusion');
   atelierRunPendingBarcode();
 }
 
@@ -3010,7 +3018,8 @@ const ftIdb = {
 
 let ftRoot = null, ftInbox = null, ftArchiveDir = null;
 let ftPending = [];          // {name, file, handle}
-let ftLots = [];             // historique serveur
+let ftLots = [];             // historique serveur (12 mois)
+let ftStats = {};            // compteurs par jour de dépôt (sans limite)
 let ftAnalysis = null;
 let ftOutBytes = null, ftOutName = '';
 
@@ -3024,8 +3033,10 @@ async function ftLoadHistory(){
     const json = await res.json();
     if(!res.ok || !json.ok) throw new Error(json.error || 'Historique indisponible.');
     ftLots = json.lots || [];
+    ftStats = json.stats || {};
   }catch(e){ console.warn(e); }
   ftRenderLots();
+  ftRenderStats();
   return ftLots;
 }
 function ftRenderLots(){
@@ -3035,6 +3046,50 @@ function ftRenderLots(){
       lots.map(l => `<tr><td>${ftFmtDate(l.date)}</td><td>${l.jourDepot ? ftDayLabel(l.jourDepot) : '—'}</td><td>${escapeHtml(l.lot||'')}</td><td>${l.pages}</td><td>${(l.jobs||[]).length}</td></tr>`).join('') + `</tbody></table>`
     : '<div class="sub">Aucun lot validé pour l\'instant.</div>';
 }
+
+/* ---- Statistiques de volume (compteurs par jour de dépôt) ---- */
+const FT_MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const FT_WEEKDAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+function ftRenderStats(){
+  const modeEl = $ft('ftStatsMode'), yearEl = $ft('ftStatsYear');
+  const days = Object.keys(ftStats).sort();
+  if(!days.length){ $ft('ftStats').innerHTML = '<div class="sub">Aucune donnée pour l\'instant.</div>'; yearEl.style.display = 'none'; return; }
+  const years = [...new Set(days.map(d => d.slice(0,4)))].sort().reverse();
+  const prevYear = yearEl.value;
+  yearEl.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+  yearEl.value = years.includes(prevYear) ? prevYear : years[0];
+  const mode = modeEl.value, year = yearEl.value;
+  yearEl.style.display = mode === 'year' ? 'none' : '';
+
+  const rows = []; // {label, lots, pages, jobs, n (nb de mois/jours pour la moyenne)}
+  const add = (map, key, label, v) => { if(!map.has(key)) map.set(key, {label, lots:0, pages:0, jobs:0, units:new Set()}); const r = map.get(key); r.lots += v.lots; r.pages += v.pages; r.jobs += v.jobs; return r; };
+  const m = new Map();
+  if(mode === 'year'){
+    days.forEach(d => add(m, d.slice(0,4), d.slice(0,4), ftStats[d]).units.add(d));
+    [...m.keys()].sort().forEach(k => rows.push(m.get(k)));
+  } else {
+    const inYear = days.filter(d => d.startsWith(year));
+    if(mode === 'month'){
+      FT_MONTHS.forEach((lbl,i) => m.set(String(i+1).padStart(2,'0'), {label:lbl, lots:0, pages:0, jobs:0, units:new Set()}));
+      inYear.forEach(d => add(m, d.slice(5,7), '', ftStats[d]).units.add(d));
+    } else if(mode === 'period'){
+      [['a','Du 1 au 10'],['b','Du 11 au 20'],['c','Du 21 à la fin du mois']].forEach(([k,l]) => m.set(k, {label:l, lots:0, pages:0, jobs:0, units:new Set()}));
+      inYear.forEach(d => { const dd = +d.slice(8,10); add(m, dd <= 10 ? 'a' : dd <= 20 ? 'b' : 'c', '', ftStats[d]).units.add(d.slice(0,7)); });
+    } else if(mode === 'weekday'){
+      FT_WEEKDAYS.forEach((l,i) => m.set(i, {label:l, lots:0, pages:0, jobs:0, units:new Set()}));
+      inYear.forEach(d => { const [y,mo,da] = d.split('-').map(Number); const wd = (new Date(y,mo-1,da).getDay() + 6) % 7; add(m, wd, '', ftStats[d]).units.add(d); });
+    }
+    rows.push(...m.values());
+  }
+  const max = Math.max(1, ...rows.map(r => r.pages));
+  const tot = rows.reduce((s,r) => ({lots:s.lots+r.lots, pages:s.pages+r.pages, jobs:s.jobs+r.jobs}), {lots:0,pages:0,jobs:0});
+  const avgLabel = mode === 'period' ? 'Moy. pages / mois' : mode === 'year' ? 'Moy. pages / jour de dépôt' : 'Moy. pages / jour de dépôt';
+  $ft('ftStats').innerHTML = `<table><thead><tr><th>${mode==='year'?'Année':mode==='month'?'Mois':mode==='period'?'Période':'Jour'}</th><th>Pages</th><th style="width:34%;"></th><th>Jobs</th><th>Lots</th><th>${avgLabel}</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${r.label}</td><td><b>${r.pages}</b></td><td><div style="height:10px;border-radius:5px;background:var(--teal-deep);opacity:.8;width:${Math.round(r.pages/max*100)}%;"></div></td><td>${r.jobs}</td><td>${r.lots}</td><td>${r.units.size ? (r.pages / r.units.size).toFixed(1) : '—'}</td></tr>`).join('') +
+    `<tr style="font-weight:700;"><td>Total</td><td>${tot.pages}</td><td></td><td>${tot.jobs}</td><td>${tot.lots}</td><td></td></tr></tbody></table>`;
+}
+$ft('ftStatsMode').addEventListener('change', ftRenderStats);
+$ft('ftStatsYear').addEventListener('change', ftRenderStats);
 
 /* ---- Dossier SharePoint synchronisé ---- */
 async function ftEnsurePerm(h){
@@ -3069,6 +3124,7 @@ async function ftLoadInbox(){
   }
   ftPending.sort((a,b) => a.file.lastModified - b.file.lastModified || a.name.localeCompare(b.name,'fr',{numeric:true}));
   $ft('ftResults').style.display = 'none'; ftAnalysis = null;
+  $ft('ftProgressWrap').style.display = 'none';
   ftRenderPending();
 }
 
