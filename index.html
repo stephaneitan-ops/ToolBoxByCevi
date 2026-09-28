@@ -798,7 +798,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.10</div>
+          <div class="brand-version">V3.11</div>
         </div>
       </div>
     </div>
@@ -1772,7 +1772,7 @@ let CURRENT_ATELIER_PASSWORD = null; // fixé par la connexion Operation/Admin (
 const AppStorage = {
   async get(key){
     try{
-      const res = await fetch(`${REMOTE_DATA_API}?key=${encodeURIComponent(key)}`);
+      const res = await fetch(`${REMOTE_DATA_API}?key=${encodeURIComponent(key)}`, { cache: 'no-store' });
       if(res.status === 404) throw new Error('API non déployée');
       if(!res.ok) throw new Error('Erreur serveur');
       const json = await res.json();
@@ -5444,6 +5444,12 @@ let SUIVI_EMAILS = { fournisseurs: {}, service_client: '' };
 // éditable dans le même panneau que les emails, stocké via AppStorage (scope 'operation'),
 // clé 'suivi-fournisseur-codes'. Utilisé dans le mail de relance ({{code_client}}).
 let SUIVI_FOURN_CODES = {};
+// Saisie en cours non enregistrée dans le panneau "Emails fournisseurs" : tant que c'est vrai,
+// un rechargement des données (ouverture de l'onglet Admin / Suivi Fournisseur) ne réécrit
+// PAS les champs, pour ne pas effacer un code client ou un email en cours de saisie.
+let SUIVI_EMAIL_CONFIG_DIRTY = false;
+let SUIVI_EMAILS_LOAD_SEQ = 0;
+let SUIVI_EMAIL_CONFIG_SAVE_SEQ = 0;
 
 // Modèles d'email par défaut (secours + valeur de "Réinitialiser ce modèle"). Éditables par
 // Operation/Admin dans le panneau "Emails de contact", stockés via AppStorage (scope
@@ -5486,41 +5492,43 @@ function suiviFillTemplate(str, vars){
 }
 
 async function loadSuiviEmails(){
-  try{
-    const { value } = await AppStorage.get('suivi-emails');
-    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
-    if(parsed && typeof parsed === 'object'){
-      SUIVI_EMAILS = { fournisseurs: parsed.fournisseurs || {}, service_client: parsed.service_client || '' };
-    }
-  } catch(e){ /* pas encore configuré / API indisponible : on garde les valeurs vides */ }
-  try{
-    const { value } = await AppStorage.get('suivi-email-templates');
-    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
-    if(parsed && typeof parsed === 'object'){
-      SUIVI_EMAIL_TEMPLATES = {
-        fournisseur: Object.assign({}, SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur, parsed.fournisseur || {}),
-        indispo: Object.assign({}, SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo, parsed.indispo || {})
-      };
-    }
-  } catch(e){ /* pas encore configuré / API indisponible : on garde les modèles par défaut */ }
-  try{
-    const { value } = await AppStorage.get('suivi-fournisseurs-custom');
-    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
-    if(Array.isArray(parsed)) SUIVI_FOURNISSEURS_CUSTOM = parsed;
-  } catch(e){ /* pas encore configuré / API indisponible : on garde la liste de base seule */ }
-  try{
-    const { value } = await AppStorage.get('suivi-fournisseur-codes');
-    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
-    if(parsed && typeof parsed === 'object') SUIVI_FOURN_CODES = parsed;
-  } catch(e){ /* pas encore configuré / API indisponible : on garde les codes vides */ }
+  const seq = ++SUIVI_EMAILS_LOAD_SEQ;
+  const saveSeqAtStart = SUIVI_EMAIL_CONFIG_SAVE_SEQ;
+  const read = async (key) => {
+    try{
+      const { value } = await AppStorage.get(key);
+      return value ? (typeof value === 'string' ? JSON.parse(value) : value) : null;
+    } catch(e){ return null; } // pas encore configuré / API indisponible
+  };
+  // Lectures en parallèle, puis application en une seule fois (jamais de mélange à moitié).
+  const [emails, templates, custom, codes] = await Promise.all([
+    read('suivi-emails'), read('suivi-email-templates'),
+    read('suivi-fournisseurs-custom'), read('suivi-fournisseur-codes')
+  ]);
+  // Un chargement plus récent a été lancé, ou un enregistrement a eu lieu pendant ce
+  // chargement : les valeurs lues sont potentiellement périmées, on n'écrase rien.
+  if(seq !== SUIVI_EMAILS_LOAD_SEQ || saveSeqAtStart !== SUIVI_EMAIL_CONFIG_SAVE_SEQ) return;
+  if(emails && typeof emails === 'object'){
+    SUIVI_EMAILS = { fournisseurs: emails.fournisseurs || {}, service_client: emails.service_client || '' };
+  }
+  if(templates && typeof templates === 'object'){
+    SUIVI_EMAIL_TEMPLATES = {
+      fournisseur: Object.assign({}, SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur, templates.fournisseur || {}),
+      indispo: Object.assign({}, SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo, templates.indispo || {})
+    };
+  }
+  if(Array.isArray(custom)) SUIVI_FOURNISSEURS_CUSTOM = custom;
+  if(codes && typeof codes === 'object') SUIVI_FOURN_CODES = codes;
   SUIVI_FOURNISSEURS = SUIVI_FOURNISSEURS_BASE.concat(SUIVI_FOURNISSEURS_CUSTOM);
-  renderSuiviEmailConfigFields();
+  // Saisie en cours non enregistrée : on ne réécrit pas les champs.
+  if(!SUIVI_EMAIL_CONFIG_DIRTY) renderSuiviEmailConfigFields();
   renderSuiviFournisseursList();
 }
 
 function renderSuiviEmailConfigFields(){
   const wrap = document.getElementById('suiviFournEmailFields');
   if(!wrap) return;
+  SUIVI_EMAIL_CONFIG_DIRTY = false;
   wrap.innerHTML = SUIVI_FOURNISSEURS.map(f => `
     <div>
       <label for="suiviEmailFourn-${f.value}" style="font-size:12px;">${escapeHtml(f.label)}</label>
@@ -5543,11 +5551,15 @@ function renderSuiviEmailConfigFields(){
   if(tplIndispoBody) tplIndispoBody.value = SUIVI_EMAIL_TEMPLATES.indispo.body;
 }
 
+document.getElementById('suiviEmailConfig').addEventListener('input', () => { SUIVI_EMAIL_CONFIG_DIRTY = true; });
+
 document.getElementById('suiviTplFournResetBtn').addEventListener('click', () => {
+  SUIVI_EMAIL_CONFIG_DIRTY = true;
   document.getElementById('suiviTplFournSubject').value = SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur.subject;
   document.getElementById('suiviTplFournBody').value = SUIVI_EMAIL_TEMPLATES_DEFAULT.fournisseur.body;
 });
 document.getElementById('suiviTplIndispoResetBtn').addEventListener('click', () => {
+  SUIVI_EMAIL_CONFIG_DIRTY = true;
   document.getElementById('suiviTplIndispoSubject').value = SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo.subject;
   document.getElementById('suiviTplIndispoBody').value = SUIVI_EMAIL_TEMPLATES_DEFAULT.indispo.body;
 });
@@ -5574,6 +5586,7 @@ document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', asy
     if(input.value.trim()) codes[input.dataset.codeFourn] = input.value.trim();
   });
   SUIVI_FOURN_CODES = codes;
+  SUIVI_EMAIL_CONFIG_SAVE_SEQ++;
 
   SUIVI_EMAIL_TEMPLATES = {
     fournisseur: {
@@ -5590,6 +5603,7 @@ document.getElementById('suiviEmailConfigSaveBtn').addEventListener('click', asy
     await AppStorage.set('suivi-emails', JSON.stringify(SUIVI_EMAILS), 'operation');
     await AppStorage.set('suivi-email-templates', JSON.stringify(SUIVI_EMAIL_TEMPLATES), 'operation');
     await AppStorage.set('suivi-fournisseur-codes', JSON.stringify(SUIVI_FOURN_CODES), 'operation');
+    SUIVI_EMAIL_CONFIG_DIRTY = false;
     savedEl.style.display = 'inline';
     setTimeout(() => { savedEl.style.display = 'none'; }, 2500);
   } catch(e){

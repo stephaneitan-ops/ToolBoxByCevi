@@ -28,6 +28,10 @@ function blobStore(name) {
     name,
     siteID: SITE_ID,
     token: process.env.NETLIFY_BLOBS_TOKEN,
+    // Lecture "forte" : sans cela Netlify Blobs est en cohérence "éventuelle" et une lecture
+    // faite jusqu'à ~60 s après une écriture peut renvoyer l'ANCIENNE valeur (ex. code client
+    // fournisseur qui semble ne pas avoir été enregistré après un rechargement de page).
+    consistency: 'strong',
   });
 }
 
