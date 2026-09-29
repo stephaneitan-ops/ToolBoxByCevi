@@ -798,7 +798,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.11</div>
+          <div class="brand-version">V3.12</div>
         </div>
       </div>
     </div>
@@ -1617,7 +1617,11 @@
 
     <div id="atelierSubFusion">
       <div class="admin-card" id="ftPendingCard" style="margin-bottom:20px;">
-        <h2>1. Fiches en attente — par jour de dépôt</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h2 style="margin:0;">1. Fiches en attente — par jour de dépôt</h2>
+          <button class="btn btn-ghost" id="ftRefreshBtn2" style="width:auto;padding:8px 16px;margin-top:0;display:none;">↻ Actualiser</button>
+        </div>
+        <div id="ftInboxState" class="sub" style="margin:6px 0 10px;"></div>
         <div id="ftConnectHint" style="margin-bottom:10px;"></div>
         <div id="ftDayList"></div>
         <div id="ftProgressWrap" style="display:none;">
@@ -1686,7 +1690,8 @@
         <div id="ftFolderState" class="sub" style="margin:8px 0;">Aucun dossier connecté.</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-primary" id="ftConnectBtn" style="width:auto;padding:11px 22px;margin-top:0;">Connecter le dossier</button>
-          <button class="btn btn-ghost" id="ftRefreshBtn" style="width:auto;padding:11px 18px;margin-top:0;" disabled>Actualiser</button>
+          <button class="btn btn-ghost" id="ftRefreshBtn" style="width:auto;padding:11px 18px;margin-top:0;" disabled>↻ Actualiser</button>
+          <button class="btn btn-ghost" id="ftChangeBtn" style="width:auto;padding:11px 18px;margin-top:0;">Changer de dossier…</button>
           <a class="btn-ghost-link" id="ftSharepointLink" href="https://evidentia.sharepoint.com/sites/Atelier/Fiches%20Atelier/Forms/AllItems.aspx" target="_blank" rel="noopener">Ouvrir la bibliothèque SharePoint ↗</a>
         </div>
         <p class="sub" style="margin-top:10px;font-size:12px;">Une seule fois par poste : choisir le dossier synchronisé « Fiches Atelier » (celui qui contient <b>A_traiter</b> et <b>Traites</b>). Fonctionne dans Edge ou Chrome.</p>
@@ -3095,36 +3100,74 @@ async function ftEnsurePerm(h){
   if(await h.queryPermission({mode:'readwrite'}) === 'granted') return true;
   return (await h.requestPermission({mode:'readwrite'})) === 'granted';
 }
-async function ftConnect(){
+async function ftConnect(forcePick){
   if(!window.showDirectoryPicker){ alert("Ce navigateur ne permet pas l'accès aux dossiers. Utilisez Microsoft Edge ou Google Chrome."); return; }
   try{
-    let h = await ftIdb.get('root');
+    let h = forcePick ? null : (ftRoot || await ftIdb.get('root'));
     if(h && !(await ftEnsurePerm(h))) h = null;
-    if(!h){ h = await window.showDirectoryPicker({ id:'fichesAtelier', mode:'readwrite' }); if(!(await ftEnsurePerm(h))) return; }
-    if(/^(a_traiter|traites)$/i.test(h.name)){ alert(`Vous avez choisi le sous-dossier « ${h.name} ». Choisissez le dossier parent « Fiches Atelier ».`); await ftIdb.set('root', null); return; }
+    if(!h){
+      const opts = { id:'fichesAtelier', mode:'readwrite' };
+      if(ftRoot) opts.startIn = ftRoot;
+      h = await window.showDirectoryPicker(opts);
+      if(!(await ftEnsurePerm(h))) return;
+    }
+    if(/^(a_traiter|traites)$/i.test(h.name)){ alert(`Vous avez choisi le sous-dossier « ${h.name} ». Choisissez le dossier parent « Fiches Atelier ».`); return; }
     ftRoot = h;
-    ftInbox = await ftRoot.getDirectoryHandle('A_traiter', {create:true});
-    ftArchiveDir = await ftRoot.getDirectoryHandle('Traites', {create:true});
+    ftInbox = ftArchiveDir = null;
+    await ftResolveSubdirs();
     await ftIdb.set('root', h);
+    ftAnalysis = null; $ft('ftResults').style.display = 'none';
     $ft('ftFolderState').innerHTML = `<span style="color:#16A34A;font-weight:600;">✓ Connecté :</span> <b>${escapeHtml(ftRoot.name)}</b>`;
-    $ft('ftConnectBtn').textContent = 'Changer / reconnecter';
+    $ft('ftConnectBtn').textContent = 'Reconnecter';
     $ft('ftRefreshBtn').disabled = false;
+    $ft('ftRefreshBtn2').style.display = '';
     ftRenderConnectHint();
     await ftLoadInbox();
   }catch(e){ if(e.name !== 'AbortError') alert('Connexion impossible : ' + e.message); }
 }
-$ft('ftConnectBtn').addEventListener('click', ftConnect);
+// Ré-obtient A_traiter / Traites à chaque fois : OneDrive peut recréer ces dossiers et rendre l'ancien accès invalide.
+async function ftResolveSubdirs(){
+  if(!(await ftEnsurePerm(ftRoot))) throw new Error("Accès au dossier refusé par le navigateur. Clique sur « Reconnecter ».");
+  ftInbox = await ftRoot.getDirectoryHandle('A_traiter', {create:true});
+  ftArchiveDir = await ftRoot.getDirectoryHandle('Traites', {create:true});
+}
+$ft('ftConnectBtn').addEventListener('click', () => ftConnect(false));
+$ft('ftChangeBtn').addEventListener('click', () => ftConnect(true));
 $ft('ftRefreshBtn').addEventListener('click', () => ftLoadInbox());
+$ft('ftRefreshBtn2').addEventListener('click', () => ftLoadInbox());
 
+let ftLoading = false;
 async function ftLoadInbox(){
-  ftPending = [];
-  for await (const [name, h] of ftInbox.entries()){
-    if(h.kind === 'file' && /\.pdf$/i.test(name)) ftPending.push({ name, file: await h.getFile(), handle: h });
+  if(!ftRoot){ ftConnect(false); return; }
+  if(ftLoading) return;
+  ftLoading = true;
+  const btns = [$ft('ftRefreshBtn'), $ft('ftRefreshBtn2')];
+  btns.forEach(b => { b.disabled = true; b.dataset.lbl = b.textContent; b.textContent = 'Actualisation…'; });
+  $ft('ftInboxState').innerHTML = 'Lecture du dossier A_traiter…';
+  const unreadable = [];
+  try{
+    await ftResolveSubdirs();
+    const list = [];
+    for await (const [name, h] of ftInbox.entries()){
+      if(h.kind !== 'file' || !/\.pdf$/i.test(name)) continue;
+      try{ list.push({ name, file: await h.getFile(), handle: h }); }
+      catch(e){ unreadable.push(name); }
+    }
+    list.sort((a,b) => a.file.lastModified - b.file.lastModified || a.name.localeCompare(b.name,'fr',{numeric:true}));
+    ftPending = list;
+    $ft('ftResults').style.display = 'none'; ftAnalysis = null;
+    $ft('ftProgressWrap').style.display = 'none';
+    ftRenderPending();
+    const now = new Date();
+    let msg = `<span style="color:#16A34A;">✓ Actualisé à ${ftPad(now.getHours())}h${ftPad(now.getMinutes())}</span> — ${list.length} fiche(s) en attente.`;
+    if(unreadable.length) msg += `<div class="modal-error show" style="margin-top:6px;">⚠ ${unreadable.length} fichier(s) pas encore disponible(s) sur ce poste (synchronisation OneDrive en cours ?) : ${unreadable.map(escapeHtml).join(', ')}. Attends quelques secondes puis actualise, ou dans l'Explorateur : clic droit sur le dossier « Fiches Atelier » › <b>Toujours conserver sur cet appareil</b>.</div>`;
+    $ft('ftInboxState').innerHTML = msg;
+  }catch(e){
+    $ft('ftInboxState').innerHTML = `<div class="modal-error show">✗ Impossible de lire le dossier : ${escapeHtml(e.message || String(e))}. Clique sur « Reconnecter » ou « Changer de dossier… » (carte 5).</div>`;
+  }finally{
+    btns.forEach(b => { b.textContent = b.dataset.lbl || '↻ Actualiser'; b.disabled = false; });
+    ftLoading = false;
   }
-  ftPending.sort((a,b) => a.file.lastModified - b.file.lastModified || a.name.localeCompare(b.name,'fr',{numeric:true}));
-  $ft('ftResults').style.display = 'none'; ftAnalysis = null;
-  $ft('ftProgressWrap').style.display = 'none';
-  ftRenderPending();
 }
 
 function ftGroupByDay(){
@@ -3290,6 +3333,7 @@ $ft('ftArchiveBtn').addEventListener('click', async () => {
     const json = await res.json().catch(() => ({}));
     if(!res.ok || !json.ok) throw new Error(json.error || "Enregistrement de l'historique impossible. Rien n'a été déplacé : réessaie.");
     // 2) Archive SharePoint : PDF fusionné + fiches du jour, puis retrait de A_traiter
+    await ftResolveSubdirs();
     const dest = await ftArchiveDir.getDirectoryHandle(a.archName, {create:true});
     if(ftOutBytes){ const fh = await dest.getFileHandle(ftOutName, {create:true}); const w = await fh.createWritable(); await w.write(ftOutBytes); await w.close(); }
     let moved = 0;
@@ -3383,14 +3427,14 @@ async function ftRenderConnectHint(){
   const h = await ftIdb.get('root');
   el.innerHTML = `<button class="btn btn-primary" id="ftConnectBtn2" style="width:auto;padding:10px 18px;margin-top:0;">${h ? 'Ouvrir le dossier « ' + escapeHtml(h.name) + ' »' : 'Connecter le dossier Fiches Atelier'}</button>` +
     '';
-  $ft('ftConnectBtn2').addEventListener('click', ftConnect);
+  $ft('ftConnectBtn2').addEventListener('click', () => ftConnect(false));
   $ft('ftDayList').innerHTML = '';
 }
 
 async function ftOnOpen(){
   ftLoadHistory();
   ftRenderConnectHint();
-  if(ftRoot) return;
+  if(ftRoot){ if(!ftAnalysis) ftLoadInbox(); return; }
   const h = await ftIdb.get('root');
   if(h){ $ft('ftFolderState').innerHTML = `Dossier mémorisé : <b>${escapeHtml(h.name)}</b> — clique sur « Connecter » pour l'ouvrir.`; $ft('ftConnectBtn').textContent = 'Connecter'; }
   if(!window.showDirectoryPicker) $ft('ftFolderState').innerHTML = `<span style="color:var(--error);">Ce navigateur ne gère pas l'accès aux dossiers : utilise Microsoft Edge ou Google Chrome.</span>`;
