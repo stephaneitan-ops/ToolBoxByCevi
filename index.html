@@ -456,6 +456,17 @@
   #viewAtelier .badge-warn{background:#FFE7D8;color:var(--brass);}
   #viewAtelier .badge-danger{background:#FBEAE5;color:var(--error);}
   #viewAtelier .badge-neutral{background:#F0F2F6;color:var(--ink-soft);}
+  #viewAtelier .ano-ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  #viewAtelier .ano-seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  #viewAtelier .ano-seg-btn{border:0;background:transparent;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink-soft);}
+  #viewAtelier .ano-seg-btn + .ano-seg-btn{border-left:1px solid var(--line);}
+  #viewAtelier .ano-seg-btn.active{background:var(--teal-deep);color:#fff;font-weight:600;}
+  #viewAtelier .ano-mat td.n{text-align:center;font-variant-numeric:tabular-nums;}
+  #viewAtelier .ano-mat td.n.z{color:var(--line);}
+  #viewAtelier .ano-mat th.p{font-size:11.5px;line-height:1.25;text-align:center;}
+  #viewAtelier .ano-scroll{overflow-x:auto;}
+  #viewAtelier .ano-del{border:0;background:transparent;cursor:pointer;color:var(--ink-soft);font-size:14px;}
+  #viewAtelier .ano-del:hover{color:var(--error);}
   #viewAtelier .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;}
   #viewAtelier .stat{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;background:#FAFBFD;}
   #viewAtelier .stat .num{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--teal-deep);}
@@ -798,7 +809,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V3.12</div>
+          <div class="brand-version">V3.13</div>
         </div>
       </div>
     </div>
@@ -1597,7 +1608,30 @@
     <div class="sub-tabs" style="display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);">
       <button class="sub-tab-btn active" id="atelierSubTabFusion" type="button">Fusion FT</button>
       <button class="sub-tab-btn" id="atelierSubTabBarcode" type="button">CodeBarre</button>
+      <button class="sub-tab-btn" id="atelierSubTabAnomalies" type="button">Anomalies</button>
     </div>
+
+    <div id="atelierSubAnomalies" style="display:none;">
+      <div class="admin-card" style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h2 style="margin:0;">Anomalies de saisie opticien</h2>
+          <button class="btn btn-ghost" id="anoRefreshBtn" style="width:auto;padding:8px 16px;margin-top:0;">↻ Actualiser</button>
+        </div>
+        <p class="sub" style="margin:6px 0 12px;">Remontées saisies à l'atelier avec l'extension Atelitool (onglet Anomalies), tous postes confondus. Envoi automatique après chaque saisie, rattrapage chaque soir à 19h.</p>
+        <div class="ano-ctrl">
+          <div class="ano-seg" role="tablist">
+            <button type="button" class="ano-seg-btn active" data-mode="week">Par semaine</button>
+            <button type="button" class="ano-seg-btn" data-mode="month">Par mois</button>
+            <button type="button" class="ano-seg-btn" data-mode="opt">Par opticien</button>
+          </div>
+          <select id="anoPeriod" style="width:auto;padding:8px 10px;"></select>
+          <select id="anoOpt" style="width:auto;padding:8px 10px;display:none;"></select>
+          <button class="btn btn-ghost" id="anoExportBtn" style="width:auto;padding:8px 16px;margin-top:0;">⬇ Exporter (Excel / CSV)</button>
+        </div>
+        <div id="anoState" class="sub" style="margin-top:10px;"></div>
+      </div>
+      <div id="anoContent"></div>
+    </div><!-- /atelierSubAnomalies -->
 
     <div id="atelierSubBarcode" style="display:none;">
       <div class="admin-card" style="max-width:480px;margin-bottom:14px;">
@@ -1643,7 +1677,7 @@
           </div>
           <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
             <button class="btn btn-primary" id="ftArchiveBtn" style="width:auto;padding:11px 22px;margin-top:0;background:#16A34A;">OK, valider ce jour → libérer le dossier</button>
-            <div class="sub" style="margin-top:6px;">Déplace les fiches de ce jour dans Traites\<span id="ftArchName"></span> (avec le PDF fusionné) et enregistre les numéros de job dans l'historique.</div>
+            <div class="sub" style="margin-top:6px;">Enregistre uniquement le PDF fusionné dans Traites\<span id="ftArchName"></span>.pdf, supprime les fiches d'origine de A_traiter et enregistre les numéros de job dans l'historique.</div>
           </div>
         </div>
         <div class="admin-card" style="margin-bottom:20px;">
@@ -2981,6 +3015,7 @@ function atelierLoadLibs(){
   return atelierLibsPromise;
 }
 
+const FT_JOB_WINDOW_DAYS = 15; // V3.13 : un job déjà imprimé il y a moins de 15 jours est retiré par défaut
 const ATELIER_RE_JOB_FOOTER = /Job\s*n[°o]\s*:\s*J\s*(\d{6,12})/i;
 const ATELIER_RE_JOB_ANY    = /\bJ\s*(\d{6,12})\b/;
 const ATELIER_RE_EXCLUDE    = /colissimo|chronopost/i;
@@ -3225,13 +3260,34 @@ async function ftRunDay(k){
     }));
     const carriers = records.filter(r => r.isCarrier);
     records = records.filter(r => !r.isCarrier);
+
+    // V3.13 — doublons par N° DE JOB, pas seulement par contenu identique : une fiche renvoyée
+    // un autre jour (ou dans un autre fichier) n'a jamais exactement le même texte (date
+    // d'édition Cosium…), l'empreinte seule ne la reconnaissait donc pas.
+    // (a) Même jour, même job présent dans PLUSIEURS fichiers : on garde le fichier déposé en
+    //     dernier (le plus à jour), les pages de ce job venant des autres fichiers sont retirées.
+    //     Plusieurs pages d'un même job dans UN même fichier restent toutes conservées.
+    const lastSrcByJob = new Map();
+    records.forEach(r => { if(r.job.type === 'numeric'){ const cur = lastSrcByJob.get(r.job.label); if(!cur || r.orig > cur.orig) lastSrcByJob.set(r.job.label, { src:r.src, orig:r.orig }); } });
+    // (b) Job déjà imprimé dans un lot validé il y a moins de FT_JOB_WINDOW_DAYS jours :
+    //     retiré par défaut (case « Réimprimer » pour le remettre). Au-delà, il est conservé
+    //     avec un simple avertissement (cas d'un vrai SAV sur un ancien job).
+    const jobWindow = Date.now() - FT_JOB_WINDOW_DAYS * 864e5;
+    const recentLot = job => (histByJob.get(job) || []).filter(l => new Date(l.date).getTime() >= jobWindow).sort((x,y) => y.date.localeCompare(x.date))[0] || null;
+
     const seen = new Set(), kept = [], dups = [], already = [];
     for(const r of records){
-      if(seen.has(r.hash)){ dups.push(r); continue; }
+      if(seen.has(r.hash)){ r.dupReason = 'Doublon (page identique)'; dups.push(r); continue; }
       seen.add(r.hash);
       const h = histByHash.get(r.hash);
       if(h){ r.histPrinted = h; already.push(r); continue; }
-      if(r.job.type === 'numeric' && histByJob.has(r.job.label)) r.histJob = histByJob.get(r.job.label);
+      if(r.job.type === 'numeric'){
+        const last = lastSrcByJob.get(r.job.label);
+        if(last && last.src !== r.src){ r.dupReason = `Doublon du job (gardé : ${last.src})`; dups.push(r); continue; }
+        const lot = recentLot(r.job.label);
+        if(lot){ r.histPrinted = lot; r.sameJob = true; already.push(r); continue; }
+        if(histByJob.has(r.job.label)) r.histJob = histByJob.get(r.job.label);
+      }
       kept.push(r);
     }
     ftAnalysis = { day:k, files, loaded, total, carriers, dups, already, kept, forceReprint:new Set() };
@@ -3274,19 +3330,19 @@ function ftRenderResults(){
   const jobs = new Set(a.numeric.map(r => r.job.value));
   $ft('ftSummaryGrid').innerHTML = [
     [a.loaded.length,'Fichiers'],[a.total,'Pages reçues'],[a.order.length,'Pages à imprimer'],[jobs.size,'Jobs distincts'],
-    [a.dups.length,'Doublons du jour'],[a.already.length,'Déjà imprimées avant'],[a.carriers.length,'Étiquettes exclues']
+    [a.dups.length,'Doublons retirés'],[a.already.length,'Déjà imprimées avant'],[a.carriers.length,'Étiquettes exclues']
   ].map(([n,l]) => `<div class="stat"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join('');
 
   let hb = '';
   if(a.already.length){
-    hb += `<div class="modal-error show">⚠ ${a.already.length} page(s) identique(s) à une fiche déjà imprimée : retirée(s) du PDF. Coche pour réimprimer.</div>
+    hb += `<div class="modal-error show">⚠ ${a.already.length} page(s) déjà imprimée(s) (même fiche, ou même n° de job renvoyé un autre jour — moins de ${FT_JOB_WINDOW_DAYS} j) : retirée(s) du PDF. Coche pour réimprimer.</div>
       <table style="margin-bottom:12px;"><thead><tr><th>Réimprimer ?</th><th>Page</th><th>Fichier</th><th>Déjà imprimée le</th></tr></thead><tbody>` +
-      a.already.map(r => `<tr><td><input type="checkbox" class="ft-reprint" data-h="${r.hash}" ${a.forceReprint.has(r.hash)?'checked':''}></td><td>${r.job.label}</td><td>${escapeHtml(r.src)} (p${r.pageIndex+1})</td><td>${ftFmtDate(r.histPrinted.date)} — ${escapeHtml(r.histPrinted.lot||'')}</td></tr>`).join('') + `</tbody></table>`;
+      a.already.map(r => `<tr><td><input type="checkbox" class="ft-reprint" data-h="${r.hash}" ${a.forceReprint.has(r.hash)?'checked':''}></td><td>${r.job.label}${r.sameJob ? ' <span class="badge badge-warn">même job</span>' : ''}</td><td>${escapeHtml(r.src)} (p${r.pageIndex+1})</td><td>${ftFmtDate(r.histPrinted.date)} — ${escapeHtml(r.histPrinted.lot||'')}</td></tr>`).join('') + `</tbody></table>`;
   }
   const seenJob = a.kept.filter(r => r.histJob);
   if(seenJob.length){
     const byJob = new Map(); seenJob.forEach(r => byJob.set(r.job.label, r.histJob));
-    hb += `<div class="modal-error show" style="background:#FFE7D8;color:var(--brass);">ℹ ${byJob.size} job(s) déjà présent(s) dans un lot précédent avec un contenu différent (fiche mise à jour ?) : conservé(s), à vérifier — ` +
+    hb += `<div class="modal-error show" style="background:#FFE7D8;color:var(--brass);">ℹ ${byJob.size} job(s) déjà imprimé(s) il y a plus de ${FT_JOB_WINDOW_DAYS} jours (SAV ?) : conservé(s), à vérifier — ` +
       [...byJob].map(([j,ls]) => `<b>${j}</b> (${[...new Set(ls.map(l => ftFmtDate(l.date).slice(0,10)))].join(', ')})`).join(' · ') + `</div>`;
   }
   $ft('ftHistBox').innerHTML = hb;
@@ -3306,8 +3362,8 @@ function ftRenderResults(){
 
   const badge = r => r.formulaire ? '<span class="badge badge-warn">FORMULAIRE</span>' : r.job.type === 'numeric' ? '<span class="badge badge-ok">Job</span>' : '<span class="badge badge-neutral">Sans n°</span>';
   const rows = a.order.map((r,i) => `<tr><td>${i+1}</td><td>${r.job.label}</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td>${badge(r)}${r.histPrinted ? ' <span class="badge badge-danger">réimpression</span>' : r.histJob ? ' <span class="badge badge-warn">job déjà vu</span>' : ''}</td></tr>`);
-  a.dups.forEach(r => rows.push(`<tr><td>—</td><td>${r.job.label}</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">Doublon retiré</span></td></tr>`));
-  a.already.filter(r => !a.forceReprint.has(r.hash)).forEach(r => rows.push(`<tr><td>—</td><td>${r.job.label}</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">Déjà imprimée</span></td></tr>`));
+  a.dups.forEach(r => rows.push(`<tr><td>—</td><td>${r.job.label}</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">${escapeHtml(r.dupReason || 'Doublon')} — retiré</span></td></tr>`));
+  a.already.filter(r => !a.forceReprint.has(r.hash)).forEach(r => rows.push(`<tr><td>—</td><td>${r.job.label}</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">${r.sameJob ? 'Job déjà imprimé le ' + ftFmtDate(r.histPrinted.date).slice(0,10) : 'Déjà imprimée'}</span></td></tr>`));
   a.carriers.forEach(r => rows.push(`<tr><td>—</td><td>—</td><td>${escapeHtml(r.src)}</td><td>p${r.pageIndex+1}</td><td><span class="badge badge-danger">Étiquette transporteur exclue</span></td></tr>`));
   $ft('ftDetailBody').innerHTML = rows.join('');
   $ft('ftResults').style.display = 'block';
@@ -3320,7 +3376,7 @@ $ft('ftSaveBtn').addEventListener('click', () => { if(!ftOutBytes) return; const
 /* ---- Validation : archivage SharePoint + historique serveur ---- */
 $ft('ftArchiveBtn').addEventListener('click', async () => {
   const a = ftAnalysis; if(!a || !ftRoot) return;
-  if(!confirm(`Confirmer : l'impression est bonne ?\n\nLes ${a.files.length} fichier(s) du ${ftDayLabel(a.day)} vont être déplacés de A_traiter vers Traites\\${a.archName} et les numéros de job ajoutés à l'historique.`)) return;
+  if(!confirm(`Confirmer : l'impression est bonne ?\n\nLe PDF fusionné est enregistré dans Traites\\${a.archName}.pdf, les ${a.files.length} fichier(s) d'origine du ${ftDayLabel(a.day)} sont SUPPRIMÉS de A_traiter, et les numéros de job ajoutés à l'historique.`)) return;
   $ft('ftArchiveBtn').disabled = true;
   try{
     // 1) Historique (serveur) : numéros de job + empreintes, aucun nom de fichier
@@ -3332,24 +3388,22 @@ $ft('ftArchiveBtn').addEventListener('click', async () => {
     const res = await fetch(ATELIER_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'record-lot', password: CURRENT_ATELIER_PASSWORD, lot }) });
     const json = await res.json().catch(() => ({}));
     if(!res.ok || !json.ok) throw new Error(json.error || "Enregistrement de l'historique impossible. Rien n'a été déplacé : réessaie.");
-    // 2) Archive SharePoint : PDF fusionné + fiches du jour, puis retrait de A_traiter
+    // 2) Archive SharePoint (V3.13) : on ne garde QUE le PDF fusionné, directement dans Traites ;
+    //    les fiches d'origine sont supprimées de A_traiter une fois la fusion écrite.
     await ftResolveSubdirs();
-    const dest = await ftArchiveDir.getDirectoryHandle(a.archName, {create:true});
-    if(ftOutBytes){ const fh = await dest.getFileHandle(ftOutName, {create:true}); const w = await fh.createWritable(); await w.write(ftOutBytes); await w.close(); }
-    let moved = 0;
+    const archFile = a.archName + '.pdf';
+    if(ftOutBytes){ const fh = await ftArchiveDir.getFileHandle(archFile, {create:true}); const w = await fh.createWritable(); await w.write(ftOutBytes); await w.close(); }
+    let removed = 0;
     for(const p of a.files){
-      const fh = await dest.getFileHandle(p.name, {create:true});
-      const w = await fh.createWritable(); await w.write(p.file); await w.close();
-      await ftInbox.removeEntry(p.name);
-      moved++;
+      try{ await ftInbox.removeEntry(p.name); removed++; }catch(e){ console.warn('Suppression impossible', p.name, e); }
     }
-    // 3) Purge des archives trop anciennes
+    // 3) Purge des archives trop anciennes (PDF fusionnés, et anciens sous-dossiers d'avant V3.13)
     const days = Number($ft('ftRetention').value) || 30, limit = Date.now() - days*864e5; let purged = 0;
     for await (const [name, h] of ftArchiveDir.entries()){
       const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(name);
-      if(h.kind === 'directory' && m && new Date(+m[1], +m[2]-1, +m[3]).getTime() < limit){ try{ await ftArchiveDir.removeEntry(name, {recursive:true}); purged++; }catch(e){} }
+      if(m && new Date(+m[1], +m[2]-1, +m[3]).getTime() < limit){ try{ await ftArchiveDir.removeEntry(name, {recursive:true}); purged++; }catch(e){} }
     }
-    alert(`${ftDayLabel(a.day)} validé : ${moved} fichier(s) déplacé(s) vers Traites\\${a.archName}.` + (purged ? `\n${purged} ancienne(s) archive(s) supprimée(s).` : ''));
+    alert(`${ftDayLabel(a.day)} validé : ${ftOutBytes ? 'fusion enregistrée dans Traites\\' + archFile : 'aucune page à archiver'}, ${removed}/${a.files.length} fiche(s) d'origine supprimée(s) de A_traiter.` + (purged ? `\n${purged} ancienne(s) archive(s) supprimée(s).` : ''));
     await ftLoadHistory();
     await ftLoadInbox();
   }catch(e){
@@ -3446,16 +3500,189 @@ const atelierSubTabBarcode = document.getElementById('atelierSubTabBarcode');
 const atelierSubFusion = document.getElementById('atelierSubFusion');
 const atelierSubBarcode = document.getElementById('atelierSubBarcode');
 
+const atelierSubTabAnomalies = document.getElementById('atelierSubTabAnomalies');
+const atelierSubAnomalies = document.getElementById('atelierSubAnomalies');
+
 function atelierShowSubTab(which){
-  const isFusion = which === 'fusion';
-  atelierSubFusion.style.display = isFusion ? 'block' : 'none';
-  atelierSubBarcode.style.display = isFusion ? 'none' : 'block';
-  atelierSubTabFusion.classList.toggle('active', isFusion);
-  atelierSubTabBarcode.classList.toggle('active', !isFusion);
-  if(isFusion) ftOnOpen();
+  const map = { fusion:[atelierSubTabFusion, atelierSubFusion], barcode:[atelierSubTabBarcode, atelierSubBarcode], anomalies:[atelierSubTabAnomalies, atelierSubAnomalies] };
+  if(!map[which]) which = 'fusion';
+  Object.entries(map).forEach(([k,[btn,panel]]) => { panel.style.display = k === which ? 'block' : 'none'; btn.classList.toggle('active', k === which); });
+  if(which === 'fusion') ftOnOpen();
+  if(which === 'anomalies') anoOnOpen();
 }
 atelierSubTabFusion.addEventListener('click', () => atelierShowSubTab('fusion'));
 atelierSubTabBarcode.addEventListener('click', () => atelierShowSubTab('barcode'));
+atelierSubTabAnomalies.addEventListener('click', () => atelierShowSubTab('anomalies'));
+
+/* ============ ANOMALIES ATELIER (V3.13) ============
+   Lecture des remontées envoyées par l'extension Atelitool. Les données (noms de clients)
+   restent sur une clé privée : lecture / suppression via data.js, action anomalies-*,
+   avec le mot de passe Operation ou Admin de la session. */
+const ANO_API = '/.netlify/functions/data';
+let anoRecords = null, anoMode = 'week', anoPeriodSel = null, anoOptSel = null, anoLoading = false;
+const anoPad = n => String(n).padStart(2,'0');
+const anoOpt = r => (r.opticien || '').trim() || '(non renseigné)';
+const anoPb = p => /^Autre\s*:/i.test(p) ? 'Autre' : p;
+const ANO_DEFAULT_PB = ['Oubli de saisie','Oubli du télédétouré','Oubli changement de cotes','Oubli d’un traitement','Erreur de saisie monture'];
+
+function anoMonday(ts){ const d = new Date(ts); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d; }
+function anoIsoWeek(d){ const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const j = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - j); const y0 = new Date(Date.UTC(x.getUTCFullYear(),0,1)); return { w: Math.ceil(((x - y0)/864e5 + 1)/7), y: x.getUTCFullYear() }; }
+const anoFr = d => `${anoPad(d.getDate())}/${anoPad(d.getMonth()+1)}`;
+function anoWeekKey(ts){ return String(anoMonday(ts).getTime()); }
+function anoWeekLabel(k){ const d = new Date(+k), dim = new Date(+k); dim.setDate(d.getDate()+6); const {w,y} = anoIsoWeek(d); return `S${w} ${y} — du ${anoFr(d)} au ${anoFr(dim)}`; }
+function anoMonthKey(ts){ const d = new Date(ts); return `${d.getFullYear()}-${anoPad(d.getMonth()+1)}`; }
+function anoMonthLabel(k){ const [y,m] = k.split('-').map(Number); const l = new Date(y,m-1,1).toLocaleDateString('fr-FR',{month:'long', year:'numeric'}); return l.charAt(0).toUpperCase() + l.slice(1); }
+
+async function anoCall(body){
+  const res = await fetch(ANO_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ...body, password: CURRENT_ATELIER_PASSWORD }) });
+  const json = await res.json().catch(() => ({}));
+  if(res.status === 401) throw new Error('Mot de passe refusé : reconnecte-toi en Operation ou Administrateur.');
+  if(!res.ok || !json.ok) throw new Error(json.error || `Serveur indisponible (HTTP ${res.status}).`);
+  return json;
+}
+
+async function anoLoad(){
+  if(anoLoading) return;
+  anoLoading = true;
+  $ft('anoState').textContent = 'Chargement…';
+  try{
+    const json = await anoCall({ action:'anomalies-list' });
+    anoRecords = json.records || [];
+    const now = new Date();
+    $ft('anoState').innerHTML = `<span style="color:#16A34A;">✓ ${anoRecords.length} remontée(s) au total</span> — actualisé à ${anoPad(now.getHours())}h${anoPad(now.getMinutes())}`;
+  }catch(e){
+    $ft('anoState').innerHTML = `<div class="modal-error show">✗ ${escapeHtml(e.message)}</div>`;
+    anoRecords = anoRecords || [];
+  }finally{ anoLoading = false; }
+  anoRender();
+}
+function anoOnOpen(){ if(anoRecords === null) anoLoad(); else anoRender(); }
+
+// Choix proposés dans la liste déroulante selon la vue.
+function anoPeriods(){
+  const recs = anoRecords || [];
+  if(anoMode === 'week'){
+    const keys = new Set(recs.map(r => anoWeekKey(r.ts))); keys.add(anoWeekKey(Date.now()));
+    return [...keys].sort((a,b) => b - a).map(k => ({ k, l: anoWeekLabel(k) + (k === anoWeekKey(Date.now()) ? ' (en cours)' : '') }));
+  }
+  const keys = new Set(recs.map(r => anoMonthKey(r.ts))); keys.add(anoMonthKey(Date.now()));
+  const months = [...keys].sort().reverse().map(k => ({ k, l: anoMonthLabel(k) }));
+  if(anoMode === 'opt') return [{ k:'all', l:'Tout l’historique' }, ...months];
+  return months;
+}
+
+function anoFiltered(){
+  const recs = anoRecords || [];
+  let out = recs;
+  if(anoMode === 'week') out = recs.filter(r => anoWeekKey(r.ts) === anoPeriodSel);
+  else if(anoPeriodSel && anoPeriodSel !== 'all') out = recs.filter(r => anoMonthKey(r.ts) === anoPeriodSel);
+  if(anoMode === 'opt') out = out.filter(r => anoOpt(r) === anoOptSel);
+  return out.slice().sort((a,b) => b.ts - a.ts);
+}
+
+function anoColumns(list){
+  const cols = ANO_DEFAULT_PB.slice();
+  (anoRecords || []).forEach(r => (r.problemes||[]).forEach(p => { const c = anoPb(p); if(c !== 'Autre' && !cols.includes(c)) cols.push(c); }));
+  const used = new Set(); list.forEach(r => (r.problemes||[]).forEach(p => used.add(anoPb(p))));
+  // On garde les colonnes par défaut + celles réellement présentes ; « Autre » toujours à la fin.
+  return [...cols.filter(c => ANO_DEFAULT_PB.includes(c) || used.has(c)), 'Autre'];
+}
+
+function anoRender(){
+  const segBtns = document.querySelectorAll('#atelierSubAnomalies .ano-seg-btn');
+  segBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === anoMode));
+  const per = anoPeriods();
+  if(!per.some(p => p.k === anoPeriodSel)) anoPeriodSel = anoMode === 'opt' ? 'all' : per[0].k;
+  $ft('anoPeriod').innerHTML = per.map(p => `<option value="${p.k}"${p.k === anoPeriodSel ? ' selected' : ''}>${escapeHtml(p.l)}</option>`).join('');
+
+  const optSel = $ft('anoOpt');
+  if(anoMode === 'opt'){
+    const opts = [...new Set((anoRecords||[]).map(anoOpt))].sort((a,b) => a.localeCompare(b,'fr'));
+    if(!opts.includes(anoOptSel)) anoOptSel = opts[0] || null;
+    optSel.innerHTML = opts.length ? opts.map(o => `<option${o === anoOptSel ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('') : '<option>—</option>';
+    optSel.style.display = '';
+  } else optSel.style.display = 'none';
+
+  const list = anoFiltered();
+  const el = $ft('anoContent');
+  if(anoRecords === null){ el.innerHTML = ''; return; }
+  if(!list.length){ el.innerHTML = `<div class="admin-card"><div class="sub">Aucune remontée sur cette sélection.</div></div>`; $ft('anoExportBtn').disabled = true; return; }
+  $ft('anoExportBtn').disabled = false;
+
+  const cols = anoColumns(list);
+  const cnt = (rs, c) => rs.filter(r => (r.problemes||[]).some(p => anoPb(p) === c)).length;
+  const cell = n => `<td class="n${n ? '' : ' z'}">${n || '·'}</td>`;
+  const optCount = new Set(list.map(anoOpt)).size, jobCount = new Set(list.map(r => r.job)).size;
+  const nbPb = list.reduce((s,r) => s + (r.problemes||[]).length, 0);
+  let html = `<div class="admin-card" style="margin-bottom:20px;"><div class="summary-grid">` +
+    [[list.length,'Remontées'],[jobCount,'Dossiers'],[nbPb,'Problèmes'],[anoMode === 'opt' ? (list.length ? (nbPb/list.length).toFixed(1) : '0') : optCount, anoMode === 'opt' ? 'Problèmes / dossier' : 'Opticiens concernés']]
+      .map(([n,l]) => `<div class="stat"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join('') + `</div>`;
+
+  if(anoMode === 'opt'){
+    // Un opticien : une ligne par mois (ou par semaine si un mois est choisi), une colonne par problème.
+    const byWeek = anoPeriodSel !== 'all';
+    const keyOf = r => byWeek ? anoWeekKey(r.ts) : anoMonthKey(r.ts);
+    const labelOf = k => byWeek ? anoWeekLabel(k) : anoMonthLabel(k);
+    const keys = [...new Set(list.map(keyOf))].sort().reverse();
+    html += `<h2>${escapeHtml(anoOptSel || '')} — ${byWeek ? 'par semaine' : 'par mois'}</h2><div class="ano-scroll"><table class="ano-mat"><thead><tr><th>${byWeek ? 'Semaine' : 'Mois'}</th>${cols.map(c => `<th class="p">${escapeHtml(c)}</th>`).join('')}<th class="p">Dossiers</th></tr></thead><tbody>` +
+      keys.map(k => { const rs = list.filter(r => keyOf(r) === k); return `<tr><td>${escapeHtml(labelOf(k))}</td>${cols.map(c => cell(cnt(rs,c))).join('')}<td class="n"><b>${rs.length}</b></td></tr>`; }).join('') +
+      `<tr style="font-weight:700;"><td>Total</td>${cols.map(c => cell(cnt(list,c))).join('')}<td class="n">${list.length}</td></tr></tbody></table></div>`;
+  } else {
+    // Semaine / mois : opticien × problème.
+    const opts = [...new Set(list.map(anoOpt))].map(o => ({ o, rs: list.filter(r => anoOpt(r) === o) })).sort((a,b) => b.rs.length - a.rs.length || a.o.localeCompare(b.o,'fr'));
+    html += `<h2>Récap par opticien</h2><div class="ano-scroll"><table class="ano-mat"><thead><tr><th>Opticien</th>${cols.map(c => `<th class="p">${escapeHtml(c)}</th>`).join('')}<th class="p">Dossiers</th></tr></thead><tbody>` +
+      opts.map(({o,rs}) => `<tr><td><a href="#" class="ano-go-opt" data-o="${escapeHtml(o)}">${escapeHtml(o)}</a></td>${cols.map(c => cell(cnt(rs,c))).join('')}<td class="n"><b>${rs.length}</b></td></tr>`).join('') +
+      `<tr style="font-weight:700;"><td>Total</td>${cols.map(c => cell(cnt(list,c))).join('')}<td class="n">${list.length}</td></tr></tbody></table></div>`;
+  }
+  html += `</div>`;
+
+  html += `<div class="admin-card" style="margin-bottom:20px;"><h2>Détail des dossiers</h2><div class="ano-scroll"><table><thead><tr><th>Date</th><th>Job</th><th>Client</th>${anoMode === 'opt' ? '' : '<th>Opticien</th>'}<th>Problème(s)</th><th>Commentaire</th><th>Saisi par</th><th></th></tr></thead><tbody>` +
+    list.map(r => { const d = new Date(r.ts); return `<tr><td style="white-space:nowrap;">${anoPad(d.getDate())}/${anoPad(d.getMonth()+1)}/${d.getFullYear()}</td><td style="font-family:'IBM Plex Mono',monospace;">${escapeHtml(r.job||'')}${r.commande ? `<div class="sub" style="font-size:11px;">Cde ${escapeHtml(r.commande)}</div>` : ''}</td><td>${escapeHtml(r.client||'')}</td>${anoMode === 'opt' ? '' : `<td>${escapeHtml(anoOpt(r))}</td>`}<td>${escapeHtml((r.problemes||[]).join(', '))}</td><td>${escapeHtml(r.commentaire||'')}</td><td style="font-size:12px;color:var(--ink-soft);">${escapeHtml(r.poste||'')}</td><td><button type="button" class="ano-del" data-id="${escapeHtml(r.id)}" title="Supprimer cette remontée">✕</button></td></tr>`; }).join('') +
+    `</tbody></table></div></div>`;
+  el.innerHTML = html;
+
+  el.querySelectorAll('.ano-go-opt').forEach(a => a.addEventListener('click', e => { e.preventDefault(); anoOptSel = a.dataset.o; const keep = anoMode === 'month' ? anoPeriodSel : 'all'; anoMode = 'opt'; anoPeriodSel = keep; anoRender(); }));
+  el.querySelectorAll('.ano-del').forEach(b => b.addEventListener('click', async () => {
+    const r = (anoRecords||[]).find(x => x.id === b.dataset.id); if(!r) return;
+    if(!confirm(`Supprimer la remontée ${r.job} (${anoOpt(r)}) ?\nElle disparaît pour tous les postes.`)) return;
+    b.disabled = true;
+    try{ await anoCall({ action:'anomalies-delete', ids:[r.id] }); anoRecords = anoRecords.filter(x => x.id !== r.id); anoRender(); }
+    catch(e){ alert(e.message); b.disabled = false; }
+  }));
+}
+
+function anoExport(){
+  const list = anoFiltered(); if(!list.length) return;
+  const cols = anoColumns(list);
+  const cnt = (rs, c) => rs.filter(r => (r.problemes||[]).some(p => anoPb(p) === c)).length;
+  const per = anoPeriods().find(p => p.k === anoPeriodSel);
+  const titre = (anoMode === 'opt' ? `${anoOptSel} — ` : '') + (per ? per.l.replace(' (en cours)','') : '');
+  const L = [[`Anomalies atelier — ${titre}`], []];
+  if(anoMode === 'opt'){
+    const byWeek = anoPeriodSel !== 'all';
+    const keyOf = r => byWeek ? anoWeekKey(r.ts) : anoMonthKey(r.ts);
+    L.push([byWeek ? 'Semaine' : 'Mois', ...cols, 'Dossiers']);
+    [...new Set(list.map(keyOf))].sort().reverse().forEach(k => { const rs = list.filter(r => keyOf(r) === k); L.push([byWeek ? anoWeekLabel(k) : anoMonthLabel(k), ...cols.map(c => cnt(rs,c) || ''), rs.length]); });
+  } else {
+    L.push(['Opticien', ...cols, 'Dossiers']);
+    [...new Set(list.map(anoOpt))].sort((a,b) => a.localeCompare(b,'fr')).forEach(o => { const rs = list.filter(r => anoOpt(r) === o); L.push([o, ...cols.map(c => cnt(rs,c) || ''), rs.length]); });
+  }
+  L.push(['Total', ...cols.map(c => cnt(list,c) || ''), list.length], [], ['DÉTAIL'],
+    ['Date','Job','Commande','Client','Opticien','Problèmes','Commentaire','Saisi par']);
+  list.slice().sort((a,b) => a.ts - b.ts).forEach(r => { const d = new Date(r.ts); L.push([`${anoPad(d.getDate())}/${anoPad(d.getMonth()+1)}/${d.getFullYear()}`, r.job, r.commande||'', r.client||'', anoOpt(r), (r.problemes||[]).join(' / '), r.commentaire||'', r.poste||'']); });
+  const esc = v => { const t = String(v == null ? '' : v); return /[;"\n]/.test(t) ? `"${t.replace(/"/g,'""')}"` : t; };
+  const csv = '\ufeff' + L.map(l => l.map(esc).join(';')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  const a = document.createElement('a'); a.href = url;
+  a.download = `Anomalies_${(titre || 'export').replace(/[^\w\u00C0-\u017F-]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'')}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+document.querySelectorAll('#atelierSubAnomalies .ano-seg-btn').forEach(b => b.addEventListener('click', () => { if(anoMode === b.dataset.mode) return; anoMode = b.dataset.mode; anoPeriodSel = null; anoRender(); }));
+$ft('anoPeriod').addEventListener('change', e => { anoPeriodSel = e.target.value; anoRender(); });
+$ft('anoOpt').addEventListener('change', e => { anoOptSel = e.target.value; anoRender(); });
+$ft('anoRefreshBtn').addEventListener('click', anoLoad);
+$ft('anoExportBtn').addEventListener('click', anoExport);
 
 /* ---- Générateur de code-barres (Code 128), 100% côté client, rien n'est conservé ---- */
 let jsBarcodeLibPromise = null;

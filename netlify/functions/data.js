@@ -17,6 +17,74 @@ const SKU_OVERRIDES_KEY = 'frames-sku-overrides';
 const SKU_LOG_KEY = 'frames-sku-overrides-log';
 const SKU_LOG_MAX = 3000;
 
+// ---- Anomalies atelier (V3.13) ----
+// Remontées envoyées par l'extension Atelitool (onglet Anomalies) depuis chaque poste.
+// Elles contiennent des noms de clients : stockées sous une clé PRIVÉE (jamais servie par le
+// GET public ci-dessous) et lues / supprimées uniquement avec le mot de passe Operation ou Admin.
+const ANOMALIES_KEY = 'anomalies-records';
+const ANOMALIES_MAX = 20000;
+const isPrivateKey = (k) => /^anomalies/i.test(String(k || ''));
+
+function cleanAnomalie(r) {
+  const clip = (v, n) => String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, n);
+  if (!r || typeof r !== 'object') return null;
+  const id = clip(r.id, 60);
+  const ts = Number(r.ts);
+  if (!id || !isFinite(ts)) return null;
+  const opticien = clip(r.opticien || (Array.isArray(r.opticiens) && r.opticiens.length ? r.opticiens[r.opticiens.length - 1] : ''), 80);
+  return {
+    id, ts,
+    job: clip(r.job, 30).toUpperCase(),
+    commande: clip(r.commande, 30),
+    client: clip(r.client, 120),
+    opticien,
+    problemes: (Array.isArray(r.problemes) ? r.problemes : []).map(x => clip(x, 120)).filter(Boolean).slice(0, 20),
+    commentaire: clip(r.commentaire, 500),
+    poste: clip(r.poste, 80),
+    recu: Date.now(),
+  };
+}
+
+async function readAnomalies(dataStore) {
+  try { const o = JSON.parse((await dataStore.get(ANOMALIES_KEY)) || '{}'); return o && typeof o === 'object' && !Array.isArray(o) ? o : {}; }
+  catch (e) { return {}; }
+}
+
+async function handleAnomalies(dataStore, body, cors) {
+  const json = (code, obj) => ({ statusCode: code, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify(obj) });
+  const authStore = blobStore('toolbox-auth');
+  if (!(await checkScopeAuthorized(dataStore, authStore, body.password, 'operation'))) {
+    return json(401, { error: 'Mot de passe incorrect.' });
+  }
+  const all = await readAnomalies(dataStore);
+
+  if (body.action === 'anomalies-list') {
+    return json(200, { ok: true, records: Object.values(all).sort((a, b) => b.ts - a.ts) });
+  }
+
+  // anomalies-push (extension) et anomalies-delete (onglet Tool Box)
+  const ids = [], deleted = [];
+  (Array.isArray(body.records) ? body.records : []).slice(0, 500).forEach(r => {
+    const c = cleanAnomalie(r);
+    if (!c) return;
+    if (all[c.id]) c.recu = all[c.id].recu || c.recu;
+    all[c.id] = c;
+    ids.push(c.id);
+  });
+  const aSupprimer = Array.isArray(body.deletes) ? body.deletes : (Array.isArray(body.ids) ? body.ids : []);
+  aSupprimer.slice(0, 1000).forEach(id => {
+    id = String(id || '');
+    if (all[id]) delete all[id];
+    deleted.push(id);   // idempotent : une remontée déjà absente compte comme supprimée
+  });
+  const keys = Object.keys(all);
+  if (keys.length > ANOMALIES_MAX) {
+    keys.sort((a, b) => all[a].ts - all[b].ts).slice(0, keys.length - ANOMALIES_MAX).forEach(k => delete all[k]);
+  }
+  await dataStore.set(ANOMALIES_KEY, JSON.stringify(all));
+  return json(200, { ok: true, ids, deleted });
+}
+
 async function handleSkuOverride(dataStore, body, cors) {
   const json = (code, obj) => ({ statusCode: code, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify(obj) });
   const authStore = blobStore('toolbox-auth');
@@ -87,6 +155,9 @@ exports.handler = async (event) => {
     if (!key) {
       return { statusCode: 400, headers: cors, body: JSON.stringify({ error: "Paramètre 'key' manquant." }) };
     }
+    if (isPrivateKey(key)) {
+      return { statusCode: 403, headers: cors, body: JSON.stringify({ error: 'Clé privée.' }) };
+    }
     const value = await dataStore.get(key);
     return {
       statusCode: 200,
@@ -105,10 +176,16 @@ exports.handler = async (event) => {
     if (body.action === 'sku-override') {
       return handleSkuOverride(dataStore, body, cors);
     }
+    if (body.action === 'anomalies-push' || body.action === 'anomalies-list' || body.action === 'anomalies-delete') {
+      return handleAnomalies(dataStore, body, cors);
+    }
 
     const { key, value, password, scope } = body;
     if (!key) {
       return { statusCode: 400, headers: cors, body: JSON.stringify({ error: "Paramètre 'key' manquant." }) };
+    }
+    if (isPrivateKey(key)) {
+      return { statusCode: 403, headers: cors, body: JSON.stringify({ error: 'Clé privée : passer par les actions anomalies-*.' }) };
     }
 
     // Un mot de passe Admin est toujours accepté, même sur une zone à privilège moindre
