@@ -521,10 +521,19 @@
   .sv-table th > span{cursor:default;}
   .sv-table th.c{text-align:center;} .sv-table th.c > span{text-align:center;}
   .sv-table td{padding:0;border-bottom:1px solid #E6EAF0;border-right:1px solid #EEF1F5;vertical-align:middle;}
-  .sv-table td.sv-h{width:10px;min-width:10px;border-right:none;cursor:pointer;}
-  .sv-table th.sv-h{width:10px;min-width:10px;border-right:none;}
+  .sv-table td.sv-h, .sv-table th.sv-h{width:64px;min-width:64px;text-align:center;}
+  .sv-table th.sv-h > span{padding:10px 4px;}
+  .sv-chip{width:28px;height:28px;margin:5px auto;border-radius:8px;border:1.5px solid #B5BDC9;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+  .sv-chip:hover{border-color:var(--teal-deep);}
+  .sv-chip svg{opacity:.55;}
+  .sv-chip:focus-visible, .sv-pop .sv-sw:focus-visible{outline:2px solid var(--teal-deep);outline-offset:2px;}
+  .sv-pop{position:fixed;z-index:1000;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(18,23,28,.18);padding:10px;width:210px;display:flex;flex-direction:column;gap:2px;}
+  .sv-pop h3{margin:0 0 6px;font-size:11.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .sv-pop .sv-sw{width:100%;border-color:transparent;justify-content:flex-start;}
+  .sv-pop .sv-sw:hover{background:var(--hover-tint);}
+  .sv-pop .sv-sw.on{border:1px solid var(--teal-deep);padding:0 10px 0 6px;}
   .sv-table .sv-sticky1{position:sticky;left:0;z-index:2;}
-  .sv-table .sv-sticky2{position:sticky;left:10px;z-index:2;border-right:1px solid var(--line);}
+  .sv-table .sv-sticky2{position:sticky;left:64px;z-index:2;border-right:1px solid var(--line);}
   .sv-table td.sv-job{padding:0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;white-space:nowrap;}
   .sv-table td.sv-maj{padding:0 8px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;}
   .sv-cell{width:100%;box-sizing:border-box;min-height:38px;border:1px solid transparent;border-radius:6px;padding:6px 7px;background:transparent;font-size:12.5px;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);}
@@ -540,8 +549,6 @@
   .sv-mail.ok{background:#DDF3E4;border-color:#8FCBA3;color:#1A6334;}
   .sv-del{border:none;background:none;cursor:pointer;padding:8px;border-radius:6px;color:var(--error);display:inline-flex;}
   .sv-del:hover{background:#FBEAE5;}
-  .sv-table.sv-paint td[data-col]{cursor:cell;}
-  .sv-table.sv-paint td[data-col] > *{pointer-events:none;}
   .sv-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-top:10px;font-size:12.5px;color:var(--ink-soft);}
   .sv-empty{padding:28px;text-align:center;font-size:14px;color:var(--ink-soft);}
   .pd-upload{
@@ -771,7 +778,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V4.1</div>
+          <div class="brand-version">V4.2</div>
         </div>
       </div>
     </div>
@@ -864,18 +871,6 @@
     </div>
   </div>
 
-  <div class="sv-card sv-brush">
-    <div class="sv-brush-row">
-      <div class="sv-modes" id="suiviModes" role="group" aria-label="Mode">
-        <button type="button" data-mode="select">Sélection</button>
-        <button type="button" data-mode="ligne">Colorer la ligne</button>
-        <button type="button" data-mode="cellule">Surligner la cellule</button>
-      </div>
-      <div class="sv-palette" id="suiviPalette"></div>
-    </div>
-    <p class="sv-hint" id="suiviBrushHint"></p>
-  </div>
-
   <div class="sv-filters">
     <div class="sv-filter" id="suiviFournFilter"></div>
     <div class="sv-filter" id="suiviColorFilter"></div>
@@ -887,7 +882,7 @@
     <table id="suiviTable" class="sv-table" style="display:none;">
       <thead>
         <tr>
-          <th class="sv-h sv-sticky1"></th>
+          <th class="sv-h sv-sticky1"><span style="text-align:center;">Couleur</span></th>
           <th class="sv-sticky2"><button type="button" data-sort="job">Job</button></th>
           <th><button type="button" data-sort="date">Date dossier</button></th>
           <th><button type="button" data-sort="date_commande">Date cmd</button></th>
@@ -909,7 +904,7 @@
 
   <div class="sv-foot">
     <span id="suiviFootLeft"></span>
-    <span>Couleurs et surlignages partagés avec toute l’équipe · emails et modèles : Administrateur › Fournisseurs</span>
+    <span>Couleurs partagées avec toute l’équipe · emails et modèles : Administrateur › Fournisseurs</span>
   </div>
 
   </div><!-- /viewSuivi -->
@@ -5497,23 +5492,29 @@ function suiviWireEmailButtons(body){
    directe. Les champs sont enregistrés dans le suivi lui-même : Copilote Atelier
    relit et réécrit l'objet entier, il les conserve donc tels quels.
    L'ancienne « Priorité » (jaune/orange/rouge) est reprise comme couleur de ligne. */
+// V4.2 : palette simplifiée (une couleur par ligne, plus de surlignage de case).
+// L'ancien orange « À relancer » et l'ancien jaune « Attente réponse » s'affichent en jaune.
 const SUIVI_PALETTE = [
-  { key:'',       label:'Aucune',          light:'',        strong:'#FFFFFF' },
-  { key:'red',    label:'Urgent',          light:'#FDE6E4', strong:'#F6B9B3' },
-  { key:'orange', label:'À relancer',      light:'#FFEBDD', strong:'#FFC59B' },
-  { key:'yellow', label:'Attente réponse', light:'#FFF6D1', strong:'#FFE175' },
-  { key:'green',  label:'Résolu',          light:'#E3F4E8', strong:'#AEE0BE' },
-  { key:'blue',   label:'Info',            light:'#E3EEFF', strong:'#B3D1FF' },
-  { key:'violet', label:'SAV',             light:'#F0E8FB', strong:'#D4BFF4' },
+  { key:'red',    label:'Urgent',      light:'#FBD0CB', strong:'#E9786C' },
+  { key:'yellow', label:'À relancer',  light:'#FFF3C4', strong:'#FFD84D' },
+  { key:'violet', label:'SAV',         light:'#EEE4FB', strong:'#C7A8F0' },
+  { key:'blue',   label:'Info',        light:'#E0ECFF', strong:'#A9CBFF' },
+  { key:'green',  label:'',            light:'#E3F4E8', strong:'#AEE0BE' },
+  { key:'',       label:'Aucune',      light:'',        strong:'#FFFFFF' },
 ];
 const SUIVI_PAL = Object.fromEntries(SUIVI_PALETTE.map(p => [p.key, p]));
-const SUIVI_PRIO_COULEUR = { rouge:'red', orange:'orange', jaune:'yellow' };
+const SUIVI_PRIO_COULEUR = { rouge:'red', orange:'yellow', jaune:'yellow' };
+const SUIVI_COULEUR_ALIAS = { orange:'yellow' };
 const SUIVI_COLS = ['job','date_dossier','date_commande','client','fournisseur','ref_monture','statut','maj','observation'];
 
 let suiviSort = { key: 'job', dir: 'asc' };
-let suiviUi = { mode: 'select', brush: 'orange', fourn: '', couleur: null, recherche: '', nonRelances: false };
+let suiviUi = { fourn: '', couleur: null, recherche: '', nonRelances: false };
 
-const suiviCouleurDe = e => (e.couleur !== undefined ? e.couleur : (SUIVI_PRIO_COULEUR[e.priorite] || '')) || '';
+const suiviCouleurDe = e => {
+  const c = (e.couleur !== undefined ? e.couleur : (SUIVI_PRIO_COULEUR[e.priorite] || '')) || '';
+  const k = SUIVI_COULEUR_ALIAS[c] || c;
+  return SUIVI_PAL[k] ? k : '';
+};
 const suiviFournLabel = v => (SUIVI_FOURNISSEURS.find(f => f.value === v) || { label: v ? v.toUpperCase() : '' }).label;
 
 function suiviSortedJobs(jobs){
@@ -5567,31 +5568,46 @@ async function suiviMajChamps(job, champs){
   }
 }
 
-async function suiviPeindre(job, col, ligneForcee){
-  const e = SUIVI_DATA[job];
-  if(!e) return;
-  const b = suiviUi.brush;
-  if(ligneForcee || suiviUi.mode === 'ligne'){
-    const nouv = suiviCouleurDe(e) === b ? '' : b;     // re-clic avec la même couleur : efface
-    await suiviMajChamps(job, { couleur: nouv, priorite: undefined });
-  } else if(suiviUi.mode === 'cellule'){
-    const s = Object.assign({}, e.surlignage || {});
-    if(!b || s[col] === b) delete s[col]; else s[col] = b;
-    await suiviMajChamps(job, { surlignage: Object.keys(s).length ? s : undefined });
-  }
+async function suiviColorer(job, couleur){
+  if(!SUIVI_DATA[job]) return;
+  await suiviMajChamps(job, { couleur, priorite: undefined });
   renderSuiviTable();
 }
 
-function renderSuiviControls(){
-  document.querySelectorAll('#suiviModes button').forEach(btn => btn.classList.toggle('on', btn.dataset.mode === suiviUi.mode));
-  document.getElementById('suiviPalette').innerHTML = '<span>Pinceau</span>' + SUIVI_PALETTE.map(p =>
-    `<button type="button" class="sv-sw${p.key === suiviUi.brush ? ' on' : ''}" data-brush="${p.key}" aria-pressed="${p.key === suiviUi.brush}"><i style="background:${p.strong}"></i>${escapeHtml(p.label)}</button>`).join('');
-  const lbl = SUIVI_PAL[suiviUi.brush].label;
-  document.getElementById('suiviBrushHint').textContent =
-    suiviUi.mode === 'select' ? 'Mode sélection : cliquez dans une case pour la modifier. La petite barre à gauche de chaque ligne colore la ligne avec le pinceau choisi.'
-    : suiviUi.mode === 'ligne' ? `Cliquez sur une ligne pour lui appliquer « ${lbl} ». Recliquez pour effacer.`
-    : `Cliquez sur une case pour la surligner en « ${lbl} ». Le surlignage passe devant la couleur de la ligne. Recliquez pour effacer.`;
+// Petit menu de couleurs ouvert depuis la pastille d'une ligne.
+let suiviPopJob = null;
+let suiviPopOuvertA = 0;
+function suiviFermerPop(){
+  const pop = document.getElementById('suiviPop');
+  if(pop) pop.remove();
+  suiviPopJob = null;
+}
+function suiviOuvrirPop(chip){
+  const job = chip.dataset.chip;
+  const actuelle = suiviCouleurDe(SUIVI_DATA[job] || {});
+  suiviFermerPop();
+  const pop = document.createElement('div');
+  pop.id = 'suiviPop'; pop.className = 'sv-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Couleur de la ligne ' + job);
+  pop.innerHTML = `<h3>Couleur · ${escapeHtml(job)}</h3>` + SUIVI_PALETTE.map(p =>
+    `<button type="button" class="sv-sw${p.key === actuelle ? ' on' : ''}" data-pick="${p.key}"${p.label ? '' : ' aria-label="Vert"'}><i style="background:${p.strong}"></i>${escapeHtml(p.label)}</button>`).join('');
+  document.body.appendChild(pop);
+  const r = chip.getBoundingClientRect(), h = pop.offsetHeight, w = pop.offsetWidth;
+  pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  pop.style.top = (r.bottom + 6 + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+  suiviPopJob = job;
+  suiviPopOuvertA = Date.now();
+  pop.addEventListener('click', e => {
+    const b = e.target.closest('[data-pick]'); if(!b) return;
+    const j = suiviPopJob; suiviFermerPop();
+    suiviColorer(j, b.dataset.pick);
+  });
+  (pop.querySelector('.sv-sw.on') || pop.querySelector('.sv-sw')).focus({ preventScroll: true });
+}
+document.addEventListener('click', e => { if(suiviPopJob && !e.target.closest('#suiviPop') && !e.target.closest('[data-chip]')) suiviFermerPop(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && suiviPopJob) suiviFermerPop(); });
+window.addEventListener('scroll', () => { if(suiviPopJob && Date.now() - suiviPopOuvertA > 300) suiviFermerPop(); }, true);
 
+function renderSuiviControls(){
   const tous = Object.keys(SUIVI_DATA).map(j => SUIVI_DATA[j] || {});
   const fourns = [{ value:'', label:'Tous', n: tous.length }]
     .concat(SUIVI_FOURNISSEURS.map(f => ({ value: f.value, label: f.label, n: tous.filter(e => e.fournisseur === f.value).length })).filter(f => f.n))
@@ -5601,7 +5617,7 @@ function renderSuiviControls(){
   document.getElementById('suiviFournFilter').innerHTML = '<span>Fournisseur</span>' + fourns.map(f =>
     `<button type="button" class="sv-pill${suiviUi.fourn === f.value ? ' on' : ''}" data-fourn="${escapeHtml(f.value)}">${escapeHtml(f.label)} <em>${f.n}</em></button>`).join('');
   document.getElementById('suiviColorFilter').innerHTML = '<span>Couleur</span>' + SUIVI_PALETTE.filter(p => p.key).map(p =>
-    `<button type="button" class="sv-pill coul${suiviUi.couleur === p.key ? ' on' : ''}" data-coul="${p.key}"><i style="background:${p.strong}"></i>${escapeHtml(p.label)} <em>${tous.filter(e => suiviCouleurDe(e) === p.key).length}</em></button>`).join('');
+    `<button type="button"${p.label ? '' : ' aria-label="Vert"'} class="sv-pill coul${suiviUi.couleur === p.key ? ' on' : ''}" data-coul="${p.key}"><i style="background:${p.strong}"></i>${escapeHtml(p.label)}${p.label ? ' ' : ''}<em>${tous.filter(e => suiviCouleurDe(e) === p.key).length}</em></button>`).join('');
   document.querySelectorAll('#suiviTable thead [data-sort]').forEach(b => {
     const base = b.textContent.replace(/\s*[↑↓]$/, '');
     b.textContent = base + (suiviSort.key === b.dataset.sort ? (suiviSort.dir === 'asc' ? ' ↑' : ' ↓') : '');
@@ -5616,15 +5632,14 @@ function renderSuiviTable(){
   const total = Object.keys(SUIVI_DATA).length;
   const jobs = suiviJobsAffiches();
   renderSuiviControls();
-  table.classList.toggle('sv-paint', suiviUi.mode !== 'select');
   loading.style.display = 'none';
 
   body.innerHTML = jobs.map(job => {
     const e = SUIVI_DATA[job] || {};
     const j = escapeHtml(job);
     const coul = suiviCouleurDe(e);
-    const surl = e.surlignage || {};
-    const fond = col => { const s = surl[col]; return s && SUIVI_PAL[s] ? SUIVI_PAL[s].strong : (coul && SUIVI_PAL[coul] ? SUIVI_PAL[coul].light : '#FFFFFF'); };
+    const fondLigne = coul && SUIVI_PAL[coul] ? SUIVI_PAL[coul].light : '#FFFFFF';
+    const fond = () => fondLigne;
     const td = (col, html, extra) => `<td data-col="${col}" data-job="${j}"${extra || ''} style="background:${fond(col)}">${html}</td>`;
     const statut = e.statut_fournisseur || '';
     const statutStyle = /annul[ée]e?|non identifi|indispo|rupture/i.test(statut) ? 'color:var(--error);font-weight:600;' :
@@ -5632,7 +5647,7 @@ function renderSuiviTable(){
     const fournSentAt = suiviFormatSentAt(e.email_fourn_sent_at);
     const indispoSentAt = suiviFormatSentAt(e.email_indispo_sent_at);
     return `<tr>
-      <td class="sv-h sv-sticky1" data-handle="${j}" title="Colorer la ligne avec le pinceau" style="background:${coul && SUIVI_PAL[coul] ? SUIVI_PAL[coul].strong : '#E1E5EB'}"></td>
+      <td class="sv-h sv-sticky1" style="background:${fondLigne}"><button type="button" class="sv-chip" data-chip="${j}" style="background:${coul ? SUIVI_PAL[coul].strong : '#fff'}" title="Changer la couleur de la ligne" aria-label="Couleur de la ligne ${j}">${coul ? '' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#12171C" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'}</button></td>
       ${td('job', j, ' class="sv-job sv-sticky2"')}
       ${td('date_dossier', `<input type="date" class="sv-cell" data-field="date_dossier" value="${escapeHtml(e.date_dossier || '')}" title="Date du dossier">`)}
       ${td('date_commande', `<input type="date" class="sv-cell" data-field="date_commande" value="${escapeHtml(e.date_commande || '')}" title="Date de commande chez le fournisseur">`)}
@@ -5688,16 +5703,6 @@ function renderSuiviTable(){
 
 // Commandes fixes du tableur (une seule fois) : pinceau, filtres, tri, recherche, export.
 (function suiviWireControls(){
-  document.getElementById('suiviModes').addEventListener('click', e => {
-    const b = e.target.closest('button[data-mode]'); if(!b) return;
-    suiviUi.mode = b.dataset.mode; renderSuiviTable();
-  });
-  document.getElementById('suiviPalette').addEventListener('click', e => {
-    const b = e.target.closest('button[data-brush]'); if(!b) return;
-    suiviUi.brush = b.dataset.brush;
-    if(suiviUi.mode === 'select') suiviUi.mode = 'ligne';
-    renderSuiviTable();
-  });
   document.getElementById('suiviFournFilter').addEventListener('click', e => {
     const b = e.target.closest('button[data-fourn]'); if(!b) return;
     suiviUi.fourn = b.dataset.fourn; renderSuiviTable();
@@ -5711,13 +5716,12 @@ function renderSuiviTable(){
     suiviSort = suiviSort.key === b.dataset.sort ? { key: b.dataset.sort, dir: suiviSort.dir === 'asc' ? 'desc' : 'asc' } : { key: b.dataset.sort, dir: 'asc' };
     renderSuiviTable();
   });
-  // Pinceau : la barre de gauche colore toujours la ligne ; en mode peinture, toute la case.
+  // Pastille de couleur : ouvre le menu des couleurs de la ligne.
   document.getElementById('suiviBody').addEventListener('click', e => {
-    const h = e.target.closest('td[data-handle]');
-    if(h){ suiviPeindre(h.dataset.handle, null, true); return; }
-    if(suiviUi.mode === 'select') return;
-    const c = e.target.closest('td[data-col]');
-    if(c) suiviPeindre(c.dataset.job, c.dataset.col, false);
+    const chip = e.target.closest('[data-chip]');
+    if(!chip) return;
+    if(suiviPopJob === chip.dataset.chip){ suiviFermerPop(); return; }
+    suiviOuvrirPop(chip);
   });
   const rech = document.getElementById('suiviSearch');
   rech.addEventListener('input', () => { suiviUi.recherche = rech.value; renderSuiviTable(); });
@@ -5735,7 +5739,7 @@ function renderSuiviTable(){
       const e = SUIVI_DATA[job] || {};
       const c = suiviCouleurDe(e);
       L.push([job, fr(e.date_dossier), fr(e.date_commande), e.client || '', suiviFournLabel(e.fournisseur), e.ref_monture || '', e.sku || '',
-        e.statut_fournisseur || '', e.derniere_verification || '', c ? SUIVI_PAL[c].label : '',
+        e.statut_fournisseur || '', e.derniere_verification || '', c ? (SUIVI_PAL[c].label || 'Vert') : '',
         suiviFormatSentAt(e.email_fourn_sent_at), suiviFormatSentAt(e.email_indispo_sent_at), e.observation || '']);
     });
     const csv = '﻿' + L.map(l => l.map(cell).join(';')).join('\r\n');
