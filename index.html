@@ -771,7 +771,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V4.0</div>
+          <div class="brand-version">V4.1</div>
         </div>
       </div>
     </div>
@@ -1002,7 +1002,7 @@
                 <div><div class="pd-stat-sub">OG</div><div class="pd-stat-value" id="pdSideOG">—</div></div>
               </div>
             </div>
-            <div class="pd-stat-block pd-measure-height" style="display:none;">
+            <div class="pd-stat-block pd-measure-height">
               <div class="pd-stat-label">Hauteur</div>
               <div class="pd-stat-pair">
                 <div><div class="pd-stat-sub">OD</div><div class="pd-stat-value" id="pdSideHOD">—</div></div>
@@ -1020,7 +1020,7 @@
           </div>
 
           <div class="pd-detect-row">
-            <button class="btn-ghost" id="pdToggleHeightBtn" type="button">👁 Afficher hauteur</button>
+            <button class="btn-ghost" id="pdToggleHeightBtn" type="button">🙈 Masquer hauteur</button>
             <button class="btn-ghost" id="pdToggleWidthBtn" type="button">👁 Afficher largeur visage</button>
           </div>
 
@@ -5828,10 +5828,10 @@ const pdSideHOG = document.getElementById('pdSideHOG');
 const pdSideTemporal = document.getElementById('pdSideTemporal');
 const pdToggleHeightBtn = document.getElementById('pdToggleHeightBtn');
 const pdToggleWidthBtn = document.getElementById('pdToggleWidthBtn');
-// Chaque mesure (ligne tracée + résultat chiffré) reste masquée tant que son propre bouton
-// n'a pas été activé — deux boutons indépendants, l'un pour la Hauteur, l'autre pour la
-// Largeur visage.
-let pdShowHeight = false;
+// V4.1 : la Hauteur (ligne bas de monture + résultat OD/OG) est de nouveau affichée par
+// défaut, le bouton permet de la masquer. La Largeur visage reste masquée tant que son
+// propre bouton n'a pas été activé.
+let pdShowHeight = true;
 let pdShowWidth = false;
 
 function pdApplyMeasuresVisibility(){
@@ -5903,7 +5903,7 @@ function pdLoadImageFromSrc(dataUrl){
   const img = new Image();
   img.onload = () => {
     pdImage = img;
-    pdShowHeight = false;
+    pdShowHeight = true;
     pdShowWidth = false;
     pdApplyMeasuresVisibility();
     const maxW = 1400; // haute résolution pour un rendu net et un cerclage précis de l'iris
@@ -6166,7 +6166,7 @@ function pdDrawAll(){
   pdDrawEye(pdState.eyeImgRight, '#DC2626', labels.right);
   pdSyncIrisFineControls();
 
-  // height line (bas de monture) : masquée tant que "Afficher hauteur" n'a pas été activé.
+  // height line (bas de monture) : affichée par défaut, masquable via le bouton Hauteur.
   if(pdShowHeight){
     pdDrawHeightLine(pdState.eyeImgLeft, pdState.lineImgLeft, '#7C3AED');
     pdDrawHeightLine(pdState.eyeImgRight, pdState.lineImgRight, '#7C3AED');
