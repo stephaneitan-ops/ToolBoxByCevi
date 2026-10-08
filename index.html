@@ -535,15 +535,14 @@
   .sv-table .sv-sticky1{position:sticky;left:0;z-index:2;}
   .sv-table .sv-sticky2{position:sticky;left:64px;z-index:2;border-right:1px solid var(--line);}
   .sv-table td.sv-job{padding:0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;white-space:nowrap;}
-  .sv-table td.sv-maj{padding:0 8px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;}
   .sv-cell{width:100%;box-sizing:border-box;min-height:38px;border:1px solid transparent;border-radius:6px;padding:6px 7px;background:transparent;font-size:12.5px;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);}
   .sv-cell::placeholder{color:var(--ink-soft);font-style:italic;font-size:12px;}
   .sv-cell:hover{border-color:var(--line);}
   .sv-cell:focus{outline:none;border-color:var(--teal-deep);background:#fff;}
   select.sv-cell{cursor:pointer;}
   input[type=date].sv-cell{font-size:11.5px;width:106px;padding:6px 2px;}
-  textarea.sv-cell{display:block;resize:none;height:38px;line-height:1.3;overflow:hidden;}
-  textarea.sv-cell:focus{height:84px;overflow:auto;resize:vertical;}
+  textarea.sv-cell{display:block;resize:none;min-height:38px;line-height:1.35;overflow:hidden;}
+  .sv-table td[data-col="observation"]{width:340px;min-width:340px;}
   .sv-mail{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:54px;min-height:36px;margin:3px;padding:3px 4px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:10.5px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;}
   .sv-mail.fourn{color:var(--teal-deep);} .sv-mail.indispo{color:#8A3A00;}
   .sv-mail.ok{background:#DDF3E4;border-color:#8FCBA3;color:#1A6334;}
@@ -778,7 +777,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V4.3</div>
+          <div class="brand-version">V4.4</div>
         </div>
       </div>
     </div>
@@ -890,8 +889,7 @@
           <th style="min-width:96px;"><button type="button" data-sort="fournisseur">Fournisseur</button></th>
           <th style="min-width:120px;"><span>Réf. monture</span></th>
           <th style="min-width:110px;"><button type="button" data-sort="statut">Statut</button></th>
-          <th><span>Màj</span></th>
-          <th style="min-width:150px;"><span>Observation</span></th>
+          <th style="min-width:340px;"><span>Observation</span></th>
           <th class="c"><span>Relance</span></th>
           <th class="c"><span>Indispo</span></th>
           <th class="c"><span></span></th>
@@ -5505,7 +5503,7 @@ const SUIVI_PALETTE = [
 const SUIVI_PAL = Object.fromEntries(SUIVI_PALETTE.map(p => [p.key, p]));
 const SUIVI_PRIO_COULEUR = { rouge:'red', orange:'yellow', jaune:'yellow' };
 const SUIVI_COULEUR_ALIAS = { orange:'yellow' };
-const SUIVI_COLS = ['job','date_dossier','date_commande','client','fournisseur','ref_monture','statut','maj','observation'];
+const SUIVI_COLS = ['job','date_dossier','date_commande','client','fournisseur','ref_monture','statut','observation'];
 
 let suiviSort = { key: 'job', dir: 'asc' };
 let suiviUi = { fourn: '', couleur: null, recherche: '', nonRelances: false };
@@ -5655,7 +5653,6 @@ function renderSuiviTable(){
       ${td('fournisseur', `<select class="sv-cell" data-field="fournisseur">${suiviFournisseurOptions(e.fournisseur)}</select>`)}
       ${td('ref_monture', `<input type="text" class="sv-cell" data-field="ref_monture" value="${escapeHtml(e.ref_monture || '')}" title="${escapeHtml(e.ref_monture || '')}" placeholder="À compléter">`)}
       ${td('statut', `<input type="text" class="sv-cell" data-field="statut_fournisseur" value="${escapeHtml(statut)}" placeholder="Auto ou à la main" style="${statutStyle}">`)}
-      ${td('maj', escapeHtml(e.derniere_verification || '—'), ' class="sv-maj"')}
       ${td('observation', `<textarea class="sv-cell" data-field="observation" rows="1" placeholder="Observation…">${escapeHtml(e.observation || '')}</textarea>`)}
       <td style="text-align:center;background:#fff;">
         <button type="button" class="sv-mail fourn suivi-email-fourn-btn${fournSentAt ? ' ok' : ''}" data-job="${j}" title="Email de relance au fournisseur${fournSentAt ? ' — envoyé le ' + fournSentAt : ''}">
@@ -5695,7 +5692,9 @@ function renderSuiviTable(){
       if(ok && (champ === 'statut_fournisseur' || champ === 'fournisseur' || (suiviSort.key === 'date' && champ === 'date_dossier') || (suiviSort.key === 'date_commande' && champ === 'date_commande'))) renderSuiviTable();
     });
   });
-  body.querySelectorAll('textarea.sv-cell').forEach(t => t.addEventListener('focus', () => { t.scrollTop = 0; }));
+  // Observation : la case s'agrandit pour montrer tout le texte.
+  const ajusterObs = t => { t.style.height = 'auto'; t.style.height = Math.max(38, t.scrollHeight + 2) + 'px'; };
+  body.querySelectorAll('textarea.sv-cell').forEach(t => { ajusterObs(t); t.addEventListener('input', () => ajusterObs(t)); });
 
   body.querySelectorAll('.suivi-delete-btn').forEach(btn => btn.addEventListener('click', () => deleteSuiviJob(btn.dataset.job)));
   suiviWireEmailButtons(body);
@@ -5734,12 +5733,12 @@ function renderSuiviTable(){
     if(!jobs.length){ alert('Aucune ligne à exporter.'); return; }
     const fr = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || ''); };
     const cell = v => { const s = String(v == null ? '' : v); return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-    const L = [['Job','Date dossier','Date commande','Client','Fournisseur','Réf. monture','SKU','Statut','Màj','Couleur','Relance fournisseur','Alerte indispo','Observation']];
+    const L = [['Job','Date dossier','Date commande','Client','Fournisseur','Réf. monture','SKU','Statut','Couleur','Relance fournisseur','Alerte indispo','Observation']];
     jobs.forEach(job => {
       const e = SUIVI_DATA[job] || {};
       const c = suiviCouleurDe(e);
       L.push([job, fr(e.date_dossier), fr(e.date_commande), e.client || '', suiviFournLabel(e.fournisseur), e.ref_monture || '', e.sku || '',
-        e.statut_fournisseur || '', e.derniere_verification || '', c ? (SUIVI_PAL[c].label || 'Vert') : '',
+        e.statut_fournisseur || '', c ? (SUIVI_PAL[c].label || 'Vert') : '',
         suiviFormatSentAt(e.email_fourn_sent_at), suiviFormatSentAt(e.email_indispo_sent_at), e.observation || '']);
     });
     const csv = '﻿' + L.map(l => l.map(cell).join(';')).join('\r\n');
