@@ -4107,12 +4107,16 @@ function convertSourceWorkbook(wb){
 // déterminée en inspectant le fichier fourni. "fixedMarque" = marque imposée quand l'onglet
 // n'a pas de colonne marque exploitable (ou que son nom réel est le nom de l'onglet).
 const COTEB_SHEET_RECIPES = {
-  'OWLETT':          { sku:1, marque:2, modele:3, couleur:4, taille:5, coteb:7 },
+  'OWLETT':          { sku:1, marque:2, modele:3, couleur:4, taille:5, coteb:7, fallbackMarque:'Owlet' }, // marque vide → "Owlet"
   'CEVIDENTIA':      { sku:1, marque:null, modele:2, couleur:3, taille:4, coteb:6, fixedMarque:'Cevidentia' },
   'LUXO':            { sku:null, marque:4, modele:1, couleur:3, taille:2, coteb:6 },
   'PACIFIC':         { sku:1, marque:2, modele:3, couleur:4, taille:5, coteb:7 },
   'FRENCH RETRO':    { sku:1, marque:3, modele:4, couleur:5, taille:6, coteb:8 },
   'WHISTLER HILLS':  { sku:1, marque:2, modele:3, couleur:4, taille:5, coteb:7, fixedMarque:'Whistler Hills' },
+  // Nouveau format (onglet renommé "Whistler", 4 colonnes : reference | Marque (désignation) | Couleur (code taille) | Côte B)
+  'WHISTLER':        { sku:1, marque:null, modele:2, couleur:3, taille:null, coteb:4, fixedMarque:'Whistler Hills' },
+  // Onglet ELEYE : reference | Code B
+  'ELEYE':           { sku:null, marque:null, modele:1, couleur:null, taille:null, coteb:2, fixedMarque:'Eleye' },
   'ATLANT':          { sku:1, marque:6, modele:2, couleur:3, taille:4, coteb:7 },
   'FERRARI':         { sku:1, marque:5, modele:2, couleur:4, taille:3, coteb:7 },
   'Gigi':            { sku:1, marque:null, modele:2, couleur:3, taille:4, coteb:6, fixedMarque:'Gigi' },
@@ -4149,18 +4153,24 @@ function coteBNormText(v){
   return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 }
 
+// Corrections de marque (fautes de frappe du fichier source) : "OWLETT" / "Owlett" → "Owlet" (marque de référence).
+// S'applique aussi aux sous-gammes (ex. "Owlett Originals" → "Owlet Originals").
+function coteBNormMarque(m){
+  return String(m||'').trim().replace(/\s+/g,' ').replace(/^owlett?(?=\s|$)/i, 'Owlet');
+}
+
 function coteBExtractRows(ws, sheetName, recipe, startRow, endRow, flat){
   let used = 0, skipped = 0;
   for(let r=startRow; r<=endRow; r++){
     const coteb = coteBParseNum(coteBGetCell(ws, r, recipe.coteb));
     if(coteb === null){ skipped++; continue; }
-    const marque = recipe.fixedMarque || (recipe.marque ? String(coteBGetCell(ws,r,recipe.marque)||'').trim() : '') || sheetName.trim();
+    const marque = recipe.fixedMarque || (recipe.marque ? String(coteBGetCell(ws,r,recipe.marque)||'').trim() : '') || recipe.fallbackMarque || sheetName.trim();
     const modele = recipe.modele ? String(coteBGetCell(ws,r,recipe.modele)||'').trim() : '';
     const sku = recipe.sku ? String(coteBGetCell(ws,r,recipe.sku)||'').trim() : '';
     const couleur = recipe.couleur ? String(coteBGetCell(ws,r,recipe.couleur)||'').trim() : '';
     const taille = recipe.taille ? String(coteBGetCell(ws,r,recipe.taille)||'').trim() : '';
     if(!marque && !modele){ skipped++; continue; }
-    flat.push([marque, modele, sku, couleur, taille, coteb]);
+    flat.push([coteBNormMarque(marque), modele, sku, couleur, taille, coteb]);
     used++;
   }
   return { used, skipped };
@@ -4171,10 +4181,19 @@ function convertCoteBWorkbook(wb){
   let sheetsUsed = 0, skippedRows = 0;
   const unknownSheets = [];
   wb.SheetNames.forEach(sheetName => {
-    const trimmed = sheetName.trim();
+    let trimmed = sheetName.trim();
+    // Nom d'onglet insensible à la casse (ex. "Whistler" ↔ "WHISTLER")
+    if(!COTEB_SHEET_RECIPES[trimmed]){
+      const k = Object.keys(COTEB_SHEET_RECIPES).find(x => x.toUpperCase() === trimmed.toUpperCase());
+      if(k) trimmed = k;
+    }
     const recipe = COTEB_SHEET_RECIPES[trimmed];
-    if(!recipe){ unknownSheets.push(sheetName); return; }
     const ws = wb.Sheets[sheetName];
+    if(!recipe){
+      // On ne signale que les onglets non vides (ex. "Feuil1" vide : ignoré silencieusement)
+      if(ws && ws['!ref'] && XLSX.utils.decode_range(ws['!ref']).e.r > 0) unknownSheets.push(sheetName);
+      return;
+    }
     if(!ws || !ws['!ref']) return;
     const range = XLSX.utils.decode_range(ws['!ref']);
     const maxRow = range.e.r + 1;
