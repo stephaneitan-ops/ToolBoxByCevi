@@ -755,6 +755,15 @@
     flex:none;white-space:nowrap;
   }
   .precos-item-price.zero{color:#16A34A;}
+  .precos-cyl-filter{align-items:center;}
+  .precos-cyl-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:500;margin-right:4px;}
+  .precos-cyl-badge{
+    display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;
+    font-size:11px;font-weight:600;white-space:nowrap;vertical-align:1px;
+  }
+  .precos-cyl-badge.c0{background:#DCFCE7;color:#166534;}
+  .precos-cyl-badge.c1{background:var(--brass-soft);color:#9A3A07;}
+  .precos-cyl-badge.c2{background:#EDE9FE;color:#5B21B6;}
   .precos-disclaimer{font-size:11.5px;color:var(--ink-soft);line-height:1.5;margin-top:18px;}
 </style>
 </head>
@@ -1172,6 +1181,10 @@
       <button class="precos-type-btn" data-mat="Blanc" type="button">Blanc</button>
       <button class="precos-type-btn" data-mat="Sensity" type="button">Sensity</button>
     </div>
+
+    <!-- Boutons générés selon les conditions présentes pour la mutuelle (ex. Cyl ≤ 2 / Cyl > 2) ;
+         la rangée n'apparaît que pour les mutuelles dont les prix dépendent du cylindre. -->
+    <div class="precos-type-filter precos-cyl-filter" id="precosCylFilter" style="display:none;"></div>
 
     <div class="empty-state" id="precosEmptyState">
       <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="17" cy="17" r="11" stroke="#B7B2A2" stroke-width="2"/><path d="M25 25l8 8" stroke="#B7B2A2" stroke-width="2" stroke-linecap="round"/></svg>
@@ -1873,6 +1886,8 @@ const precosEmptyState = document.getElementById('precosEmptyState');
 const precosTypeFilter = document.getElementById('precosTypeFilter');
 const precosIndiceFilter = document.getElementById('precosIndiceFilter');
 const precosMatFilter = document.getElementById('precosMatFilter');
+const precosCylFilter = document.getElementById('precosCylFilter');
+let precosActiveCyl = 'Tous';
 let precosActiveType = 'Tous';
 let precosActiveIndice = 'Tous';
 let precosActiveMat = 'Tous';
@@ -1900,10 +1915,30 @@ function classifyPrecosRowType(row){
 }
 
 const PRECOS_INDICES = ['1.50','1.60','1.67','1.74'];
+// Un même indice s'écrit de plusieurs façons dans les fichiers : 1.50 / 1,50 / 1.5 / 150.
+// Toutes ces écritures sont ramenées à l'indice de référence. Seules ces 4 valeurs sont
+// reconnues, et seulement en nombre isolé (un prix "170€" ou un code "CY5963" n'est pas un indice).
+const PRECOS_INDICE_ALIASES = {
+  '1.50':'1.50', '1.5':'1.50', '150':'1.50',
+  '1.60':'1.60', '1.6':'1.60', '160':'1.60',
+  '1.67':'1.67', '167':'1.67',
+  '1.74':'1.74', '174':'1.74'
+};
 function precosRowIndice(row){
   const name = (row[3] || '').replace(/,/g, '.');
-  for(const ind of PRECOS_INDICES){ if(name.includes(ind)) return ind; }
+  const re = /(?:^|[^\d.])(1\.\d{1,2}|1[5-7]\d)(?![\d.]|\s*€)/g;
+  let m;
+  while((m = re.exec(name))){
+    const ind = PRECOS_INDICE_ALIASES[m[1]];
+    if(ind) return ind;
+  }
   return null;
+}
+
+// Condition de correction (ex. "Cyl ≤ 2" / "Cyl > 2") : 8e colonne de la ligne, posée à
+// l'import quand l'onglet de la mutuelle donne des prix différents selon le cylindre.
+function precosRowCyl(row){
+  return row[7] || null;
 }
 
 function precosRowMat(row){
@@ -1949,6 +1984,7 @@ precosMutuelleSelect.addEventListener('change', () => {
   precosActiveType = 'Tous';
   precosActiveIndice = 'Tous';
   precosActiveMat = 'Tous';
+  precosActiveCyl = 'Tous';
   precosTypeFilter.querySelectorAll('.precos-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === 'Tous'));
   precosIndiceFilter.querySelectorAll('.precos-type-btn').forEach(b => b.classList.toggle('active', b.dataset.indice === 'Tous'));
   precosMatFilter.querySelectorAll('.precos-type-btn').forEach(b => b.classList.remove('active'));
@@ -2287,10 +2323,30 @@ function renderGlossNotesMgmt(){
 
 loadPrecosGlossaire();
 
+// Rangée "Cylindre" : reconstruite à chaque affichage d'après les conditions présentes
+// dans les verres de la mutuelle (ordre d'apparition dans le fichier).
+function renderPrecosCylFilter(conds){
+  if(!conds.length){
+    precosActiveCyl = 'Tous';
+    precosCylFilter.style.display = 'none';
+    precosCylFilter.innerHTML = '';
+    return;
+  }
+  if(precosActiveCyl !== 'Tous' && conds.indexOf(precosActiveCyl) < 0) precosActiveCyl = 'Tous';
+  const btn = (val, label) => `<button class="precos-type-btn${precosActiveCyl===val?' active':''}" data-cyl="${escapeHtml(val)}" type="button">${escapeHtml(label)}</button>`;
+  precosCylFilter.innerHTML = '<span class="precos-cyl-label">Cylindre</span>'
+    + btn('Tous', 'Tous') + conds.map(c => btn(c, c.replace(/^Cyl\s*/, ''))).join('');
+  precosCylFilter.style.display = 'flex';
+  precosCylFilter.querySelectorAll('.precos-type-btn').forEach(b => {
+    b.addEventListener('click', () => { precosActiveCyl = b.dataset.cyl; renderPrecosResults(); });
+  });
+}
+
 function precosResetFilters(){
   precosActiveType = 'Tous';
   precosActiveIndice = 'Tous';
   precosActiveMat = 'Tous';
+  precosActiveCyl = 'Tous';
   precosTypeFilter.querySelectorAll('.precos-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === 'Tous'));
   precosIndiceFilter.querySelectorAll('.precos-type-btn').forEach(b => b.classList.toggle('active', b.dataset.indice === 'Tous'));
   precosMatFilter.querySelectorAll('.precos-type-btn').forEach(b => b.classList.remove('active'));
@@ -2304,10 +2360,14 @@ function renderPrecosResults(){
     precosTypeFilter.style.display = 'none';
     precosIndiceFilter.style.display = 'none';
     precosMatFilter.style.display = 'none';
+    renderPrecosCylFilter([]);
     precosEmptyState.style.display = '';
     return;
   }
   const allRows = PRECOS_DATA.filter(r => r[0] === reseau && r[1] === mutuelle);
+  const cylConds = [];
+  allRows.forEach(r => { const c = precosRowCyl(r); if(c && cylConds.indexOf(c) < 0) cylConds.push(c); });
+  renderPrecosCylFilter(cylConds);
   if(!allRows.length){
     precosTypeFilter.style.display = 'none';
     precosIndiceFilter.style.display = 'none';
@@ -2340,6 +2400,10 @@ function renderPrecosResults(){
   if(precosActiveMat !== 'Tous'){
     rows = rows.filter(r => precosRowShowsAlways(r) || precosRowMat(r) === precosActiveMat);
   }
+  // Un verre sans condition de cylindre (prix valable pour tous) reste toujours affiché.
+  if(precosActiveCyl !== 'Tous'){
+    rows = rows.filter(r => !precosRowCyl(r) || precosRowCyl(r) === precosActiveCyl);
+  }
 
   if(!rows.length){
     precosEmptyState.style.display = '';
@@ -2348,18 +2412,23 @@ function renderPrecosResults(){
   }
   precosEmptyState.style.display = 'none';
 
+  // Groupes créés dans l'ordre de la mutuelle complète : un filtre (ex. Cylindre > 2)
+  // ne doit pas faire remonter un groupe en tête de liste.
   const groups = {};
+  allRows.forEach(r => { const cat = r[2] || 'Autres'; if(!groups[cat]) groups[cat] = []; });
   rows.forEach(r => {
     const cat = r[2] || 'Autres';
     (groups[cat] = groups[cat] || []).push(r);
   });
+  Object.keys(groups).forEach(cat => { if(!groups[cat].length) delete groups[cat]; });
 
-  // Règle de rangement : les verres dont le nom commence par "FR" apparaissent
-  // en premier dans chaque groupe (tri stable, l'ordre reste inchangé sinon).
+  // Règle de rangement : d'abord par condition de cylindre (ordre du fichier, ex. ≤ 2 puis > 2),
+  // puis les verres dont le nom commence par "FR" en premier (tri stable sinon).
+  const cylRank = r => { const c = precosRowCyl(r); return c ? cylConds.indexOf(c) : -1; };
   Object.keys(groups).forEach(cat => {
     groups[cat] = groups[cat]
-      .map((r, i) => ({ r, i, fr: normalize(r[3]).startsWith('fr') ? 0 : 1 }))
-      .sort((a, b) => a.fr - b.fr || a.i - b.i)
+      .map((r, i) => ({ r, i, cy: cylRank(r), fr: normalize(r[3]).startsWith('fr') ? 0 : 1 }))
+      .sort((a, b) => a.cy - b.cy || a.fr - b.fr || a.i - b.i)
       .map(x => x.r);
   });
 
@@ -2383,7 +2452,7 @@ function renderPrecosResults(){
       }
       html += `<div class="precos-item">
         <div>
-          <div class="precos-item-name">${escapeHtml(name)}</div>
+          <div class="precos-item-name">${escapeHtml(name)}${precosRowCyl(r) ? `<span class="precos-cyl-badge c${Math.min(cylConds.indexOf(precosRowCyl(r)),2)}">${escapeHtml(precosRowCyl(r))}</span>` : ''}</div>
           ${codeLabel ? `<div class="precos-item-code">${escapeHtml(codeLabel)}</div>` : ''}
         </div>
         <div class="precos-item-price${price===0?' zero':''}">${priceLabel}</div>
@@ -3857,14 +3926,32 @@ function convIsSimpleCatHeader(v){
   return CONV_SIMPLE_CAT_WORDS.indexOf(normText(v)) >= 0;
 }
 
+// Repère un intitulé de condition de correction placé au-dessus d'un ou plusieurs tableaux,
+// ex. "SI CYL< ou = 2" → "Cyl ≤ 2", "SI CYL > 2" → "Cyl > 2". Retourne null sinon.
+function convCylCondition(v){
+  if(typeof v !== 'string') return null;
+  const t = normText(v).replace(/≤/g,'<=').replace(/≥/g,'>=');
+  const m = t.match(/^(?:si\s+)?cyl(?:indre)?\s*(<\s*ou\s*=|>\s*ou\s*=|<\s*=|>\s*=|<|>)\s*(\d+(?:[.,]\d+)?)$/);
+  if(!m) return null;
+  const op = m[1].replace(/\s+/g,'');
+  const sym = {'<':'<', '>':'>', '<ou=':'≤', '<=':'≤', '>ou=':'≥', '>=':'≥'}[op];
+  return 'Cyl ' + sym + ' ' + m[2].replace('.',',');
+}
+
 function convParseSheet(ws){
   const results = [];
   const {maxRow, maxCol} = convSheetDims(ws);
   const headers = [];
   const simpleHeaders = [];
+  // Conditions de cylindre : chacune s'applique à tous les tableaux situés en dessous,
+  // jusqu'à la condition suivante.
+  const cylRows = [];
+  const cylAt = (hr) => { let c = null; cylRows.forEach(x => { if(x.r < hr) c = x.label; }); return c; };
   for(let r=1;r<=maxRow;r++){
     for(let c=1;c<=maxCol;c++){
       const v = convCellValue(ws,r,c);
+      const cyl = convCylCondition(v);
+      if(cyl){ cylRows.push({r, label: cyl}); continue; }
       if(convIsHeaderCell(v)){
         headers.push([r,c]);
       } else if(convIsSimpleCatHeader(v) && normText(convCellValue(ws,r,c+1)).indexOf('prix')===0){
@@ -3876,6 +3963,7 @@ function convParseSheet(ws){
     const [codeOff, priceOff] = convFindCodePriceOffsets(ws, hr, hc);
     const localLabel = convFindCategoryLabel(ws, hr, hc);
     const groupType = convScanGroupType(ws, hr, maxCol);
+    const cyl = cylAt(hr);
     let blankStreak = 0;
     let r = hr+1;
     while(r<=maxRow){
@@ -3902,13 +3990,14 @@ function convParseSheet(ws){
       const displayCategory = finish ? (baseType+' '+finish) : baseType;
 
       if(name && normText(name)!=='0' && name.length>1){
-        results.push({category: displayCategory, name, code, price});
+        results.push({category: displayCategory, name, code, price, cyl});
       }
       r++;
     }
   });
 
   simpleHeaders.forEach(([hr,hc]) => {
+    const cyl = cylAt(hr);
     // "Options" (suppléments type Dégradé/Miroir) : catégorie à part, jamais mélangée
     // avec la classification Unifocaux/Progressifs/Proximité — elle s'affiche comme un
     // encart séparé dans les résultats, automatiquement, sur les mutuelles qui en ont.
@@ -3930,11 +4019,19 @@ function convParseSheet(ws){
       const finish = isOptions ? null : convFinishFromText(name);
       const displayCategory = isOptions ? 'Options' : (finish ? (baseType+' '+finish) : baseType);
       if(name && normText(name)!=='0' && name.length>1){
-        results.push({category: displayCategory, name, code: null, price});
+        results.push({category: displayCategory, name, code: null, price, cyl});
       }
       r++;
     }
   });
+
+  // Une condition de cylindre n'a de sens que si la catégorie a des prix sous AU MOINS
+  // deux conditions (ex. Unifocaux ≤ 2 et > 2). Si une catégorie n'existe que sous une
+  // seule condition (ex. Progressifs seulement sous "≤ 2"), son prix vaut pour tous les
+  // cylindres : on retire la condition, la ligne s'affiche sans badge et sous tous les filtres.
+  const cylByCat = {};
+  results.forEach(x => { (cylByCat[x.category] = cylByCat[x.category] || new Set()).add(x.cyl || ''); });
+  results.forEach(x => { if(!x.cyl || cylByCat[x.category].size < 2) x.cyl = null; });
 
   return results;
 }
@@ -4096,7 +4193,9 @@ function convertSourceWorkbook(wb){
     const reseau = convGuessReseau(mutuelleName);
     hierarchy[reseau] = hierarchy[reseau] || [];
     if(hierarchy[reseau].indexOf(mutuelleName)<0) hierarchy[reseau].push(mutuelleName);
-    rows.forEach(row => flat.push([reseau, mutuelleName, row.category, row.name, row.code, row.price]));
+    rows.forEach(row => flat.push(row.cyl
+      ? [reseau, mutuelleName, row.category, row.name, row.code, row.price, null, row.cyl]
+      : [reseau, mutuelleName, row.category, row.name, row.code, row.price]));
   });
   Object.keys(hierarchy).forEach(k => hierarchy[k].sort());
   return { flat, hierarchy, sheetsUsed };
