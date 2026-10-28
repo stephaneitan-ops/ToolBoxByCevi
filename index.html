@@ -786,7 +786,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V4.5</div>
+          <div class="brand-version">V4.6</div>
         </div>
       </div>
     </div>
@@ -2803,10 +2803,48 @@ function roleSetLoggedIn(role, pw, remember, profileId){
   CURRENT_PROFILE_ID = profileId || null;
   applyCurrentProfileTabs();
   if(remember){
-    try{ sessionStorage.setItem(ROLE_SESSION_KEY, JSON.stringify({ role, password: pw, profileId: CURRENT_PROFILE_ID })); }catch(e){}
+    ROLE_LOGIN_AT = Date.now();
+    try{ sessionStorage.setItem(ROLE_SESSION_KEY, JSON.stringify({ role, password: pw, profileId: CURRENT_PROFILE_ID, loginAt: ROLE_LOGIN_AT })); }catch(e){}
   }
   roleApplyVisibility();
+  scheduleNightlyLogout();
 }
+
+/* ============ DÉCONNEXION AUTOMATIQUE QUOTIDIENNE (21h) ============
+   Tous les postes connectés sont déconnectés à 21h (heure du PC). La déconnexion recharge
+   entièrement la page : à la reconnexion, l'opticien récupère la dernière version du site
+   ET des données (mutuelles, montures…). Aucun appel serveur supplémentaire : tout est
+   calculé localement à partir de l'heure de connexion. Si le PC était en veille / l'onglet
+   en arrière-plan à 21h, la déconnexion a lieu au premier retour sur l'onglet. */
+const NIGHTLY_LOGOUT_HOUR = 21;
+let ROLE_LOGIN_AT = null;
+let NIGHTLY_LOGOUT_TIMER = null;
+function nextNightlyCutoff(fromTs){
+  const d = new Date(fromTs);
+  d.setHours(NIGHTLY_LOGOUT_HOUR, 0, 0, 0);
+  if(d.getTime() <= fromTs) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+function nightlyLogoutDue(){
+  return !!(CURRENT_ROLE && ROLE_LOGIN_AT && Date.now() >= nextNightlyCutoff(ROLE_LOGIN_AT));
+}
+function nightlyLogoutNow(){
+  try{ sessionStorage.removeItem(ROLE_SESSION_KEY); }catch(e){}
+  location.reload();
+}
+function checkNightlyLogout(){
+  if(nightlyLogoutDue()) nightlyLogoutNow();
+}
+function scheduleNightlyLogout(){
+  if(NIGHTLY_LOGOUT_TIMER){ clearTimeout(NIGHTLY_LOGOUT_TIMER); NIGHTLY_LOGOUT_TIMER = null; }
+  if(!CURRENT_ROLE || !ROLE_LOGIN_AT) return;
+  // Plafonné à 1h : les minuteurs longs dérivent quand le PC se met en veille.
+  const wait = Math.min(Math.max(nextNightlyCutoff(ROLE_LOGIN_AT) - Date.now(), 0), 3600000);
+  NIGHTLY_LOGOUT_TIMER = setTimeout(() => { checkNightlyLogout(); scheduleNightlyLogout(); }, wait);
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden) checkNightlyLogout(); });
+window.addEventListener('focus', checkNightlyLogout);
+window.addEventListener('pageshow', checkNightlyLogout);
 
 function roleLogout(){
   CURRENT_ROLE = null;
@@ -2816,6 +2854,8 @@ function roleLogout(){
   CURRENT_ATELIER_PASSWORD = null;
   CURRENT_PROFILE_ID = null;
   CURRENT_PROFILE_TABS = null;
+  ROLE_LOGIN_AT = null;
+  if(NIGHTLY_LOGOUT_TIMER){ clearTimeout(NIGHTLY_LOGOUT_TIMER); NIGHTLY_LOGOUT_TIMER = null; }
   try{ sessionStorage.removeItem(ROLE_SESSION_KEY); }catch(e){}
   roleLoginUser.value = '';
   roleLoginPw.value = '';
@@ -2850,11 +2890,25 @@ roleLogoutBtn.addEventListener('click', () => roleLogout());
 (function roleRestoreSession(){
   let saved = null;
   try{ saved = JSON.parse(sessionStorage.getItem(ROLE_SESSION_KEY) || 'null'); }catch(e){}
+  // Session ouverte avant le dernier passage de 21h : on ne la restaure pas.
+  // (Une session enregistrée avant la V4.6 n'a pas d'horodatage : on part de maintenant,
+  // pour ne déconnecter personne au moment de la mise en ligne.)
+  if(saved && saved.role && saved.password){
+    const loginAt = Number(saved.loginAt) || Date.now();
+    if(Date.now() >= nextNightlyCutoff(loginAt)){
+      try{ sessionStorage.removeItem(ROLE_SESSION_KEY); }catch(e){}
+      saved = null;
+    } else {
+      ROLE_LOGIN_AT = loginAt;
+      if(!saved.loginAt){ try{ sessionStorage.setItem(ROLE_SESSION_KEY, JSON.stringify(Object.assign({}, saved, { loginAt }))); }catch(e){} }
+    }
+  }
   if(saved && saved.role && saved.password){
     // CUSTOM_PROFILES n'est pas encore chargé à ce stade (chargement asynchrone, voir
     // loadCustomProfiles) : on retente l'application du profil une fois celui-ci arrivé.
     if(saved.profileId) PENDING_PROFILE_ID_FROM_SESSION = saved.profileId;
     roleSetLoggedIn(saved.role, saved.password, false, saved.profileId || null);
+    scheduleNightlyLogout();
   } else {
     roleApplyVisibility();
   }
