@@ -94,7 +94,8 @@ async function handleSkuOverride(dataStore, body, cors) {
   const ref = body.ref && typeof body.ref === 'object' ? body.ref : {};
   if (!key || key.length > 400 || key.split('||').length !== 4) return json(400, { error: 'Référence invalide.' });
   if (author.length < 2 || author.length > 60) return json(400, { error: 'Merci d\'indiquer votre nom (2 à 60 caractères).' });
-  if (sku.length > 40 || (sku && !/^[A-Za-z0-9._\-\/ ]+$/.test(sku))) return json(400, { error: 'SKU invalide (lettres, chiffres, . _ - / uniquement, 40 caractères max).' });
+  // Règle SKU (V4.7) : chiffres uniquement, 8 maximum (vide = suppression, Administrateur seulement).
+  if (sku && !/^\d{1,8}$/.test(sku)) return json(400, { error: 'SKU invalide : chiffres uniquement, 8 maximum.' });
 
   if (!(await checkAnyProfileAuthorized(dataStore, authStore, body.password))) {
     return json(401, { error: 'Session expirée ou mot de passe incorrect. Reconnectez-vous.' });

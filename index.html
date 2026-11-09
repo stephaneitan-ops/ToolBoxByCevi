@@ -329,6 +329,53 @@
   .ra-mgmt-actions button:hover{border-color:var(--teal);color:var(--ink);}
   .ra-mgmt-actions button.danger:hover{border-color:#DC2626;color:#DC2626;}
 
+
+  /* ===== Verres intermédiaires (onglet Hauteur Cote B, V4.7) ===== */
+  .vi{margin-top:26px;background:var(--panel);border:1.5px solid var(--brass);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:18px;}
+  .vi-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;}
+  .vi-head h2{margin:0;font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:10px;}
+  .vi-new{background:var(--brass-soft);color:#8A3505;font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;}
+  .vi-seg{display:flex;background:var(--paper);border-radius:10px;padding:4px;gap:4px;flex-wrap:wrap;}
+  .vi-seg button{border:0;background:transparent;border-radius:8px;padding:8px 14px;min-height:44px;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;}
+  .vi-seg button span{font-size:11.5px;font-weight:400;}
+  .vi-seg button.on{background:#fff;color:var(--teal-deep);box-shadow:0 1px 3px rgba(18,23,28,.15);}
+  .vi-inputs{display:flex;flex-wrap:wrap;gap:18px 28px;}
+  .vi-h{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 300px;}
+  .vi-hline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .vi-h label{font-size:13px;color:var(--ink);font-weight:600;}
+  .vi-hkind{font-weight:400;color:var(--ink-soft);}
+  .vi-h input{width:96px;height:44px;border:1.5px solid var(--line);border-radius:8px;padding:0 12px;font-size:16px;font-family:'IBM Plex Mono',monospace;color:var(--ink);background:#fff;}
+  .vi-h input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,127,255,0.15);}
+  .vi-hsrc{font-size:12px;color:var(--ink-soft);}
+  .vi-link{border:0;background:none;color:var(--teal-deep);font-size:12px;font-weight:600;text-decoration:underline;padding:8px 4px;cursor:pointer;font-family:inherit;}
+  .vi-group{display:flex;flex-direction:column;gap:8px;min-width:0;}
+  .vi-group[hidden]{display:none;}
+  .vi-group.add{flex:1 1 100%;} .vi-group.use{flex:1 1 260px;}
+  .vi-lbl{font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .vi-lbl span{font-weight:400;}
+  .vi-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .vi-chip{height:44px;padding:0 10px;min-width:54px;border-radius:8px;font-size:14px;font-weight:600;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;font-family:inherit;}
+  .vi-chip.mono{font-family:'IBM Plex Mono',monospace;}
+  .vi-chip:hover{border-color:var(--teal);}
+  .vi-chip.on{background:var(--teal-deep);border-color:var(--teal-deep);color:#fff;}
+  .vi-uselbl{font-size:12px;color:var(--ink-soft);}
+  .vi-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+  @media (max-width:700px){.vi-cards{grid-template-columns:1fr;}}
+  .vi-card{border:1.5px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;background:#fff;}
+  .vi-card.ok{border-color:var(--teal-deep);}
+  .vi-card-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .vi-card-name{font-size:13.5px;font-weight:600;}
+  .vi-card-need{font-size:11px;color:var(--ink-soft);}
+  .vi-main{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--teal-deep);line-height:1.1;}
+  .vi-tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .vi-tag{background:var(--paper);border-radius:6px;padding:5px 8px;font-size:12.5px;}
+  .vi-tag span{color:var(--ink-soft);} .vi-tag b{font-family:'IBM Plex Mono',monospace;}
+  .vi-order{font-size:13px;line-height:1.4;background:var(--brass-soft);color:#5C2A08;border-radius:8px;padding:8px 10px;}
+  .vi-order span{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+  .vi-foot{font-size:12px;color:var(--ink-soft);line-height:1.45;}
+  .vi-msg{border-radius:8px;padding:12px;font-size:13px;line-height:1.45;background:var(--paper);color:var(--ink-soft);}
+  .vi-msg.err{background:#FDECEA;color:#8C1D18;}
+  .vi-src{font-size:11px;color:var(--ink-soft);line-height:1.4;}
   /* Ajout d'un SKU manquant directement depuis Hauteur Cote B (tous profils, nom obligatoire) */
   .sku-add{margin:-6px 0 18px;padding:12px 14px;border:1.5px dashed #F5B98F;border-radius:10px;background:#FFF8F3;font-size:13px;}
   .sku-add-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
@@ -400,6 +447,17 @@
   .verres-mgmt-row:last-child{border-bottom:none;}
   .verres-mgmt-name{color:var(--ink);}
   .verres-mgmt-cat{font-size:11px;color:var(--ink-soft);margin-top:1px;}
+  .verres-mgmt-info{flex:1;min-width:0;}
+  .verres-rename-btn{border:0;background:none;cursor:pointer;font-size:12px;padding:2px 4px;opacity:.6;}
+  .verres-rename-btn:hover{opacity:1;}
+  .verres-renamed{color:#B3470A;}
+  .verres-rename-form{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+  .verres-rename-form[hidden]{display:none;}
+  .verres-rename-form input[type=text]{font:inherit;font-size:13px;padding:7px 9px;border:1.5px solid var(--line);border-radius:7px;width:100%;max-width:520px;}
+  .verres-rename-form input[type=text]:focus{outline:none;border-color:var(--teal);}
+  .verres-rename-all{font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;}
+  .verres-rename-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .verres-rename-actions .btn-ghost{margin-top:0;padding:4px 6px;border:0;cursor:pointer;}
   .verres-mgmt-select{
     flex:none;font-family:'IBM Plex Sans',sans-serif;font-size:13px;
     padding:6px 10px;border:1.5px solid var(--line);border-radius:7px;
@@ -786,7 +844,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V4.6</div>
+          <div class="brand-version">V4.7</div>
         </div>
       </div>
     </div>
@@ -950,7 +1008,7 @@
         <button type="button" id="fSkuAddOpen">➕ Ajouter le SKU</button>
       </div>
       <div class="sku-add-form">
-        <label>SKU<input type="text" id="fSkuAddValue" maxlength="40" autocomplete="off" placeholder="ex. 8056597123456"></label>
+        <label>SKU (chiffres, 8 max)<input type="text" id="fSkuAddValue" maxlength="8" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="ex. 57765"></label>
         <label>Votre nom (obligatoire)<input type="text" id="fSkuAddAuthor" maxlength="60" autocomplete="name" placeholder="Prénom Nom"></label>
         <button type="button" class="primary" id="fSkuAddSave">Enregistrer</button>
         <button type="button" id="fSkuAddCancel">Annuler</button>
@@ -962,6 +1020,37 @@
 
     <div class="grid-label">Hauteur calculée par type de verre</div>
     <div class="type-grid" id="typeGrid"></div>
+
+    <section class="vi" id="viBlock" aria-labelledby="viTitle">
+      <div class="vi-head">
+        <h2 id="viTitle">Verres intermédiaires <span class="vi-new">Nouveau</span></h2>
+        <div class="vi-seg" role="group" aria-label="Type d’ordonnance" id="viRx">
+          <button type="button" data-rx="prog">Ordonnance progressive <span>VL + addition</span></button>
+          <button type="button" data-rx="vp">Ordonnance VP <span>vision de près</span></button>
+        </div>
+      </div>
+      <div class="vi-inputs">
+        <div class="vi-h">
+          <label for="viH" id="viHlbl"></label>
+          <div class="vi-hline">
+            <input id="viH" inputmode="decimal" autocomplete="off">
+            <span class="vi-hsrc" id="viHsrc"></span>
+            <button type="button" class="vi-link" id="viHreset" hidden></button>
+          </div>
+        </div>
+        <div class="vi-group use">
+          <span class="vi-lbl">Voir net jusqu’à</span>
+          <div class="vi-chips" id="viUses" role="group" aria-label="Distance de vision"></div>
+          <span class="vi-uselbl" id="viUseLbl"></span>
+        </div>
+        <div class="vi-group add" id="viAddGroup">
+          <span class="vi-lbl">Addition <span>(sert uniquement à choisir la dégression)</span></span>
+          <div class="vi-chips" id="viAdds" role="group" aria-label="Addition"></div>
+        </div>
+      </div>
+      <div class="vi-cards" id="viCards" aria-live="polite"></div>
+      <div class="vi-src">Sources : tableaux Hoya Workstyle et Supereader, fiches Seiko Indoor 100, Indoor 200 et Indoor PC. Aucune puissance n’est calculée : saisir la correction de l’ordonnance telle quelle.</div>
+    </section>
   </div>
 
   <div class="empty-state" id="emptyState">
@@ -1348,7 +1437,7 @@
       <div class="admin-subview" id="adminSubview-verres" style="display:none;">
         <div class="admin-card">
           <h2>Gestion verres — ranger par catégorie</h2>
-          <p class="sub">Choisissez une mutuelle puis affectez chaque verre à Unifocaux, Progressifs ou Proximité. Cela ne change que l'onglet de filtre affiché aux opticiens ; enregistré automatiquement à chaque changement. <em>Première version — vos retours sont bienvenus.</em></p>
+          <p class="sub">Choisissez une mutuelle puis affectez chaque verre à Unifocaux, Progressifs ou Proximité. Cela ne change que l'onglet de filtre affiché aux opticiens ; enregistré automatiquement à chaque changement. Le crayon ✏️ permet de corriger le nom d'un verre : la correction est conservée lors des prochaines publications du fichier précos, tant que le fichier garde le même nom d'origine.</p>
           <div class="precos-selects" style="margin-bottom:16px;">
             <div class="precos-field">
               <label for="adminVerresReseau">Réseau</label>
@@ -1771,12 +1860,41 @@ function frameOverrideKey(marque, modele, couleur, taille){
   return [normalize(marque), normalize(modele), normalize(couleur), normalize(taille)].join('||');
 }
 
+// Règle SKU (V4.7) : un SKU C·Evidentia ne contient QUE des chiffres, 8 au maximum.
+// Tout autre contenu trouvé dans la colonne SKU (référence fournisseur type "WHBILLY01",
+// code EAN à 13 chiffres…) n'est pas un SKU : la case SKU reste vide (l'opticien peut alors
+// l'ajouter) et la valeur est gardée à part en 7e colonne « réf. fournisseur », toujours
+// cherchable dans Hauteur Cote B.
+const SKU_RULE = /^\d{1,8}$/;
+function cleanFrameSku(v){
+  if(v === null || v === undefined) return { sku:'', ref:'' };
+  let raw = (typeof v === 'number' && Number.isInteger(v)) ? String(v) : String(v).trim();
+  if(/^\d+\.0+$/.test(raw)) raw = raw.replace(/\.0+$/, ''); // 57765.0 (cellule Excel numérique)
+  if(!raw) return { sku:'', ref:'' };
+  return SKU_RULE.test(raw) ? { sku:raw, ref:'' } : { sku:'', ref:raw };
+}
+// Normalise une ligne monture (SKU non conforme → déplacé en réf. fournisseur). Renvoie true si modifiée.
+function sanitizeFrameRow(row){
+  if(!row || !row[2]) return false;
+  const c = cleanFrameSku(row[2]);
+  if(c.sku === row[2]) return false;
+  row[2] = c.sku;
+  if(c.ref && !row[6]) row[6] = c.ref;
+  return true;
+}
+function sanitizeFramesData(rows){
+  let n = 0;
+  (rows || []).forEach(r => { if(sanitizeFrameRow(r)) n++; });
+  return n;
+}
+
 function applyFramesSkuOverrides(){
   if(!DATA || !DATA.length) return;
   DATA.forEach(row => {
     if(row[2]) return; // le fichier fournit déjà un SKU pour cette ligne : on ne touche pas
     const key = frameOverrideKey(row[0], row[1], row[3], row[4]);
-    if(FRAMES_SKU_OVERRIDES[key]) row[2] = FRAMES_SKU_OVERRIDES[key];
+    const o = FRAMES_SKU_OVERRIDES[key];
+    if(o && SKU_RULE.test(String(o).trim())) row[2] = String(o).trim();
   });
 }
 
@@ -1804,7 +1922,7 @@ function loadData(){
     .then(() => AppStorage.get('frames-sku-overrides'))
     .then(res => { const o = JSON.parse(res.value); if(o) FRAMES_SKU_OVERRIDES = o; })
     .catch(() => {})
-    .finally(() => { applyFramesSkuOverrides(); renderMeta(); renderSkuFixResults(); });
+    .finally(() => { sanitizeFramesData(DATA); applyFramesSkuOverrides(); renderMeta(); renderSkuFixResults(); });
 }
 
 function renderMeta(){
@@ -1824,6 +1942,16 @@ let PRECOS_HIER = {};
 let PRECOS_META = { updatedAt: null, source: 'défaut' };
 let PRECOS_VISIBILITY = {};
 let PRECOS_TYPE_OVERRIDES = {};
+// Noms de verres corrigés à la main (Admin > Gestion verres). Stockés à part du fichier
+// importé (clé 'precos-name-overrides') : une publication du fichier précos ne les efface pas.
+// Clé = reseau||mutuelle||nom d'origine (ce verre seulement) ou *||*||nom d'origine (partout).
+// La correction s'applique tant que le fichier garde le même nom d'origine.
+let PRECOS_NAME_OVERRIDES = {};
+const PRECOS_NAME_ALL = '*||*||';
+function precosDisplayName(row){
+  const o = PRECOS_NAME_OVERRIDES;
+  return o[precosRowKey(row)] || o[PRECOS_NAME_ALL + (row[3] || '')] || row[3] || '';
+}
 let LENTILLES_PMSS_MENSUEL = null; // saisi dans Admin > Lentilles, sert au calcul des forfaits en % du PMSS
 
 function isMutuelleVisible(m){
@@ -1839,6 +1967,7 @@ function loadPrecosData(){
   PRECOS_HIER = PRECOS_HIERARCHY;
   PRECOS_VISIBILITY = Object.assign({}, PRECOS_VISIBILITY_DEFAULT);
   PRECOS_TYPE_OVERRIDES = {};
+  PRECOS_NAME_OVERRIDES = {};
   renderPrecosMeta();
   populatePrecosReseaux();
   renderVisibilityPanel();
@@ -1861,6 +1990,9 @@ function loadPrecosData(){
     .catch(() => {})
     .then(() => AppStorage.get('precos-type-overrides'))
     .then(res => { const o = JSON.parse(res.value); if(o) PRECOS_TYPE_OVERRIDES = o; })
+    .catch(() => {})
+    .then(() => AppStorage.get('precos-name-overrides'))
+    .then(res => { const o = JSON.parse(res.value); if(o && typeof o === 'object') PRECOS_NAME_OVERRIDES = o; })
     .catch(() => {})
     .then(() => AppStorage.get('lentilles-pmss'))
     .then(res => { const v = parseFloat(res.value); if(!isNaN(v)) LENTILLES_PMSS_MENSUEL = v; })
@@ -1925,7 +2057,7 @@ const PRECOS_INDICE_ALIASES = {
   '1.74':'1.74', '174':'1.74'
 };
 function precosRowIndice(row){
-  const name = (row[3] || '').replace(/,/g, '.');
+  const name = precosDisplayName(row).replace(/,/g, '.');
   const re = /(?:^|[^\d.])(1\.\d{1,2}|1[5-7]\d)(?![\d.]|\s*€)/g;
   let m;
   while((m = re.exec(name))){
@@ -2427,7 +2559,7 @@ function renderPrecosResults(){
   const cylRank = r => { const c = precosRowCyl(r); return c ? cylConds.indexOf(c) : -1; };
   Object.keys(groups).forEach(cat => {
     groups[cat] = groups[cat]
-      .map((r, i) => ({ r, i, cy: cylRank(r), fr: normalize(r[3]).startsWith('fr') ? 0 : 1 }))
+      .map((r, i) => ({ r, i, cy: cylRank(r), fr: normalize(precosDisplayName(r)).startsWith('fr') ? 0 : 1 }))
       .sort((a, b) => a.cy - b.cy || a.fr - b.fr || a.i - b.i)
       .map(x => x.r);
   });
@@ -2436,7 +2568,8 @@ function renderPrecosResults(){
   Object.keys(groups).forEach(cat => {
     html += `<div class="precos-group"><div class="precos-group-title">${escapeHtml(cat)}</div>`;
     groups[cat].forEach(r => {
-      const [ reseauR, , , name, code, price, pct ] = r;
+      const [ reseauR, , , , code, price, pct ] = r;
+      const name = precosDisplayName(r);
       let priceLabel, codeLabel = code;
       if(price !== null && price !== undefined){
         priceLabel = price === 0 ? 'Inclus' : formatNum(price) + ' €';
@@ -2484,7 +2617,7 @@ function search(query){
   for(let i=0;i<DATA.length;i++){
     const row = DATA[i];
     const sku = row[2] || '';
-    const hay = normalize(row[0]+' '+row[1]+' '+sku+' '+stripLeadingZeros(sku)+' '+row[3]);
+    const hay = normalize(row[0]+' '+row[1]+' '+sku+' '+stripLeadingZeros(sku)+' '+row[3]+(row[6] ? ' '+row[6] : ''));
     if(terms.every(t => hay.includes(t))){
       results.push(row);
       if(results.length >= 40) break;
@@ -2579,6 +2712,7 @@ function displayFrameResult(row){
   if(sku) metaParts.push('SKU '+sku);
   if(couleur) metaParts.push(couleur);
   if(taille) metaParts.push('Taille '+taille);
+  if(row[6]) metaParts.push('Réf. fournisseur '+row[6]);
   document.getElementById('fMeta').textContent = metaParts.join(' · ');
   document.getElementById('fCoteB').textContent = formatNum(coteb) + ' mm';
 
@@ -2602,9 +2736,163 @@ function displayFrameResult(row){
     </div>`;
   }).join('');
 
+  if(typeof VI !== 'undefined') VI.setFrame(coteb);
   resultEl.classList.add('show');
   emptyState.style.display = 'none';
 }
+
+/* ============ VERRES INTERMÉDIAIRES (onglet Hauteur Cote B, V4.7) ============ */
+// Règles validées avec le service (spéc. « verres-intermediaires-spec », maquette v2) :
+// - Ordonnance progressive → HOYA Workstyle Screen/Space ou SEIKO Indoor 100/200 (hauteur = formule Prog.)
+// - Ordonnance VP → HOYA Supereader ou SEIKO Indoor PC, dégression imposée (hauteur = formule Proximité)
+// - Aucun calcul de puissance. Les hauteurs reprennent les formules Prog./Proximité réglées dans Admin.
+const VI = (function(){
+  const ADDS = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5];
+  // Hoya Workstyle : couloir (mm) par Cote B (ligne) et hauteur de montage 15 → 30 mm (colonnes)
+  const WS = {
+    26:[18], 27:[18,18], 28:[18,18,18], 29:[18,18,18,18], 30:[18,18,18,18,18],
+    31:[19,19,18,18,18,18], 32:[19,19,19,19,19,18,18], 33:[19,19,20,20,19,19,18,18],
+    34:[19,19,20,20,20,19,19,18,18], 35:[19,19,20,21,21,20,19,19,18,18],
+    36:[19,19,20,21,21,20,20,19,19,18,18], 37:[19,19,20,20,21,21,20,20,19,19,18,18],
+    38:[19,19,20,20,21,21,21,20,20,19,19,18,18], 39:[19,19,20,20,21,21,22,21,20,20,19,19,18,18],
+    40:[19,19,20,20,21,21,22,22,21,20,20,19,19,18,18], 41:[19,19,20,20,21,21,22,22,21,21,20,20,19,19,18,18],
+    42:[19,19,20,20,21,21,22,23,22,21,21,20,20,19,19,18], 43:[19,19,20,20,21,21,22,23,23,22,21,21,20,20,19,19],
+    44:[19,19,20,20,21,21,22,23,23,24,24,23,23,22,22,20], 45:[19,19,20,20,21,21,22,23,23,24,24,23,23,22,22,21],
+    46:[19,19,20,20,21,21,22,23,23,24,24,24,24,22,22,21]
+  };
+  // Hoya Supereader : profondeur de champ max (cm) par addition 1,00 → 3,50
+  const SR = [
+    { name:'Supereader A', deg:0.75, d:[null,200,133,100,80,67,57,50,44,40,36] },
+    { name:'Supereader B', deg:1.5,  d:[null,null,null,null,200,133,100,80,67,57,50] }
+  ];
+  // Seiko Indoor PC (fiche Seiko officielle) : profondeur max (cm) + puissance à la croix de centrage
+  const IN = [
+    { name:'Indoor PC 1.00', deg:1,   d:[167,120,91,74,63,54,48,43,null,null,null], p:[0.60,0.85,1.10,1.35,1.60,1.85,2.10,2.35,null,null,null] },
+    { name:'Indoor PC 1.50', deg:1.5, d:[250,154,110,87,71,61,53,47,42,null,null],  p:[0.40,0.65,0.90,1.15,1.40,1.65,1.90,2.15,2.40,null,null] },
+    { name:'Indoor PC 2.00', deg:2,   d:[null,222,143,105,83,69,59,51,45,41,37],    p:[null,0.45,0.70,0.95,1.20,1.45,1.70,1.95,2.20,2.45,2.70] }
+  ];
+  const USES = [
+    { id:'ecran',  short:'≈ 80 cm',  label:'Écran et bureau',     target:80 },
+    { id:'bureau', short:'≈ 1,30 m', label:'Bureau et réunion',   target:130 },
+    { id:'maison', short:'≈ 2 m',    label:'Maison et intérieur', target:200 }
+  ];
+  const st = { B:null, rx:'prog', hOv:{ prog:'', vp:'' }, add:null, usage:'ecran' };
+  const $ = (id) => document.getElementById(id);
+  const num = (s) => { const t = String(s == null ? '' : s).trim().replace(',', '.'); if(t === '') return null; const n = Number(t); return isNaN(n) ? null : n; };
+  const dec = (n) => n.toFixed(2).replace('.', ',');
+  const fdist = (cm) => { if(cm < 100) return cm + ' cm'; const m = cm / 100; return (Number.isInteger(m) ? String(m) : m.toFixed(2).replace('.', ',')) + ' m'; };
+  const lens = (key, fb) => (LENS_TYPES.find(t => t.key === key) || fb);
+
+  function bind(){
+    if(!$('viBlock')) return;
+    $('viRx').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; st.rx = b.dataset.rx; render(); });
+    $('viH').addEventListener('input', function(){ st.hOv[st.rx] = this.value; render(); });
+    $('viHreset').addEventListener('click', () => { st.hOv[st.rx] = ''; render(); });
+    $('viAdds').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; const a = Number(b.dataset.add); st.add = (st.add === a) ? null : a; render(); });
+    $('viUses').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; st.usage = b.dataset.use; render(); });
+  }
+
+  // Appelé à chaque nouvelle monture affichée : on repart des hauteurs calculées.
+  function setFrame(coteb){
+    st.B = Number(coteb);
+    st.hOv = { prog:'', vp:'' };
+    render();
+  }
+
+  function render(){
+    if(!$('viBlock') || st.B === null || isNaN(st.B)) return;
+    const B = st.B;
+    const isProg = st.rx === 'prog';
+    $('viRx').querySelectorAll('button').forEach(b => { const on = b.dataset.rx === st.rx; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+
+    const t = isProg ? lens('prog', { multiplier:0.6, offset:0 }) : lens('proximite', { multiplier:0.6, offset:-4 });
+    const calc = roundUpHalf(lensCalc(t, B));
+    const typeName = isProg ? 'Prog.' : 'Proximité';
+    const ov = num(st.hOv[st.rx]);
+    const H = ov === null ? calc : ov, Hr = Math.round(H);
+    $('viHlbl').innerHTML = 'Hauteur de montage <span class="vi-hkind">' + (isProg ? 'centrage progressif' : 'centrage proximité') + '</span>';
+    if($('viH').value !== st.hOv[st.rx]) $('viH').value = st.hOv[st.rx];
+    $('viH').placeholder = formatNum(calc);
+    $('viHsrc').textContent = ov === null ? 'reprise de ' + typeName + ', modifiable si mesurée' : 'mesurée (' + typeName + ' calculée : ' + formatNum(calc) + ' mm)';
+    $('viHreset').hidden = ov === null;
+    $('viHreset').textContent = 'Revenir à la hauteur ' + typeName;
+
+    const use = USES.find(u => u.id === st.usage);
+    $('viUses').innerHTML = USES.map(u => { const on = u.id === st.usage; return `<button type="button" class="vi-chip${on ? ' on' : ''}" aria-pressed="${on}" data-use="${u.id}" title="${u.label}">${u.short}</button>`; }).join('');
+    $('viUseLbl').textContent = use.label;
+    $('viAddGroup').hidden = isProg;
+    $('viAdds').innerHTML = ADDS.map(a => { const on = a === st.add; return `<button type="button" class="vi-chip mono${on ? ' on' : ''}" aria-pressed="${on}" data-add="${a}">${dec(a)}</button>`; }).join('');
+    const addIdx = st.add === null ? -1 : ADDS.indexOf(st.add);
+    const hTxt = formatNum(H) + ' mm';
+    const cards = [];
+
+    if(isProg){
+      const far = use.target >= 200;
+      // Hoya Workstyle Screen / Space
+      const ws = { name:'HOYA Workstyle', need:'automatique' };
+      const Br = Math.round(B), Bt = Math.min(Br, 46);
+      if(Br < 26) ws.err = 'Cote B ' + formatNum(B) + ' mm : trop petite (26 mm minimum). Workstyle non réalisable.';
+      else if(Hr < 15) ws.err = 'Hauteur ' + hTxt + ' : trop basse (15 mm minimum).';
+      else {
+        const maxH = Math.min(30, Bt - 11);
+        if(Hr > maxH) ws.err = 'Hauteur ' + hTxt + ' trop haute pour cette Cote B : ' + maxH + ' mm maximum. Baisser la hauteur ou changer de monture.';
+        else {
+          const cl = WS[Bt][Hr - 15];
+          ws.main = far ? 'Workstyle Space' : 'Workstyle Screen';
+          ws.tags = [['Couloir', cl + ' mm'], ['Hauteur', Hr + ' mm']];
+          ws.order = 'Puissance VL + addition de l’ordonnance · couloir ' + cl + ' mm';
+          const n = [];
+          if(Br > 46) n.push('Cote B ' + formatNum(B) + ' mm : ligne 46 du tableau Hoya utilisée.');
+          if(H !== Hr) n.push('Hauteur ' + formatNum(H) + ' → ' + Hr + ' mm (tableau au mm).');
+          n.push('Autre option : ' + (far ? 'Workstyle Screen (écran / bureau)' : 'Workstyle Space (intérieur)') + '.');
+          ws.foot = n.join(' ');
+        }
+      }
+      cards.push(ws);
+      // Seiko Indoor 100 / 200
+      const s = { name:'SEIKO Indoor 100 / 200', need:'automatique' };
+      if(H < 17) s.err = 'Hauteur ' + hTxt + ' : trop basse pour Indoor 100 / 200 (17 mm minimum).';
+      else {
+        const cl = H >= 19 ? 23 : 20;
+        s.main = far ? 'Indoor 200' : 'Indoor 100';
+        s.tags = [['Couloir', cl + ' mm'], ['Travail à', far ? '2 m' : '1 m'], ['Hauteur', hTxt]];
+        s.order = 'Puissance VL + addition de l’ordonnance · couloir ' + cl + ' mm';
+        s.foot = (cl === 20 ? 'Couloir 23 mm impossible : il faut 19 mm de hauteur. ' : '') + 'Autre option : ' + (far ? 'Indoor 100 (travail à 1 m)' : 'Indoor 200 (travail à 2 m)') + '.';
+      }
+      cards.push(s);
+    } else {
+      const degressif = (c, table, word, short) => {
+        if(addIdx < 0){ c.wait = 'Sélectionnez l’addition pour obtenir la ' + word.toLowerCase() + '.'; return; }
+        const avail = table.map(o => ({ name:o.name, deg:o.deg, dist:o.d[addIdx], p:o.p ? o.p[addIdx] : null })).filter(o => o.dist !== null);
+        if(!avail.length){ c.err = 'Addition ' + dec(st.add) + ' : aucun ' + short + ' dans le tableau.'; return; }
+        const ok = avail.filter(o => o.dist >= use.target);
+        const rec = ok.length ? ok[0] : avail.reduce((a, b) => b.dist > a.dist ? b : a);
+        c.main = rec.name;
+        c.tags = [[word, dec(rec.deg)], ['Net jusqu’à', fdist(rec.dist)], ['Hauteur', hTxt]];
+        c.order = 'Puissance VP de l’ordonnance · ' + word.toLowerCase() + ' ' + dec(rec.deg);
+        const n = [];
+        if(!ok.length) n.push('Aucun verre n’atteint ' + use.short + ' avec cette addition : profondeur maximale retenue.');
+        if(rec.p !== null && rec.p !== undefined) n.push('Puissance mesurée à la croix de centrage : +' + dec(rec.p) + ' δ.');
+        c.foot = n.join(' ');
+      };
+      const sr = { name:'HOYA Supereader', need:'addition' }; degressif(sr, SR, 'Dégression', 'Supereader'); cards.push(sr);
+      const ip = { name:'SEIKO Indoor PC', need:'addition' }; degressif(ip, IN, 'Progression', 'Indoor PC'); cards.push(ip);
+    }
+
+    $('viCards').innerHTML = cards.map(c => {
+      const ok = !!c.main && !c.err;
+      const body = ok
+        ? `<div class="vi-main">${escapeHtml(c.main)}</div><div class="vi-tags">${c.tags.map(t => `<span class="vi-tag"><span>${escapeHtml(t[0])}</span> <b>${escapeHtml(t[1])}</b></span>`).join('')}</div>`
+          + `<div class="vi-order"><span>Commande</span>${escapeHtml(c.order)}</div>`
+          + (c.foot ? `<div class="vi-foot">${escapeHtml(c.foot)}</div>` : '')
+        : `<div class="vi-msg${c.err ? ' err' : ''}" role="status">${escapeHtml(c.err || c.wait)}</div>`;
+      return `<div class="vi-card${ok ? ' ok' : ''}"><div class="vi-card-top"><span class="vi-card-name">${escapeHtml(c.name)}</span><span class="vi-card-need">${escapeHtml(c.need)}</span></div>${body}</div>`;
+    }).join('');
+  }
+
+  bind();
+  return { setFrame, render };
+})();
 
 /* ---- Lightbox photo monture : clic sur la vignette pour agrandir ---- */
 const photoLightbox = document.getElementById('photoLightbox');
@@ -2650,7 +2938,7 @@ skuAddSaveBtn.addEventListener('click', async () => {
   const sku = skuAddValue.value.trim();
   const author = skuAddAuthor.value.trim().replace(/\s+/g, ' ');
   if(!sku){ skuAddSetMsg('Saisissez le SKU.', 'err'); skuAddValue.focus(); return; }
-  if(!/^[A-Za-z0-9._\-\/ ]{1,40}$/.test(sku)){ skuAddSetMsg('SKU invalide : lettres, chiffres, . _ - / uniquement.', 'err'); skuAddValue.focus(); return; }
+  if(!SKU_RULE.test(sku)){ skuAddSetMsg('SKU invalide : chiffres uniquement, 8 maximum.', 'err'); skuAddValue.focus(); return; }
   if(author.length < 2){ skuAddSetMsg('Indiquez votre nom avant d\'enregistrer.', 'err'); skuAddAuthor.focus(); return; }
   const [marque, modele, , couleur, taille] = row;
   if(!confirm(`Enregistrer le SKU ${sku} pour ${marque} ${modele} (${couleur || '—'} · ${taille || '—'}) ?\nModification enregistrée au nom de : ${author}`)) return;
@@ -3221,22 +3509,25 @@ function processSimpleFrames(res){
       const cotebRaw = (r[colMap.coteb]||'').toString().replace(',','.').trim();
       const coteb = parseFloat(cotebRaw);
       if(!cotebRaw || isNaN(coteb)){ skipped++; return; }
-      rows.push([
+      const row = [
         (r[colMap.marque]||'').toString().trim(),
         colMap.modele ? (r[colMap.modele]||'').toString().trim() : '',
         colMap.sku ? (r[colMap.sku]||'').toString().trim() : '',
         colMap.couleur ? (r[colMap.couleur]||'').toString().trim() : '',
         colMap.taille ? (r[colMap.taille]||'').toString().trim() : '',
         coteb
-      ]);
+      ];
+      sanitizeFrameRow(row);
+      rows.push(row);
     });
+    const badSku = rows.filter(r => r[6]).length;
     if(rows.length === 0){
       uploadError.textContent = "Aucune ligne valide trouvée dans le fichier.";
       uploadError.classList.add('show');
       return;
     }
     pendingRows = rows;
-    previewBox.innerHTML = `<b>${rows.length.toLocaleString('fr-FR')}</b> lignes valides prêtes à publier` + (skipped ? ` · ${skipped} ligne(s) ignorée(s) (Côte B manquante ou invalide)` : '');
+    previewBox.innerHTML = `<b>${rows.length.toLocaleString('fr-FR')}</b> lignes valides prêtes à publier` + (skipped ? ` · ${skipped} ligne(s) ignorée(s) (Côte B manquante ou invalide)` : '') + skuRejectNote(rows);
     previewBox.classList.add('show');
     publishBtn.disabled = false;
   } catch(err){
@@ -3283,6 +3574,7 @@ function handleFile(file){
           let msg = `<b>${result.flat.length.toLocaleString('fr-FR')}</b> lignes extraites (fichier source multi-onglets), sur <b>${result.sheetsUsed}</b> onglet(s) de marque.`;
           if(result.skippedRows) msg += ` · ${result.skippedRows} ligne(s) ignorée(s).`;
           if(result.unknownSheets.length) msg += ` · Onglet(s) non reconnu(s), ignoré(s) : ${result.unknownSheets.join(', ')}.`;
+          msg += skuRejectNote(result.flat);
           previewBox.innerHTML = msg;
           previewBox.classList.add('show');
           publishBtn.disabled = false;
@@ -3308,6 +3600,17 @@ function handleFile(file){
   };
   reader.onerror = () => { uploadError.textContent = "Impossible de lire ce fichier."; uploadError.classList.add('show'); };
   reader.readAsArrayBuffer(file);
+}
+
+// Résumé, dans l'aperçu avant publication, des SKU écartés par la règle « chiffres, 8 max ».
+function skuRejectNote(rows){
+  const bad = rows.filter(r => r[6]);
+  if(!bad.length) return '';
+  const byBrand = {};
+  bad.forEach(r => { byBrand[r[0]] = (byBrand[r[0]] || 0) + 1; });
+  const list = Object.keys(byBrand).sort((a, b) => byBrand[b] - byBrand[a]).map(b => `${escapeHtml(b)} (${byBrand[b]})`).join(', ');
+  const ex = bad.slice(0, 3).map(r => escapeHtml(r[6])).join(', ');
+  return `<br>⚠️ <b>${bad.length.toLocaleString('fr-FR')}</b> SKU non conforme(s) écarté(s) (un SKU = chiffres uniquement, 8 maximum) : ${list}. Ex. : ${ex}. Ces lignes sont importées sans SKU ; la valeur reste cherchable comme réf. fournisseur.`;
 }
 
 function publishFramesData(rows, sourceLabel){
@@ -3357,7 +3660,7 @@ function renderSkuFixResults(){
   }
   const matches = DATA.filter(row => (
     normalize(row[0]).includes(q) || normalize(row[1]).includes(q) ||
-    normalize(row[3]).includes(q) || normalize(row[4]).includes(q)
+    normalize(row[3]).includes(q) || normalize(row[4]).includes(q) || (row[6] && normalize(row[6]).includes(q))
   )).slice(0, 40);
   if(!matches.length){
     skuFixResultsEl.innerHTML = '<div class="sku-fix-empty">Aucune référence trouvée.</div>';
@@ -3369,9 +3672,9 @@ function renderSkuFixResults(){
       <div class="sku-fix-row" data-sku-fix-key="${escapeHtml(key)}">
         <div class="sku-fix-info">
           <b>${escapeHtml(row[0])} ${escapeHtml(row[1])}</b>
-          <div class="muted">${escapeHtml(row[3])} · ${escapeHtml(row[4])} · Côte B ${formatNum(row[5])} mm</div>
+          <div class="muted">${escapeHtml(row[3])} · ${escapeHtml(row[4])} · Côte B ${formatNum(row[5])} mm${row[6] ? ` · réf. fournisseur ${escapeHtml(row[6])}` : ''}</div>
         </div>
-        <input type="text" data-sku-fix-input placeholder="SKU" value="${escapeHtml(row[2]||'')}">
+        <input type="text" data-sku-fix-input placeholder="SKU" maxlength="8" inputmode="numeric" value="${escapeHtml(row[2]||'')}">
         <button type="button" class="btn-ghost" data-sku-fix-save>Enregistrer</button>
         <span class="sku-fix-saved" data-sku-fix-saved style="display:none;">Enregistré ✓</span>
       </div>
@@ -3394,6 +3697,11 @@ if(skuFixResultsEl){
     const input = rowEl.querySelector('[data-sku-fix-input]');
     const value = input.value.trim();
     const savedEl = rowEl.querySelector('[data-sku-fix-saved]');
+    if(value && !SKU_RULE.test(value)){
+      if(skuFixErrorEl){ skuFixErrorEl.textContent = 'SKU invalide : chiffres uniquement, 8 maximum.'; skuFixErrorEl.style.display = 'block'; }
+      input.focus();
+      return;
+    }
     const refRow = DATA.find(r => frameOverrideKey(r[0], r[1], r[3], r[4]) === key) || [];
     const adminProfile = CURRENT_PROFILE_ID ? CUSTOM_PROFILES.find(p => p.id === CURRENT_PROFILE_ID) : null;
     const author = adminProfile ? adminProfile.name : 'Administrateur';
@@ -4319,11 +4627,13 @@ function coteBExtractRows(ws, sheetName, recipe, startRow, endRow, flat){
     if(coteb === null){ skipped++; continue; }
     const marque = recipe.fixedMarque || (recipe.marque ? String(coteBGetCell(ws,r,recipe.marque)||'').trim() : '') || recipe.fallbackMarque || sheetName.trim();
     const modele = recipe.modele ? String(coteBGetCell(ws,r,recipe.modele)||'').trim() : '';
-    const sku = recipe.sku ? String(coteBGetCell(ws,r,recipe.sku)||'').trim() : '';
+    const skuC = cleanFrameSku(recipe.sku ? coteBGetCell(ws,r,recipe.sku) : '');
     const couleur = recipe.couleur ? String(coteBGetCell(ws,r,recipe.couleur)||'').trim() : '';
     const taille = recipe.taille ? String(coteBGetCell(ws,r,recipe.taille)||'').trim() : '';
     if(!marque && !modele){ skipped++; continue; }
-    flat.push([coteBNormMarque(marque), modele, sku, couleur, taille, coteb]);
+    const out = [coteBNormMarque(marque), modele, skuC.sku, couleur, taille, coteb];
+    if(skuC.ref) out[6] = skuC.ref;
+    flat.push(out);
     used++;
   }
   return { used, skipped };
@@ -4597,10 +4907,22 @@ function renderVerresMgmtPanel(){
     const key = precosRowKey(row);
     const overridden = !!PRECOS_TYPE_OVERRIDES[key];
     const effectiveType = classifyPrecosRowType(row);
-    html += `<div class="verres-mgmt-row">
-      <div>
-        <div class="verres-mgmt-name">${escapeHtml(row[3])}</div>
-        <div class="verres-mgmt-cat">${escapeHtml(row[2])}</div>
+    const shown = precosDisplayName(row);
+    const renamed = shown !== row[3];
+    const sameName = PRECOS_DATA.filter(r => r[3] === row[3]).length;
+    html += `<div class="verres-mgmt-row" data-row-key="${escapeHtml(key)}">
+      <div class="verres-mgmt-info">
+        <div class="verres-mgmt-name">${escapeHtml(shown)} <button type="button" class="verres-rename-btn" data-rename-open title="Corriger le nom de ce verre">✏️</button></div>
+        <div class="verres-mgmt-cat">${escapeHtml(row[2])}${renamed ? ` · <span class="verres-renamed">nom du fichier : ${escapeHtml(row[3])}</span>` : ''}</div>
+        <div class="verres-rename-form" data-rename-form hidden>
+          <input type="text" data-rename-input maxlength="200" value="${escapeHtml(shown)}">
+          <label class="verres-rename-all"><input type="checkbox" data-rename-all${PRECOS_NAME_OVERRIDES[PRECOS_NAME_ALL + row[3]] || !PRECOS_NAME_OVERRIDES[key] ? ' checked' : ''}> Corriger partout où ce nom apparaît (${sameName} verre${sameName > 1 ? 's' : ''})</label>
+          <div class="verres-rename-actions">
+            <button type="button" class="btn-ghost" data-rename-save>Enregistrer</button>
+            <button type="button" class="btn-ghost" data-rename-cancel>Annuler</button>
+            ${renamed ? '<button type="button" class="btn-ghost" data-rename-reset>Rétablir le nom du fichier</button>' : ''}
+          </div>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <select class="verres-mgmt-select${overridden?' overridden':''}" data-key="${escapeHtml(key)}">
@@ -4622,15 +4944,54 @@ function renderVerresMgmtPanel(){
     });
   });
 
+  // Correction du nom d'un verre (conservée après une nouvelle publication du fichier précos)
+  verresMgmtPanel.querySelectorAll('.verres-mgmt-row[data-row-key]').forEach(rowEl => {
+    const key = rowEl.dataset.rowKey;
+    const row = PRECOS_DATA.find(r => precosRowKey(r) === key);
+    if(!row) return;
+    const form = rowEl.querySelector('[data-rename-form]');
+    const input = rowEl.querySelector('[data-rename-input]');
+    const allBox = rowEl.querySelector('[data-rename-all]');
+    const saveNames = () => AppStorage.set('precos-name-overrides', JSON.stringify(PRECOS_NAME_OVERRIDES))
+      .then(() => { renderVerresMgmtPanel(); renderPrecosResults(); })
+      .catch(e => alert("Erreur lors de l'enregistrement du nom : " + e.message));
+    rowEl.querySelector('[data-rename-open]').addEventListener('click', () => { form.hidden = !form.hidden; if(!form.hidden){ input.focus(); input.select(); } });
+    rowEl.querySelector('[data-rename-cancel]').addEventListener('click', () => { form.hidden = true; input.value = precosDisplayName(row); });
+    input.addEventListener('keydown', e => { if(e.key === 'Enter') rowEl.querySelector('[data-rename-save]').click(); if(e.key === 'Escape') rowEl.querySelector('[data-rename-cancel]').click(); });
+    rowEl.querySelector('[data-rename-save]').addEventListener('click', () => {
+      const name = input.value.trim().replace(/\s+/g, ' ');
+      if(!name){ alert('Le nom ne peut pas être vide.'); input.focus(); return; }
+      const allKey = PRECOS_NAME_ALL + row[3];
+      delete PRECOS_NAME_OVERRIDES[key];
+      if(allBox.checked){
+        if(name === row[3]) delete PRECOS_NAME_OVERRIDES[allKey]; else PRECOS_NAME_OVERRIDES[allKey] = name;
+      } else if(name !== row[3] || PRECOS_NAME_OVERRIDES[allKey]){
+        PRECOS_NAME_OVERRIDES[key] = name; // ce verre seulement (prioritaire sur une correction « partout »)
+      }
+      saveNames();
+    });
+    const resetBtn = rowEl.querySelector('[data-rename-reset]');
+    if(resetBtn) resetBtn.addEventListener('click', () => {
+      const allKey = PRECOS_NAME_ALL + row[3];
+      const n = PRECOS_DATA.filter(r => r[3] === row[3]).length;
+      if(PRECOS_NAME_OVERRIDES[allKey] && n > 1 && !confirm(`Rétablir le nom du fichier pour les ${n} verres portant ce nom ?`)) return;
+      delete PRECOS_NAME_OVERRIDES[key];
+      delete PRECOS_NAME_OVERRIDES[allKey];
+      saveNames();
+    });
+  });
+
   verresMgmtPanel.querySelectorAll('[data-del-verre]').forEach(btn => {
     btn.addEventListener('click', () => {
       const key = btn.dataset.key;
       if(!confirm('Supprimer définitivement ce verre ?')) return;
       PRECOS_DATA = PRECOS_DATA.filter(r => precosRowKey(r) !== key);
       delete PRECOS_TYPE_OVERRIDES[key];
+      delete PRECOS_NAME_OVERRIDES[key];
       Promise.all([
         AppStorage.set('precos-data', JSON.stringify(PRECOS_DATA)),
         AppStorage.set('precos-type-overrides', JSON.stringify(PRECOS_TYPE_OVERRIDES)),
+        AppStorage.set('precos-name-overrides', JSON.stringify(PRECOS_NAME_OVERRIDES)),
       ]).then(() => {
         renderVerresMgmtPanel();
         renderPrecosResults();
