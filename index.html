@@ -214,7 +214,7 @@
   #photoLightbox img{max-width:min(90vw,640px);max-height:85vh;border-radius:10px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.4);}
 
   /* Ruler divider */
-  .ruler{height:14px;margin:0 0 18px;position:relative;opacity:.55;}
+  .ruler{display:block;width:100%;height:14px;margin:0 0 18px;position:relative;opacity:.55;}
 
   /* Lens type grid */
   .grid-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:10px;font-weight:500;}
@@ -375,6 +375,18 @@
   .vi-foot{font-size:12px;color:var(--ink-soft);line-height:1.45;}
   .vi-msg{border-radius:8px;padding:12px;font-size:13px;line-height:1.45;background:var(--paper);color:var(--ink-soft);}
   .vi-msg.err{background:#FDECEA;color:#8C1D18;}
+  .vi-head h2{text-wrap:balance;}
+  .vi-tag.net{font-weight:600;}
+  .vi-tag.net.ok{background:#E2F4E8;color:#14532D;box-shadow:inset 0 0 0 1.5px #2F9E5B;}
+  .vi-tag.net.ok span{color:#1F6B3B;}
+  .vi-tag.net.bad{background:#D6432A;color:#fff;}
+  .vi-tag.net.bad span{color:#FFE3DC;}
+  .vi-alert{background:#FDECEA;border:1.5px solid #D6432A;border-radius:8px;padding:10px 12px;color:#8C1D18;font-size:13px;line-height:1.45;display:flex;flex-direction:column;gap:4px;}
+  .vi-alert p{margin:0;}
+  .vi-alert p:first-child{font-weight:600;}
+  .vi-order{display:flex;flex-direction:column;gap:2px;}
+  .vi-order b.vi-order-lens{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--teal-deep);font-size:clamp(14px,1.55vw,18px);line-height:1.25;}
+  .vi-order em{font-style:normal;}
   .vi-src{font-size:11px;color:var(--ink-soft);line-height:1.4;}
   /* Ajout d'un SKU manquant directement depuis Hauteur Cote B (tous profils, nom obligatoire) */
   .sku-add{margin:-6px 0 18px;padding:12px 14px;border:1.5px dashed #F5B98F;border-radius:10px;background:#FFF8F3;font-size:13px;}
@@ -844,7 +856,7 @@
           <div class="brand-sub">by C·Evidentia</div>
           <!-- Numéro de version : incrémenté à la main à chaque livraison.
                y (mineur) +1 à chaque modif livrée ; x (majeur) +1 (y->0) pour un changement structurel important. -->
-          <div class="brand-version">V4.7</div>
+          <div class="brand-version">V4.8</div>
         </div>
       </div>
     </div>
@@ -1023,7 +1035,7 @@
 
     <section class="vi" id="viBlock" aria-labelledby="viTitle">
       <div class="vi-head">
-        <h2 id="viTitle">Verres intermédiaires <span class="vi-new">Nouveau</span></h2>
+        <h2 id="viTitle">Verres intermédiaires / Progressifs d’intérieur <span class="vi-new">Nouveau</span></h2>
         <div class="vi-seg" role="group" aria-label="Type d’ordonnance" id="viRx">
           <button type="button" data-rx="prog">Ordonnance progressive <span>VL + addition</span></button>
           <button type="button" data-rx="vp">Ordonnance VP <span>vision de près</span></button>
@@ -1044,12 +1056,12 @@
           <span class="vi-uselbl" id="viUseLbl"></span>
         </div>
         <div class="vi-group add" id="viAddGroup">
-          <span class="vi-lbl">Addition <span>(sert uniquement à choisir la dégression)</span></span>
+          <span class="vi-lbl">Addition <span id="viAddLbl">(sert uniquement à choisir la dégression)</span></span>
           <div class="vi-chips" id="viAdds" role="group" aria-label="Addition"></div>
         </div>
       </div>
       <div class="vi-cards" id="viCards" aria-live="polite"></div>
-      <div class="vi-src">Sources : tableaux Hoya Workstyle et Supereader, fiches Seiko Indoor 100, Indoor 200 et Indoor PC. Aucune puissance n’est calculée : saisir la correction de l’ordonnance telle quelle.</div>
+      <div class="vi-src">Sources : tableaux Hoya Workstyle et Supereader, fiches Seiko Computer Xtra, Indoor PC, Indoor 100 et Indoor 200 (16/04/2026). Hauteurs : toujours le millimètre du dessous. Aucune puissance n’est calculée : saisir la correction de l’ordonnance telle quelle.</div>
     </section>
   </div>
 
@@ -2728,7 +2740,7 @@ function displayFrameResult(row){
 
   const grid = document.getElementById('typeGrid');
   grid.innerHTML = LENS_TYPES.map(t => {
-    const val = roundUpHalf(lensCalc(t, coteb));
+    const val = t.key === 'proximite' ? floorMm(lensCalc(t, coteb)) : roundUpHalf(lensCalc(t, coteb));
     return `<div class="type-card">
       <div class="type-name">${t.name}</div>
       <div class="type-formula">${lensFormulaLabel(t)}</div>
@@ -2741,11 +2753,12 @@ function displayFrameResult(row){
   emptyState.style.display = 'none';
 }
 
-/* ============ VERRES INTERMÉDIAIRES (onglet Hauteur Cote B, V4.7) ============ */
-// Règles validées avec le service (spéc. « verres-intermediaires-spec », maquette v2) :
-// - Ordonnance progressive → HOYA Workstyle Screen/Space ou SEIKO Indoor 100/200 (hauteur = formule Prog.)
-// - Ordonnance VP → HOYA Supereader ou SEIKO Indoor PC, dégression imposée (hauteur = formule Proximité)
-// - Aucun calcul de puissance. Les hauteurs reprennent les formules Prog./Proximité réglées dans Admin.
+/* ============ VERRES INTERMÉDIAIRES / PROGRESSIFS D'INTÉRIEUR (onglet Hauteur Cote B, V4.8) ============ */
+// Règles validées par le service (échanges du 9-10/11/2026, fiches Seiko du 16/04/2026) :
+// - Ordonnance VP → HOYA Supereader ↔ SEIKO Computer Xtra (dégressifs, dégression imposée par l'outil)
+// - Ordonnance progressive → HOYA Workstyle ↔ SEIKO Indoor PC (≈ 80 cm) / Indoor 100 (≈ 1,30 m) / Indoor 200 (≈ 2 m)
+// - Hauteur : toujours le millimètre du dessous du calcul exact (19,4 → 19 ; 19,9 → 19), mesurée ou calculée.
+// - Aucun calcul de puissance : l'opticien saisit la correction de l'ordonnance.
 const VI = (function(){
   const ADDS = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5];
   // Hoya Workstyle : couloir (mm) par Cote B (ligne) et hauteur de montage 15 → 30 mm (colonnes)
@@ -2765,11 +2778,13 @@ const VI = (function(){
     { name:'Supereader A', deg:0.75, d:[null,200,133,100,80,67,57,50,44,40,36] },
     { name:'Supereader B', deg:1.5,  d:[null,null,null,null,200,133,100,80,67,57,50] }
   ];
-  // Seiko Indoor PC (fiche Seiko officielle) : profondeur max (cm) + puissance à la croix de centrage
-  const IN = [
-    { name:'Indoor PC 1.00', deg:1,   d:[167,120,91,74,63,54,48,43,null,null,null], p:[0.60,0.85,1.10,1.35,1.60,1.85,2.10,2.35,null,null,null] },
-    { name:'Indoor PC 1.50', deg:1.5, d:[250,154,110,87,71,61,53,47,42,null,null],  p:[0.40,0.65,0.90,1.15,1.40,1.65,1.90,2.15,2.40,null,null] },
-    { name:'Indoor PC 2.00', deg:2,   d:[null,222,143,105,83,69,59,51,45,41,37],    p:[null,0.45,0.70,0.95,1.20,1.45,1.70,1.95,2.20,2.45,2.70] }
+  // Seiko Computer Xtra et Indoor PC (même tableau sur les deux fiches) : distance de vision nette
+  // à la CROIX DE CENTRAGE (cm), par addition 1,00 → 3,50. Chaque dégression/progression n'existe
+  // que pour les additions de sa fiche (1.00 : ADD 1,00-2,50 ; 1.50 : 1,50-3,00 ; 2.00 : 2,00-3,50).
+  const SEIKO_CC = [
+    { deg:1,   d:[170,120,91,74,63,54,48,null,null,null,null] },
+    { deg:1.5, d:[null,null,110,87,71,61,53,47,42,null,null] },
+    { deg:2,   d:[null,null,null,null,83,69,59,51,45,41,37] }
   ];
   const USES = [
     { id:'ecran',  short:'≈ 80 cm',  label:'Écran et bureau',     target:80 },
@@ -2780,7 +2795,7 @@ const VI = (function(){
   const $ = (id) => document.getElementById(id);
   const num = (s) => { const t = String(s == null ? '' : s).trim().replace(',', '.'); if(t === '') return null; const n = Number(t); return isNaN(n) ? null : n; };
   const dec = (n) => n.toFixed(2).replace('.', ',');
-  const fdist = (cm) => { if(cm < 100) return cm + ' cm'; const m = cm / 100; return (Number.isInteger(m) ? String(m) : m.toFixed(2).replace('.', ',')) + ' m'; };
+  const fdist = (cm) => { if(cm < 100) return cm + ' cm'; const m = cm / 100; return (Number.isInteger(m) ? String(m) : (Math.round(m * 100) / 100).toString().replace('.', ',')) + ' m'; };
   const lens = (key, fb) => (LENS_TYPES.find(t => t.key === key) || fb);
 
   function bind(){
@@ -2799,91 +2814,124 @@ const VI = (function(){
     render();
   }
 
+  // Choisit, dans un tableau de profondeurs, la plus petite dégression qui atteint la distance
+  // demandée ; sinon celle qui va le plus loin (et le signale).
+  function pickDeg(table, addIdx, target){
+    const avail = table.map(o => ({ name:o.name, deg:o.deg, dist:o.d[addIdx] })).filter(o => o.dist !== null && o.dist !== undefined);
+    if(!avail.length) return null;
+    const ok = avail.filter(o => o.dist >= target);
+    const rec = ok.length ? ok[0] : avail.reduce((a, b) => b.dist > a.dist ? b : a);
+    return { rec, reached: ok.length > 0 };
+  }
+
   function render(){
     if(!$('viBlock') || st.B === null || isNaN(st.B)) return;
     const B = st.B;
     const isProg = st.rx === 'prog';
     $('viRx').querySelectorAll('button').forEach(b => { const on = b.dataset.rx === st.rx; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
 
+    // Hauteur : formule Prog. (pleine pupille) ou Proximité (PP − 4), toujours le mm du dessous.
     const t = isProg ? lens('prog', { multiplier:0.6, offset:0 }) : lens('proximite', { multiplier:0.6, offset:-4 });
-    const calc = roundUpHalf(lensCalc(t, B));
+    const calc = floorMm(lensCalc(t, B));
     const typeName = isProg ? 'Prog.' : 'Proximité';
     const ov = num(st.hOv[st.rx]);
-    const H = ov === null ? calc : ov, Hr = Math.round(H);
-    $('viHlbl').innerHTML = 'Hauteur de montage <span class="vi-hkind">' + (isProg ? 'centrage progressif' : 'centrage proximité') + '</span>';
+    const H = ov === null ? calc : floorMm(ov);
+    $('viHlbl').innerHTML = 'Hauteur de montage <span class="vi-hkind">' + (isProg ? 'centrage pleine pupille' : 'centrage proximité (PP − 4 mm)') + '</span>';
     if($('viH').value !== st.hOv[st.rx]) $('viH').value = st.hOv[st.rx];
-    $('viH').placeholder = formatNum(calc);
-    $('viHsrc').textContent = ov === null ? 'reprise de ' + typeName + ', modifiable si mesurée' : 'mesurée (' + typeName + ' calculée : ' + formatNum(calc) + ' mm)';
+    $('viH').placeholder = String(calc);
+    $('viHsrc').textContent = ov === null ? 'reprise de ' + typeName + ', modifiable si mesurée' : 'mesurée (' + typeName + ' calculée : ' + calc + ' mm)';
     $('viHreset').hidden = ov === null;
     $('viHreset').textContent = 'Revenir à la hauteur ' + typeName;
 
     const use = USES.find(u => u.id === st.usage);
+    const needAdd = !isProg || st.usage === 'ecran'; // VP : toujours ; progressif : Indoor PC (≈ 80 cm)
     $('viUses').innerHTML = USES.map(u => { const on = u.id === st.usage; return `<button type="button" class="vi-chip${on ? ' on' : ''}" aria-pressed="${on}" data-use="${u.id}" title="${u.label}">${u.short}</button>`; }).join('');
     $('viUseLbl').textContent = use.label;
-    $('viAddGroup').hidden = isProg;
+    $('viAddGroup').hidden = !needAdd;
+    $('viAddLbl').textContent = isProg ? '(sert uniquement à choisir la progression de l’Indoor PC)' : '(sert uniquement à choisir la dégression)';
     $('viAdds').innerHTML = ADDS.map(a => { const on = a === st.add; return `<button type="button" class="vi-chip mono${on ? ' on' : ''}" aria-pressed="${on}" data-add="${a}">${dec(a)}</button>`; }).join('');
     const addIdx = st.add === null ? -1 : ADDS.indexOf(st.add);
-    const hTxt = formatNum(H) + ' mm';
+    const hTag = ['Hauteur', H + ' mm'];
     const cards = [];
 
     if(isProg){
       const far = use.target >= 200;
-      // Hoya Workstyle Screen / Space
+      // ---- HOYA Workstyle Screen / Space ----
       const ws = { name:'HOYA Workstyle', need:'automatique' };
       const Br = Math.round(B), Bt = Math.min(Br, 46);
       if(Br < 26) ws.err = 'Cote B ' + formatNum(B) + ' mm : trop petite (26 mm minimum). Workstyle non réalisable.';
-      else if(Hr < 15) ws.err = 'Hauteur ' + hTxt + ' : trop basse (15 mm minimum).';
+      else if(H < 15) ws.err = 'Hauteur ' + H + ' mm : trop basse (15 mm minimum).';
       else {
         const maxH = Math.min(30, Bt - 11);
-        if(Hr > maxH) ws.err = 'Hauteur ' + hTxt + ' trop haute pour cette Cote B : ' + maxH + ' mm maximum. Baisser la hauteur ou changer de monture.';
+        if(H > maxH) ws.err = 'Hauteur ' + H + ' mm trop haute pour cette Cote B : ' + maxH + ' mm maximum. Baisser la hauteur ou changer de monture.';
         else {
-          const cl = WS[Bt][Hr - 15];
-          ws.main = far ? 'Workstyle Space' : 'Workstyle Screen';
-          ws.tags = [['Couloir', cl + ' mm'], ['Hauteur', Hr + ' mm']];
-          ws.order = 'Puissance VL + addition de l’ordonnance · couloir ' + cl + ' mm';
+          const cl = WS[Bt][H - 15];
+          ws.tags = [['Usage', use.label], hTag];
+          ws.order = [(far ? 'Workstyle Space' : 'Workstyle Screen') + ' · Couloir ' + cl + ' mm', 'Correction VL + addition', 'Écart VL · Hauteur ' + H + ' mm'];
           const n = [];
           if(Br > 46) n.push('Cote B ' + formatNum(B) + ' mm : ligne 46 du tableau Hoya utilisée.');
-          if(H !== Hr) n.push('Hauteur ' + formatNum(H) + ' → ' + Hr + ' mm (tableau au mm).');
           n.push('Autre option : ' + (far ? 'Workstyle Screen (écran / bureau)' : 'Workstyle Space (intérieur)') + '.');
           ws.foot = n.join(' ');
         }
       }
       cards.push(ws);
-      // Seiko Indoor 100 / 200
-      const s = { name:'SEIKO Indoor 100 / 200', need:'automatique' };
-      if(H < 17) s.err = 'Hauteur ' + hTxt + ' : trop basse pour Indoor 100 / 200 (17 mm minimum).';
-      else {
-        const cl = H >= 19 ? 23 : 20;
-        s.main = far ? 'Indoor 200' : 'Indoor 100';
-        s.tags = [['Couloir', cl + ' mm'], ['Travail à', far ? '2 m' : '1 m'], ['Hauteur', hTxt]];
-        s.order = 'Puissance VL + addition de l’ordonnance · couloir ' + cl + ' mm';
-        s.foot = (cl === 20 ? 'Couloir 23 mm impossible : il faut 19 mm de hauteur. ' : '') + 'Autre option : ' + (far ? 'Indoor 100 (travail à 1 m)' : 'Indoor 200 (travail à 2 m)') + '.';
+
+      // ---- SEIKO : Indoor PC (≈ 80 cm) ou Indoor 100 / 200 ----
+      if(st.usage === 'ecran'){
+        const s = { name:'SEIKO Indoor PC', need:'addition' };
+        if(H < 15) s.err = 'Hauteur ' + H + ' mm : trop basse pour l’Indoor PC (15 mm minimum).';
+        else if(addIdx < 0) s.wait = 'Sélectionnez l’addition de l’ordonnance pour obtenir la progression.';
+        else {
+          const p = pickDeg(SEIKO_CC, addIdx, use.target);
+          if(!p) s.err = 'Addition ' + dec(st.add) + ' : aucune progression Indoor PC sur la fiche Seiko.';
+          else {
+            s.tags = [['Progression', dec(p.rec.deg)], ['Net jusqu’à', fdist(p.rec.dist), p.reached ? 'ok' : 'bad'], hTag];
+            s.order = ['Indoor PC ' + p.rec.deg.toFixed(2), 'Correction VP (VL + addition)', 'Écart VL · Hauteur ' + H + ' mm'];
+            if(!p.reached) s.alert = ['Aucune progression n’atteint ' + use.short + ' avec cette addition : le client verra net jusqu’à ' + fdist(p.rec.dist) + ' seulement (profondeur maximale retenue).',
+              'Pour voir plus loin, choisir « ≈ 1,30 m » : Seiko Indoor 100, net jusqu’à 2 m.'];
+            s.foot = 'Distance de vision nette à la croix de centrage (fiche Seiko).';
+          }
+        }
+        cards.push(s);
+      } else {
+        const v200 = far;
+        const s = { name:'SEIKO Indoor 100 / 200', need:'automatique' };
+        if(H < 17) s.err = 'Hauteur ' + H + ' mm : trop basse pour Indoor 100 / 200 (17 mm minimum).';
+        else {
+          const cl = H >= 19 ? 23 : 20;
+          s.tags = [['Travail à', v200 ? '2 m' : '1 m'], ['Net jusqu’à', v200 ? '4 m' : '2 m', 'ok'], hTag];
+          s.order = [(v200 ? 'Indoor 200' : 'Indoor 100') + ' · Couloir ' + cl + ' mm', 'Correction VL + addition', 'Écart VL · Hauteur ' + H + ' mm'];
+          s.foot = (cl === 20 ? 'Couloir 23 mm impossible : il faut 19 mm de hauteur. ' : '') + 'Autre option : ' + (v200 ? 'Indoor 100 (travail à 1 m, net jusqu’à 2 m)' : 'Indoor 200 (travail à 2 m, net jusqu’à 4 m)') + '.';
+        }
+        cards.push(s);
       }
-      cards.push(s);
     } else {
-      const degressif = (c, table, word, short) => {
-        if(addIdx < 0){ c.wait = 'Sélectionnez l’addition pour obtenir la ' + word.toLowerCase() + '.'; return; }
-        const avail = table.map(o => ({ name:o.name, deg:o.deg, dist:o.d[addIdx], p:o.p ? o.p[addIdx] : null })).filter(o => o.dist !== null);
-        if(!avail.length){ c.err = 'Addition ' + dec(st.add) + ' : aucun ' + short + ' dans le tableau.'; return; }
-        const ok = avail.filter(o => o.dist >= use.target);
-        const rec = ok.length ? ok[0] : avail.reduce((a, b) => b.dist > a.dist ? b : a);
-        c.main = rec.name;
-        c.tags = [[word, dec(rec.deg)], ['Net jusqu’à', fdist(rec.dist)], ['Hauteur', hTxt]];
-        c.order = 'Puissance VP de l’ordonnance · ' + word.toLowerCase() + ' ' + dec(rec.deg);
-        const n = [];
-        if(!ok.length) n.push('Aucun verre n’atteint ' + use.short + ' avec cette addition : profondeur maximale retenue.');
-        if(rec.p !== null && rec.p !== undefined) n.push('Puissance mesurée à la croix de centrage : +' + dec(rec.p) + ' δ.');
-        c.foot = n.join(' ');
+      // ---- Ordonnance VP : dégressifs, dégression imposée ----
+      const degressif = (c, table, label, minH, altSentence) => {
+        if(minH && H < minH){ c.err = 'Hauteur ' + H + ' mm : trop basse (' + minH + ' mm minimum).'; return; }
+        if(addIdx < 0){ c.wait = 'Sélectionnez l’addition pour obtenir la dégression.'; return; }
+        const p = pickDeg(table, addIdx, use.target);
+        if(!p){ c.err = 'Addition ' + dec(st.add) + ' : aucune dégression dans le tableau.'; return; }
+        c.tags = [['Dégression', dec(p.rec.deg)], ['Net jusqu’à', fdist(p.rec.dist), p.reached ? 'ok' : 'bad'], hTag];
+        c.order = [label(p.rec), 'Correction VP', 'Écart VP · Hauteur ' + H + ' mm'];
+        if(!p.reached) c.alert = ['Aucun verre n’atteint ' + use.short + ' avec cette addition : le client verra net jusqu’à ' + fdist(p.rec.dist) + ' seulement (profondeur maximale retenue).',
+          'Pour voir jusqu’à ' + use.short.replace('≈ ', '') + ', il faut une ordonnance en verre progressif et passer sur ' + altSentence + '.'];
       };
-      const sr = { name:'HOYA Supereader', need:'addition' }; degressif(sr, SR, 'Dégression', 'Supereader'); cards.push(sr);
-      const ip = { name:'SEIKO Indoor PC', need:'addition' }; degressif(ip, IN, 'Progression', 'Indoor PC'); cards.push(ip);
+      const sr = { name:'HOYA Supereader', need:'addition' };
+      degressif(sr, SR, r => r.name, 0, 'un Workstyle');
+      cards.push(sr);
+      const cx = { name:'SEIKO Computer Xtra', need:'addition' };
+      degressif(cx, SEIKO_CC, r => 'Computer Xtra ' + r.deg.toFixed(2), 13, 'un Seiko Indoor');
+      if(cx.tags) cx.foot = 'Distance de vision nette à la croix de centrage (fiche Seiko).';
+      cards.push(cx);
     }
 
     $('viCards').innerHTML = cards.map(c => {
-      const ok = !!c.main && !c.err;
+      const ok = !!c.order && !c.err;
       const body = ok
-        ? `<div class="vi-main">${escapeHtml(c.main)}</div><div class="vi-tags">${c.tags.map(t => `<span class="vi-tag"><span>${escapeHtml(t[0])}</span> <b>${escapeHtml(t[1])}</b></span>`).join('')}</div>`
-          + `<div class="vi-order"><span>Commande</span>${escapeHtml(c.order)}</div>`
+        ? `<div class="vi-tags">${c.tags.map(t => `<span class="vi-tag${t[2] ? ' net ' + t[2] : ''}"><span>${escapeHtml(t[0])}</span> <b>${escapeHtml(t[1])}</b></span>`).join('')}</div>`
+          + (c.alert ? `<div class="vi-alert" role="alert"><p>⚠️ ${escapeHtml(c.alert[0])}</p><p>${escapeHtml(c.alert[1])}</p></div>` : '')
+          + `<div class="vi-order"><span>Commande</span><b class="vi-order-lens">${escapeHtml(c.order[0])}</b><em>${escapeHtml(c.order[1])}</em><em>${escapeHtml(c.order[2])}</em></div>`
           + (c.foot ? `<div class="vi-foot">${escapeHtml(c.foot)}</div>` : '')
         : `<div class="vi-msg${c.err ? ' err' : ''}" role="status">${escapeHtml(c.err || c.wait)}</div>`;
       return `<div class="vi-card${ok ? ' ok' : ''}"><div class="vi-card-top"><span class="vi-card-name">${escapeHtml(c.name)}</span><span class="vi-card-need">${escapeHtml(c.need)}</span></div>${body}</div>`;
@@ -2963,6 +3011,11 @@ function selectFrame(row){
   dropdown.classList.remove('show');
   displayFrameResult(row);
 }
+
+// Hauteurs de montage des verres intermédiaires et de la carte Proximité : toujours le
+// millimètre du dessous du calcul exact (19,4 → 19 ; 19,6 → 19 ; 19,9 → 19). Le petit epsilon
+// évite qu'un 24 exact calculé 23,999999… en flottant ne donne 23.
+function floorMm(n){ return Math.floor(n + 1e-9); }
 
 function roundUpHalf(n){
   // Round UP to the nearest 0.5 (result always ends in .0 or .5)
